@@ -23,6 +23,60 @@
 #	include "gnuregex.h"
 #endif /* _WINDOWS */
 
+/* Performs a similar task as php's preg_replace 	*/	
+char	*zbx_reg_replace(const char *string, const char *pattern, const char *replace, int flags)
+{
+	char		c[MAX_STRING_LEN];
+	char		ret[MAX_STRING_LEN];
+	char		c1[3][MAX_STRING_LEN];
+	char		*k = NULL;
+	char		*i = NULL;
+	int 		j;
+	regex_t		re;
+	regmatch_t	match[3];
+
+	zbx_strlcpy(ret, string, MAX_STRING_LEN);
+
+	if (0 == strncmp(replace, "", MAX_STRING_LEN))
+	{
+		return ret;
+	}
+
+	if (NULL != string)
+	{
+		if (0 == regcomp(&re, pattern, flags))
+		{
+			if (0 == regexec(&re, string, (size_t)4, match, 0)) /* matched */
+			{
+				for (j = 1; j < 4 ; j++)
+				{
+					zbx_strlcpy(c1[j], "", 2);
+					zbx_snprintf(c1[j], 1 + match[j].rm_eo - match[j].rm_so, "%s", string + match[j].rm_so);
+					zbx_strlcpy(c1[j], string + match[j].rm_so, 1 + match[j].rm_eo - match[j].rm_so);
+				}
+
+				zbx_strlcpy(c, replace, MAX_STRING_LEN);
+				zbx_strlcpy(ret, "", MAX_STRING_LEN);
+
+				j = 0;
+				i = strchr(c, '$');
+				for (k = c ; i != NULL ; i = strchr(k, '$'))
+			        {
+					*i++ = '\0';
+					j++;
+					strcat(ret, k);
+					strcat(ret, c1[j]);
+					k = i;
+				}
+			regfree(&re);
+			}
+		}
+	}
+
+	return ret;
+}
+
+
 static char	*zbx_regexp(const char *string, const char *pattern, int *len, int flags)
 {
 	char		*c = NULL;

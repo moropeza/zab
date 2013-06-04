@@ -923,6 +923,7 @@ typedef struct
 ZBX_REGEXP;
 
 /* regular expressions */
+char    *zbx_reg_replace(const char *string, const char *pattern, const char *replace, int flags);
 char    *zbx_regexp_match(const char *string, const char *pattern, int *len);
 char    *zbx_iregexp_match(const char *string, const char *pattern, int *len);
 

@@ -792,7 +792,8 @@ static int	snmp_set_value(struct variable_list *vars, DC_ITEM *item, AGENT_RESUL
  * Comments:                                                                  *
  *                                                                            *
  ******************************************************************************/
-static int	snmp_walk(struct snmp_session *ss, DC_ITEM *item, const char *OID, AGENT_RESULT *value)
+static int	snmp_walk(struct snmp_session *ss, DC_ITEM *item, const char *OID, AGENT_RESULT *value,
+				const char *pattern, const char *replace)
 {
 	const char		*__function_name = "snmp_walk";
 
@@ -805,7 +806,7 @@ static int	snmp_walk(struct snmp_session *ss, DC_ITEM *item, const char *OID, AG
 	struct zbx_json		j;
 	AGENT_RESULT		snmp_value;
 
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s() oid:'%s'", __function_name, OID);
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() oid:'%s', patt:'%s', replace:'%s'", __function_name, OID);
 
 	zbx_json_init(&j, ZBX_JSON_STAT_BUF_LEN);
 
@@ -873,7 +874,10 @@ static int	snmp_walk(struct snmp_session *ss, DC_ITEM *item, const char *OID, AG
 						{
 							zbx_json_addobject(&j, NULL);
 							zbx_json_addstring(&j, "{#SNMPINDEX}", &p[1], ZBX_JSON_TYPE_INT);
-							zbx_json_addstring(&j, "{#SNMPVALUE}", snmp_value.str, ZBX_JSON_TYPE_STRING);
+							zbx_json_addstring(&j, "{#SNMPVALUE}", 
+									zbx_reg_replace(snmp_value.str, pattern, replace,
+									REG_EXTENDED | REG_ICASE | REG_NEWLINE),
+									ZBX_JSON_TYPE_STRING);
 							zbx_json_close(&j);
 						}
 
@@ -1102,8 +1106,10 @@ int	get_value_snmp(DC_ITEM *item, AGENT_RESULT *value)
 
 	struct snmp_session	*ss;
 	char			method[8], oid_normalized[MAX_STRING_LEN], oid_index[MAX_STRING_LEN],
-				oid_full[MAX_STRING_LEN], index_value[MAX_STRING_LEN], err[MAX_STRING_LEN], *pl;
-	int			idx, num, ret = SUCCEED;
+				oid_full[MAX_STRING_LEN], index_value[MAX_STRING_LEN], err[MAX_STRING_LEN], *pl,
+				pattern[MAX_STRING_LEN]="", replace[MAX_STRING_LEN]="";
+
+	int			idx, num, res, ret = SUCCEED;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() key:'%s' oid:'%s'", __function_name, item->key_orig, item->snmp_oid);
 
@@ -1116,6 +1122,8 @@ int	get_value_snmp(DC_ITEM *item, AGENT_RESULT *value)
 		goto out;
 	}
 
+	explode_snmp_oid_disc(item->snmp_oid, pattern, replace);
+
 	num = num_key_param(item->snmp_oid);
 
 	if (0 != (ZBX_FLAG_DISCOVERY & item->flags))
@@ -1124,12 +1132,12 @@ int	get_value_snmp(DC_ITEM *item, AGENT_RESULT *value)
 		{
 			case 0:
 				snmp_normalize(oid_normalized, item->snmp_oid, sizeof(oid_normalized));
-				ret = snmp_walk(ss, item, oid_normalized, value);
+				ret = snmp_walk(ss, item, oid_normalized, value, pattern, replace);
 				break;
 			case 3:
 				zabbix_log(LOG_LEVEL_DEBUG, "Special processing");
 				process_dynamic_index(ss, item, item->snmp_oid, oid_full, value);
-				ret = snmp_walk(ss, item, oid_full, value);
+				ret = snmp_walk(ss, item, oid_full, value, pattern, replace);
 				break;
 			default:
 				SET_MSG_RESULT(value, zbx_dsprintf(NULL, "OID [%s] contains unsupported parameters",
@@ -1163,6 +1171,33 @@ out:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
 
 	return ret;
+}
+
+int	explode_snmp_oid_disc(char *snmp_oid, char *pattern, char *replace)
+{
+	int res = FAIL;
+	char *patt = NULL, *rep = NULL;
+
+	patt = strchr(snmp_oid, ';');
+	//rep = strchr(patt+1, ';');
+	if (NULL != patt)
+	{
+		*patt++ = '\0';
+		rep = strchr(patt, ';');
+		if (NULL != rep)
+		{
+			*rep++ = '\0';
+
+			zbx_snprintf(pattern, MAX_STRING_LEN, "%s", patt);
+			zbx_snprintf(replace, MAX_STRING_LEN, "%s", rep);
+
+			res = SUCCEED;
+		}
+	}
+
+	zabbix_log(LOG_LEVEL_DEBUG, "End of explode() oid:'%s' pat:'%s' rep:'%s'", snmp_oid, pattern, replace);
+
+	return res;
 }
 
 int	process_dynamic_index(struct snmp_session *ss, DC_ITEM *item, char *snmp_oid, char *oid_full, AGENT_RESULT *value)
