@@ -3626,15 +3626,17 @@ int	substitute_key_macros(char **data, zbx_uint64_t *hostid, DC_ITEM *dc_item, s
 			(*data)[i] = c;
 	}
 
-	for (; '\0' != (*data)[i]; i++)
+	i--;
+	do
 	{
+		i++;
 		if (0 == level)
 		{
 			/* first square bracket + Zapcat compatibility */
-			if (ZBX_STATE_END == state && '[' == (*data)[i])
+			if ((ZBX_STATE_END == state && ('[' == (*data)[i]) || '.' == (*data)[i]))
 				state = ZBX_STATE_NEW;
-			else
-				break;
+			else if (!(ZBX_STATE_UNQUOTED == state))
+				break; 
 		}
 
 		switch (state)
@@ -3677,13 +3679,12 @@ int	substitute_key_macros(char **data, zbx_uint64_t *hostid, DC_ITEM *dc_item, s
 				}
 				break;
 			case ZBX_STATE_UNQUOTED:	/* an unquoted parameter */
-				if (']' == (*data)[i] || ',' == (*data)[i])
+				if (']' == (*data)[i] || ',' == (*data)[i] || '\0' == (*data)[i] )
 				{
 					if (']' == (*data)[i])
-					{
 						level--;
+					else if ('\0' == (*data)[i])
 						state = ZBX_STATE_END;
-					}
 					else
 						state = ZBX_STATE_NEW;
 
@@ -3745,7 +3746,7 @@ int	substitute_key_macros(char **data, zbx_uint64_t *hostid, DC_ITEM *dc_item, s
 				}
 				break;
 		}
-	}
+	} while ('\0' != (*data)[i]);
 clean:
 	if (0 == i || '\0' != (*data)[i] || 0 != level)
 	{

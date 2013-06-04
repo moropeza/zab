@@ -1126,6 +1126,11 @@ int	get_value_snmp(DC_ITEM *item, AGENT_RESULT *value)
 				snmp_normalize(oid_normalized, item->snmp_oid, sizeof(oid_normalized));
 				ret = snmp_walk(ss, item, oid_normalized, value);
 				break;
+			case 3:
+				zabbix_log(LOG_LEVEL_DEBUG, "Special processing");
+				process_dynamic_index(ss, item, item->snmp_oid, oid_full, value);
+				ret = snmp_walk(ss, item, oid_full, value);
+				break;
 			default:
 				SET_MSG_RESULT(value, zbx_dsprintf(NULL, "OID [%s] contains unsupported parameters",
 						item->snmp_oid));
@@ -1142,68 +1147,9 @@ int	get_value_snmp(DC_ITEM *item, AGENT_RESULT *value)
 				ret = get_snmp(ss, item, oid_normalized, value);
 				break;
 			case 3:
-				do
-				{
-					zabbix_log(LOG_LEVEL_DEBUG, "Special processing");
-
-					if (get_key_param(item->snmp_oid, 1, method, sizeof(method)) != 0
-						|| get_key_param(item->snmp_oid, 2, oid_index, MAX_STRING_LEN) != 0
-						|| get_key_param(item->snmp_oid, 3, index_value, MAX_STRING_LEN) != 0)
-					{
-						SET_MSG_RESULT(value, zbx_dsprintf(NULL,
-								"Cannot retrieve all three parameters from [%s]",
-								item->snmp_oid));
-						ret = NOTSUPPORTED;
-						break;
-					}
-
-					zabbix_log(LOG_LEVEL_DEBUG, "method:%s", method);
-					zabbix_log(LOG_LEVEL_DEBUG, "oid_index:%s", oid_index);
-					zabbix_log(LOG_LEVEL_DEBUG, "index_value:%s", index_value);
-
-					if (0 != strcmp("index", method))
-					{
-						SET_MSG_RESULT(value, zbx_dsprintf(NULL,
-								"Unsupported method [%s] in the OID [%s]",
-								method, item->snmp_oid));
-						ret = NOTSUPPORTED;
-						break;
-					}
-
-					snmp_normalize(oid_normalized, oid_index, sizeof(oid_normalized));
-					if (SUCCEED == (ret = cache_get_snmp_index(item, oid_normalized, index_value, &idx)))
-					{
-						zbx_snprintf(oid_full, sizeof(oid_full), "%s.%d", oid_normalized, idx);
-						ret = snmp_get_index(ss, item, oid_full, index_value, &idx, err, 0);
-					}
-
-					if (SUCCEED != ret && SUCCEED != (ret = snmp_get_index(ss, item, oid_normalized, index_value, &idx, err, 1)))
-					{
-						SET_MSG_RESULT(value, zbx_dsprintf(NULL, "Cannot find index [%s] of the OID [%s]: %s",
-								oid_index, item->snmp_oid, err));
-						break;
-					}
-
-					zabbix_log(LOG_LEVEL_DEBUG, "Found index:%d", idx);
-
-					if (NULL == (pl = strchr(item->snmp_oid, '[')))
-					{
-						SET_MSG_RESULT(value, zbx_dsprintf(NULL, "Cannot find left bracket in the OID [%s]",
-								item->snmp_oid));
-						ret = NOTSUPPORTED;
-						break;
-					}
-
-					*pl = '\0';
-					snmp_normalize(oid_normalized, item->snmp_oid, sizeof(oid_normalized));
-					*pl = '[';
-
-					zbx_snprintf(oid_full, sizeof(oid_full), "%s.%d", oid_normalized, idx);
-					zabbix_log(LOG_LEVEL_DEBUG, "full OID:%s", oid_full);
-
-					ret = get_snmp(ss, item, oid_full, value);
-				}
-				while (0);
+				zabbix_log(LOG_LEVEL_DEBUG, "Special processing");
+				process_dynamic_index(ss, item, item->snmp_oid, oid_full, value);
+				ret = get_snmp(ss, item, oid_full, value);
 				break;
 			default:
 				SET_MSG_RESULT(value, zbx_dsprintf(NULL, "OID [%s] contains unsupported parameters",
@@ -1216,6 +1162,88 @@ int	get_value_snmp(DC_ITEM *item, AGENT_RESULT *value)
 out:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
 
+	return ret;
+}
+
+int	process_dynamic_index(struct snmp_session *ss, DC_ITEM *item, char *snmp_oid, char *oid_full, AGENT_RESULT *value)
+{
+	const char		*__function_name = "process_dynamic_index";
+
+	char			method[8], oid_normalized[MAX_STRING_LEN], oid_index[MAX_STRING_LEN],
+				index_value[MAX_STRING_LEN], err[MAX_STRING_LEN], *pl;
+
+	int			idx, ret = SUCCEED;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() oid in:'%s'", __function_name, snmp_oid);
+
+	do
+	{
+		if (get_key_param(snmp_oid, 1, method, sizeof(method)) != 0
+			|| get_key_param(snmp_oid, 2, oid_index, MAX_STRING_LEN) != 0
+			|| get_key_param(snmp_oid, 3, index_value, MAX_STRING_LEN) != 0)
+		{
+			SET_MSG_RESULT(value, zbx_dsprintf(NULL,
+					"Cannot retrieve all three parameters from [%s]",
+					snmp_oid));
+			ret = NOTSUPPORTED;
+			break;
+		}
+
+		zabbix_log(LOG_LEVEL_DEBUG, "method:%s", method);
+		zabbix_log(LOG_LEVEL_DEBUG, "oid_index:%s", oid_index);
+		zabbix_log(LOG_LEVEL_DEBUG, "index_value:%s", index_value);
+
+		if (0 != strcmp("index", method))
+		{
+			SET_MSG_RESULT(value, zbx_dsprintf(NULL,
+					"Unsupported method [%s] in the OID [%s]",
+					method, snmp_oid));
+			ret = NOTSUPPORTED;
+			break;
+		}
+
+		snmp_normalize(oid_normalized, oid_index, sizeof(oid_normalized));
+		if (SUCCEED == (ret = cache_get_snmp_index(item, oid_normalized, index_value, &idx)))
+		{
+			zbx_snprintf(oid_full, MAX_STRING_LEN, "%s.%d", oid_normalized, idx);
+			ret = snmp_get_index(ss, item, oid_full, index_value, &idx, err, 0);
+		}
+
+		if (SUCCEED != ret && SUCCEED != (ret = snmp_get_index(ss, item, oid_normalized, index_value, &idx, err, 1)))
+		{
+			SET_MSG_RESULT(value, zbx_dsprintf(NULL, "Cannot find index [%s] of the OID [%s]: %s",
+					oid_index,
+					snmp_oid,
+					err));
+			break;
+		}
+
+		zabbix_log(LOG_LEVEL_DEBUG, "Found index:%d", idx);
+
+		if (NULL == (pl = strchr(snmp_oid, '[')))
+		{
+			SET_MSG_RESULT(value, zbx_dsprintf(NULL, "Cannot find left bracket in the OID [%s]",
+					snmp_oid));
+			ret = NOTSUPPORTED;
+			break;
+		}
+
+		*pl = '\0';
+		snmp_normalize(oid_normalized, snmp_oid, sizeof(oid_normalized));
+		*pl = '[';
+
+		if (NULL == (pl = strchr(snmp_oid, ']')))  /* Finds the tail of the dynamic snmp OID */
+		{
+			SET_MSG_RESULT(value, zbx_dsprintf(NULL, "Cannot find right bracket in the OID [%s]",
+					snmp_oid));
+			ret = NOTSUPPORTED;
+			break;
+		}
+		*pl++;
+
+		zbx_snprintf(oid_full, MAX_STRING_LEN, "%s.%d%s", oid_normalized, idx, pl);
+		zabbix_log(LOG_LEVEL_DEBUG, "full OID:%s", oid_full);
+	} while (0);
 	return ret;
 }
 
