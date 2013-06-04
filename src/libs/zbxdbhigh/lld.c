@@ -1665,7 +1665,8 @@ void	DBlld_process_discovery_rule(zbx_uint64_t discovery_itemid, char *value, zb
 		discovery_key = zbx_strdup(discovery_key, row[1]);
 		status = (unsigned char)atoi(row[2]);
 		filter = zbx_strdup(filter, row[3]);
-		substitute_simple_macros(NULL, &hostid, NULL, NULL, NULL, &filter, MACRO_TYPE_LLD_LIFETIME, NULL, 0);  /* Support macros in filter regexp */	
+		substitute_simple_macros(NULL, NULL, &hostid, NULL, NULL, NULL,
+				&filter, MACRO_TYPE_LLD_LIFETIME, NULL, 0);  /* Support macros in filter regexp */	
 		db_error = zbx_strdup(db_error, row[4]);
 
 		lifetime_str = zbx_strdup(NULL, row[5]);
