@@ -265,7 +265,7 @@ function applyValueMap($value, $valueMapId) {
 			' AND m.value='.zbx_dbstr($value)
 	);
 	if ($mapping = DBfetch($dbMappings)) {
-		$valueMaps[$valueMapId][$value] = $mapping['newvalue'].' '.'('.$value.')';
+		$valueMaps[$valueMapId][$value] = $mapping['newvalue'];
 		return $valueMaps[$valueMapId][$value];
 	}
 
