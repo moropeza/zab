@@ -213,7 +213,7 @@ foreach ($this->data['items'] as $item) {
 	}
 
 	$checkBox = new CCheckBox('group_itemid['.$item['itemid'].']', null, null, $item['itemid']);
-	$checkBox->setEnabled(empty($item['discoveryRule']));
+	//$checkBox->setEnabled(empty($item['discoveryRule']));
 
 	$itemTable->addRow(array(
 		$checkBox,
