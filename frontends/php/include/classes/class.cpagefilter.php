@@ -459,14 +459,19 @@ class CPageFilter {
 				'nodeids' => $this->config['all_nodes'] ? get_current_nodeid() : null,
 				'output' => array('graphid', 'name'),
 				'groupids' => ($this->groupid > 0 && $this->hostid == 0) ? $this->groupid : null,
-				'hostids' => ($this->hostid > 0) ? $this->hostid : null
+				'hostids' => ($this->hostid > 0) ? $this->hostid : null,
+				'selectHosts' => API_OUTPUT_EXTEND
 			);
 			$options = zbx_array_merge($def_ptions, $options);
 			$graphs = API::Graph()->get($options);
 			order_result($graphs, 'name');
 
 			foreach ($graphs as $graph) {
-				$this->data['graphs'][$graph['graphid']] = $graph['name'];
+				//$this->data['graphs'][$graph['graphid']] = $graph['name'];
+				if ($this->hostid > 0)
+					$this->data['graphs'][$graph['graphid']] = resolveGraphNameMacros($graph['name']);
+				else
+					$this->data['graphs'][$graph['graphid']] = $graph['hosts'][0]['host'] . ' : ' . resolveGraphNameMacros($graph['name']);
 			}
 
 			// no graphid provided

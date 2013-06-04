@@ -86,7 +86,8 @@ $chartHeader = '';
 if (id2nodeid($dbGraph['graphid']) != get_current_nodeid()) {
 	$chartHeader = get_node_name_by_elid($dbGraph['graphid'], true, ': ');
 }
-$chartHeader .= $host['name'].': '.$dbGraph['name'];
+
+$chartHeader .= $host['name'].': '. resolveGraphNameMacros($dbGraph['name']);
 
 $graph = new CChart($dbGraph['graphtype']);
 $graph->setHeader($chartHeader);

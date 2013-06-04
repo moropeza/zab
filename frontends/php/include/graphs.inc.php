@@ -931,3 +931,98 @@ function find_period_end($periods, $time, $max_time) {
 
 	return -1;
 }
+
+/**
+ * Resolve macros and return expanded graph name
+ * @param string $name
+ * @return string
+ */
+
+function resolveGraphNameMacros($label) {
+        $pattern = '/{'.ZBX_PREG_HOST_FORMAT.":.+\.(last|max|min|avg)\([0-9]+[smhdwKMGT]?\)}/Uu";
+
+        preg_match_all($pattern, $label, $matches);
+			
+	// for each functional macro
+	foreach ($matches[0] as $expr) {
+		$macro = $expr;
+
+		// try to create valid expression
+		$expressionData = new CTriggerExpression();
+		if (!$expressionData->parse($macro) || !isset($expressionData->expressions[0])) {
+			continue;
+		}
+
+		// look in DB for coressponding item
+		$itemHost = $expressionData->expressions[0]['host'];
+		$key = $expressionData->expressions[0]['item'];
+		$function = $expressionData->expressions[0]['functionName'];
+		$parameter = convertFunctionValue($expressionData->expressions[0]['functionParamList'][0]);
+
+		$item = API::Item()->get(array(
+			'webitems' => true,
+			'filter' => array(
+				'host' => $itemHost,
+				'key_' => $key
+			),
+			'output' => array('lastclock', 'value_type', 'lastvalue', 'units')
+		));
+
+		$item = reset($item);
+
+		// if no corresponding item found with functional macro key and host
+		if (!$item) {
+			$label = str_replace($expr, '', $label);
+			continue;
+		}
+
+		// do function type (last, min, max, avg) related actions
+		if (0 == strcmp($function, 'last')) {
+			if ($item['lastclock'] == 0) {
+				$label = str_replace($expr, '', $label);
+			}
+			else {
+				switch ($item['value_type']) {
+					case ITEM_VALUE_TYPE_FLOAT:
+					case ITEM_VALUE_TYPE_UINT64:
+						$value = convert_units($item['lastvalue'], $item['units']);
+						break;
+					default:
+						$value = $item['lastvalue'];
+				}
+				if ($value != '')
+					$label = str_replace($expr, '[' . $value . ']', $label);
+				else
+					$label = str_replace($expr, '', $label);
+			}
+		}
+		elseif (0 == strcmp($function, 'min') || 0 == strcmp($function, 'max') || 0 == strcmp($function, 'avg')) {
+			// allowed item types for min, max and avg function
+			$history_table = array(
+				ITEM_VALUE_TYPE_FLOAT => 'history',
+				ITEM_VALUE_TYPE_UINT64 => 'history_uint'
+			);
+			if (!isset($history_table[$item['value_type']])) {
+				$label = str_replace($expr, '???', $label);
+				continue;
+			}
+
+			// search for item function data in DB corresponding history tables
+			$result = DBselect(
+				'SELECT '.$function.'(value) AS value'.
+				' FROM '.$history_table[$item['value_type']].
+				' WHERE clock>'.(time() - $parameter).
+				' AND itemid='.$item['itemid']
+			);
+			if (null === ($row = DBfetch($result))) {
+				$label = str_replace($expr, '('._('no data').')', $label);
+			}
+			else {
+				$label = str_replace($expr, convert_units($row['value'], $item['units']), $label);
+			}
+		}
+	}
+    
+	return $label;
+}
+

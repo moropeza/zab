@@ -512,7 +512,7 @@ class CGraph extends CGraphGeneral {
 	protected function inherit($graph, $hostids = null) {
 		$graphTemplates = API::Template()->get(array(
 			'itemids' => zbx_objectValues($graph['gitems'], 'itemid'),
-			'output' => API_OUTPUT_SHORTEN,
+			'output' => API_OUTPUT_EXTEND,
 			'nopermissions' => true
 		));
 
@@ -543,6 +543,8 @@ class CGraph extends CGraphGeneral {
 		foreach ($chdHosts as $chdHost) {
 			$tmpGraph = $graph;
 			$tmpGraph['templateid'] = $graph['graphid'];
+
+			$tmpGraph['name'] = str_replace($graphTemplate['host'], $chdHost['host'], $tmpGraph['name']);
 
 			if (!$tmpGraph['gitems'] = get_same_graphitems_for_host($tmpGraph['gitems'], $chdHost['hostid'])) {
 				self::exception(ZBX_API_ERROR_PARAMETERS, _s('Graph "%1$s" cannot inherit. No required items on "%2$s".', $tmpGraph['name'], $chdHost['host']));
