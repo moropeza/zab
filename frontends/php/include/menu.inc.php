@@ -48,6 +48,10 @@ $ZBX_MENU = array(
 				'sub_pages' => array('history.php', 'chart.php')
 			),
 			array(
+				'url' => 'mylatest.php',
+				'label' => _('My latest data'),
+			),
+			array(
 				'url' => 'tr_status.php',
 				'label' => _('Triggers'),
 				'sub_pages' => array('acknow.php', 'tr_comments.php', 'chart4.php', 'scripts_exec.php')
