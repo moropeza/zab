@@ -282,6 +282,11 @@ $ZBX_MENU = array(
 				'url' => 'setup.php',
 				'label' => _('Installation'),
 				'sub_pages' => array('warning.php')
+			),
+			array(
+				'url' => 'automap.php',
+				'label' => _('Map Analysis'),
+				'sub_pages' => array('map.php')
 			)
 		)
 	),
