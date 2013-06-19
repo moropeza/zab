@@ -408,6 +408,37 @@ elseif (in_array($resourcetype, array(SCREEN_RESOURCE_TRIGGERS_OVERVIEW, SCREEN_
 }
 
 /*
+ * Data Tables
+ */
+elseif ($resourcetype == SCREEN_RESOURCE_DATA_TABLE) {
+	$caption = '';
+	$id = 0;
+
+		if ($resourceid > 0) {
+			$hosts = API::Host()->get(array(
+				'hostids' => $resourceid,
+				'output' => API_OUTPUT_EXTEND,
+				'editable' => true
+			));
+			foreach ($hosts as $host) {
+				$caption = get_node_name_by_elid($host['hostid'], true, ':').$host['name'];
+				$id = $resourceid;
+			}
+		}
+
+		$screenFormList->addVar('resourceid', $id);
+		$screenFormList->addRow(_('Host'), array(
+			new CTextBox('caption', $caption, ZBX_TEXTBOX_STANDARD_SIZE, 'yes'),
+			new CButton('select', _('Select'),
+				'javascript: return PopUp("popup.php?srctbl=hosts&srcfld1=hostid&srcfld2=name'.
+					'&dstfrm='.$screenForm->getName().'&dstfld1=resourceid&dstfld2=caption'.
+					'&real_hosts=1&writeonly=1", 800, 450);',
+				'formlist'
+			)
+		));
+}
+
+/*
  * Screens
  */
 elseif ($resourcetype == SCREEN_RESOURCE_SCREEN) {

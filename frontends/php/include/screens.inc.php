@@ -27,6 +27,7 @@ function screen_resources($resource = null) {
 	$resources = array(
 		SCREEN_RESOURCE_CLOCK => _('Clock'),
 		SCREEN_RESOURCE_DATA_OVERVIEW => _('Data overview'),
+		SCREEN_RESOURCE_DATA_TABLE => _('Data table'),
 		SCREEN_RESOURCE_GRAPH => _('Graph'),
 		SCREEN_RESOURCE_ACTIONS => _('History of actions'),
 		SCREEN_RESOURCE_EVENTS => _('History of events'),
