@@ -35,7 +35,7 @@ $chartsWidget->addHeader(
 );
 $chartsWidget->addItem(BR());
 
-$dataTable = get_items_mydata($this->data['hostids'], $this->data['groupids']);
+$dataTable = get_items_mydata($this->data['hostid'], $this->data['groupid']);
 
 $chartsWidget->addItem($dataTable);
 

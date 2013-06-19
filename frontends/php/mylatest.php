@@ -130,8 +130,8 @@ if ($page['type'] == PAGE_TYPE_JS || $page['type'] == PAGE_TYPE_HTML_BLOCK) {
 $data = array(
 	'pageFilter' => $pageFilter,
 	'fullscreen' => get_request('fullscreen'),
-    'hostid' = get_request('hostid', null),
-	'groupid' = get_request('groupid', null)
+    'hostid' => get_request('hostid', null),
+	'groupid' => get_request('groupid', null)
 );
 
 /*
