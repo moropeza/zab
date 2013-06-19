@@ -664,7 +664,7 @@ function get_realrule_by_itemid_and_hostid($itemid, $hostid) {
  * @return CTableInfo
  */
 function get_items_mydata($items) {
-{
+
 	$itemTables = array();
 
 	//Organizes data
@@ -763,7 +763,7 @@ function get_items_mydata($items) {
 		}
 		$table->addRow($hostTable);
 	}
-	
+
 	return $table;
 }
 
