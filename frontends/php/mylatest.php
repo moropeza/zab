@@ -129,29 +129,10 @@ if ($page['type'] == PAGE_TYPE_JS || $page['type'] == PAGE_TYPE_HTML_BLOCK) {
 
 $data = array(
 	'pageFilter' => $pageFilter,
-	'fullscreen' => get_request('fullscreen')
+	'fullscreen' => get_request('fullscreen'),
+    'hostid' = get_request('hostid', null),
+	'groupid' = get_request('groupid', null)
 );
-
-$options = array(
-		'filter' => array('status' => 0, 'flags' => array(ZBX_FLAG_DISCOVERY_NORMAL, ZBX_FLAG_DISCOVERY_CREATED)),
-                'output' => array('name', 'lastvalue', 'lastclock', 'value_type', 'units', 'valuemapid'),
-                'preservekeys' => true,
-		'sortfield' => 'name',
-		'selectDiscoveryRule' =>  array('name', 'snmp_oid'),
-		'selectHosts' =>  array('host')
-        );
-
-if ($_REQUEST['hostid'] != 0) {
-        $options['hostids'] = get_request('hostid', null);
-}
-elseif ($_REQUEST['groupid'] != 0) {
-        $options['groupids'] = get_request('groupid', null);
-}
-
-$data['items'] = API::Item()->get($options);
-if (empty($data['items']))
-	access_deny();
-
 
 /*
  * Display

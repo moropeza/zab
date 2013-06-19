@@ -663,7 +663,28 @@ function get_realrule_by_itemid_and_hostid($itemid, $hostid) {
  *
  * @return CTableInfo
  */
-function get_items_mydata($items) {
+function get_items_mydata($hostid, $groupid) {
+
+	$options = array(
+			'filter' => array('status' => 0, 'flags' => array(ZBX_FLAG_DISCOVERY_NORMAL, ZBX_FLAG_DISCOVERY_CREATED)),
+					'output' => array('name', 'lastvalue', 'lastclock', 'value_type', 'units', 'valuemapid'),
+					'preservekeys' => true,
+			'sortfield' => 'name',
+			'selectDiscoveryRule' =>  array('name', 'snmp_oid'),
+			'selectHosts' =>  array('host')
+			);
+
+	if ($hostid != 0) {
+			$options['hostids'] = $hostid;
+	}
+	elseif ($groupid != 0) {
+			$options['groupids'] = $groupid;
+	}
+
+	$items = API::Item()->get($options);
+	if (empty($items))
+		access_deny();
+
 
 	$itemTables = array();
 
