@@ -36,7 +36,7 @@ require_once dirname(__FILE__).'/include/page_header.php';
 $fields = array(
 	'screenid' =>		array(T_ZBX_INT, O_MAND, P_SYS,	DB_ID,			null),
 	'screenitemid' =>	array(T_ZBX_INT, O_OPT, P_SYS,	DB_ID,			null),
-	'resourcetype' =>	array(T_ZBX_INT, O_OPT, null,	BETWEEN(0, 16),	'isset({save})'),
+	'resourcetype' =>	array(T_ZBX_INT, O_OPT, null,	BETWEEN(0, 19),	'isset({save})'),
 	'caption' =>		array(T_ZBX_STR, O_OPT, null,	null,			null),
 	'resourceid' =>		array(T_ZBX_INT, O_OPT, null,	DB_ID,			'isset({save})'),
 	'templateid' =>		array(T_ZBX_INT, O_OPT, null,	DB_ID,			null),
