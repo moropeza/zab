@@ -228,6 +228,9 @@ class CScreenBuilder {
 			case SCREEN_RESOURCE_DATA_OVERVIEW:
 				return new CScreenDataOverview($options);
 
+			case SCREEN_RESOURCE_DATA_TABLE:
+				return new CScreenDataTable($options);				
+				
 			case SCREEN_RESOURCE_URL:
 				return new CScreenUrl($options);
 
