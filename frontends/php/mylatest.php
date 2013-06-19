@@ -133,7 +133,7 @@ $data = array(
 );
 
 $options = array(
-           	'filter' => array('status' => 0, 'flags' => array(ZBX_FLAG_DISCOVERY_NORMAL, ZBX_FLAG_DISCOVERY_CREATED)),
+		'filter' => array('status' => 0, 'flags' => array(ZBX_FLAG_DISCOVERY_NORMAL, ZBX_FLAG_DISCOVERY_CREATED)),
                 'output' => array('name', 'lastvalue', 'lastclock', 'value_type', 'units', 'valuemapid'),
                 'preservekeys' => true,
 		'sortfield' => 'name',
@@ -148,73 +148,10 @@ elseif ($_REQUEST['groupid'] != 0) {
         $options['groupids'] = get_request('groupid', null);
 }
 
-$items = API::Item()->get($options);
-if (empty($items))
+$data['items'] = API::Item()->get($options);
+if (empty($data['items']))
 	access_deny();
 
-
-$data['itemTables'] = array();
-
-//Organizes data
-foreach ($items as $item)
-{
-	$hostid = $item['hosts'][0]['hostid'];
-	$partes = explode(' - ', $item['name']);
-	$value = formatItemValue($item);
-
-
-	if (!array_key_exists($hostid, $data['itemTables']))
-	{
-		$data['itemTables'][$hostid]['host'] = $item['hosts'][0]['host'];
-		$data['itemTables'][$hostid]['tables'] = array();
-	}
-
-	if (!empty($item['discoveryRule']))
-	{
-		$table = $item['discoveryRule']['itemid'];
-		$name = $item['discoveryRule']['name'];
-	}
-	else
-	{
-		$table = 0;
-		$name = 'General';
-	}
-
-	if (!array_key_exists($table, $data['itemTables'][$hostid]['tables']))
-	{
-		$data['itemTables'][$hostid]['tables'][$table]['name'] = $name;
-		$data['itemTables'][$hostid]['tables'][$table]['rows'] = array();
-		if (count($partes) == 2)
-//		if ($table != 0)
-			$data['itemTables'][$hostid]['tables'][$table]['rows'][0][0] = 'Item';
-		else
-		{
-			$data['itemTables'][$hostid]['tables'][$table]['rows'][0][0] = 'Item';
-			$data['itemTables'][$hostid]['tables'][$table]['rows'][0]['Value'] = 'Value';
-		}
-	}
-
-//	if (($table != 0) && count($partes == 2))
-	if (count($partes) == 2)
-	{
-		if (!array_key_exists($partes[1], $data['itemTables'][$hostid]['tables'][$table]['rows'][0]))
-		{
-			$data['itemTables'][$hostid]['tables'][$table]['rows'][0][$partes[1]] = $partes[1];
-		}
-		if (!array_key_exists($partes[0], $data['itemTables'][$hostid]['tables'][$table]['rows']))
-		{
-			$data['itemTables'][$hostid]['tables'][$table]['rows'][$partes[0]][0] = $partes[0];
-		}
-		$data['itemTables'][$hostid]['tables'][$table]['rows'][$partes[0]][$partes[1]] = $value;
-	}
-	else
-	{
-		array_push($data['itemTables'][$hostid]['tables'][$table]['rows'], array(
-										'Item' => $item['name'],
-										'Value' => $value
-									));
-	}
-}
 
 /*
  * Display

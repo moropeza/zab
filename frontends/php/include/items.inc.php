@@ -654,6 +654,120 @@ function get_realrule_by_itemid_and_hostid($itemid, $hostid) {
 	return $item['itemid'];
 }
 
+
+/**
+ * Retrieve overview table object for items.
+ *
+ * @param $hostids
+ * @param null $view_style
+ *
+ * @return CTableInfo
+ */
+function get_items_mydata($items) {
+{
+	$itemTables = array();
+
+	//Organizes data
+	foreach ($items as $item)
+	{
+		$hostid = $item['hosts'][0]['hostid'];
+		$partes = explode(' - ', $item['name']);
+		$value = formatItemValue($item);
+
+		if (!array_key_exists($hostid, $itemTables))
+		{
+			$itemTables[$hostid]['host'] = $item['hosts'][0]['host'];
+			$itemTables[$hostid]['tables'] = array();
+		}
+
+		if (!empty($item['discoveryRule']))
+		{
+			$table = $item['discoveryRule']['itemid'];
+			$name = $item['discoveryRule']['name'];
+		}
+		else
+		{
+			$table = 0;
+			$name = 'General';
+		}
+
+		if (!array_key_exists($table, $itemTables[$hostid]['tables']))
+		{
+			$itemTables[$hostid]['tables'][$table]['name'] = $name;
+			$itemTables[$hostid]['tables'][$table]['rows'] = array();
+			if (count($partes) == 2)
+	//		if ($table != 0)
+				$itemTables[$hostid]['tables'][$table]['rows'][0][0] = 'Item';
+			else
+			{
+				$itemTables[$hostid]['tables'][$table]['rows'][0][0] = 'Item';
+				$itemTables[$hostid]['tables'][$table]['rows'][0]['Value'] = 'Value';
+			}
+		}
+
+	//	if (($table != 0) && count($partes == 2))
+		if (count($partes) == 2)
+		{
+			if (!array_key_exists($partes[1], $itemTables[$hostid]['tables'][$table]['rows'][0]))
+			{
+				$itemTables[$hostid]['tables'][$table]['rows'][0][$partes[1]] = $partes[1];
+			}
+			if (!array_key_exists($partes[0], $itemTables[$hostid]['tables'][$table]['rows']))
+			{
+				$itemTables[$hostid]['tables'][$table]['rows'][$partes[0]][0] = $partes[0];
+			}
+			$itemTables[$hostid]['tables'][$table]['rows'][$partes[0]][$partes[1]] = $value;
+		}
+		else
+		{
+			array_push($itemTables[$hostid]['tables'][$table]['rows'], array(
+										'Item' => $item['name'],
+										'Value' => $value
+									));
+		}
+	}
+
+	// Assembles table for displaying data
+	$table = new CTableInfo(_('No data.'));
+	foreach ($itemTables as $hostTables)
+	{
+		$hostTable = new CTableInfo(_('No data.'));
+		$hostTable->setHeader(new Ccol($hostTables['host'], 'center'));
+
+		foreach ($hostTables['tables'] as $hostdbTable)
+		{
+			$titleTable = new CTableInfo(_('No data.'));
+			$titleTable->setHeader(new Ccol($hostdbTable['name'], 'center'));
+
+			$dataTable = new CTableInfo(_('No data.'));
+        	$dataTable->makeVerticalRotation();
+
+			foreach ($hostdbTable['rows'] as $n => $row)
+			{
+				if ($n === 0)
+				{
+		                // header
+                		$header = array(new CCol($row[0], 'center'));
+		                foreach ($row as $j => $col) {
+							if ($j !== 0)
+	 	  	                     	$header[] = new CCol($col, 'vertical_rotation');
+                		}
+		                $dataTable->setHeader($header, 'vertical_header');
+				}
+				else
+					$dataTable->addRow($row);
+			}
+
+			$titleTable->addRow($dataTable);
+			$hostTable->addRow($titleTable);
+		}
+		$table->addRow($hostTable);
+	}
+	
+	return $table;
+}
+
+
 /**
  * Retrieve overview table object for items.
  *

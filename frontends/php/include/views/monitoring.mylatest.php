@@ -35,40 +35,9 @@ $chartsWidget->addHeader(
 );
 $chartsWidget->addItem(BR());
 
-foreach ($data['itemTables'] as $hostTables)
-{
-	$hostTable = new CTableInfo(_('No data.'));
-	$hostTable->setHeader(new Ccol($hostTables['host'], 'center'));
+$dataTable = get_items_mydata($his->data['items']);
 
-	foreach ($hostTables['tables'] as $table)
-	{
-		$titleTable = new CTableInfo(_('No data.'));
-		$titleTable->setHeader(new Ccol($table['name'], 'center'));
-
-		$dataTable = new CTableInfo(_('No data.'));
-        	$dataTable->makeVerticalRotation();
-
-		foreach ($table['rows'] as $n => $row)
-		{
-			if ($n === 0)
-			{
-		                // header
-                		$header = array(new CCol($row[0], 'center'));
-		                foreach ($row as $j => $col) {
-					if ($j !== 0)
-	 	  	                     	$header[] = new CCol($col, 'vertical_rotation');
-                		}
-		                $dataTable->setHeader($header, 'vertical_header');
-			}
-			else
-				$dataTable->addRow($row);
-		}
-
-		$titleTable->addRow($dataTable);
-		$hostTable->addRow($titleTable);
-	}
-	$chartsWidget->addItem($hostTable);
-}
+$chartsWidget->addItem($dataTable);
 
 
 return $chartsWidget;
