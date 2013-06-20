@@ -73,6 +73,10 @@ switch ($srctbl) {
 		$page['title'] = _('Items');
 		$min_user_type = USER_TYPE_ZABBIX_USER;
 		break;
+	case 'item_tables':
+		$page['title'] = _('Item Tables');
+		$min_user_type = USER_TYPE_ZABBIX_USER;
+		break;
 	case 'prototypes':
 		$page['title'] = _('Prototypes');
 		$min_user_type = USER_TYPE_ZABBIX_ADMIN;
