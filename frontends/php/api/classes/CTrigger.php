@@ -180,6 +180,8 @@ class CTrigger extends CTriggerGeneral {
 		if (!is_null($options['groupids'])) {
 			zbx_value2array($options['groupids']);
 
+			sort($options['groupids']);
+
 			if ($options['output'] != API_OUTPUT_SHORTEN) {
 				$sqlParts['select']['groupid'] = 'hg.groupid';
 			}
@@ -485,8 +487,8 @@ class CTrigger extends CTriggerGeneral {
 			$sqlParts['where']['hi'] = 'h.hostid=i.hostid';
 		}
 
-		// countOutput
-		if (!is_null($options['countOutput'])) {
+		// count or grouped counts via direct SQL count
+		if (!is_null($options['countOutput']) && !$this->requiresPostSqlFiltering($options)) {
 			$options['sortfield'] = '';
 			$sqlParts['select'] = array('COUNT(DISTINCT t.triggerid) as rowscount');
 
@@ -561,25 +563,16 @@ class CTrigger extends CTriggerGeneral {
 		}
 
 		// limit
-		$postLimit = false;
-		if (zbx_ctype_digit($options['limit']) && $options['limit']) {
-			// to make limit work correctly with truncating filters (skipDependent, withLastEventUnacknowledged)
-			// do select without limit, truncate result and then slice excess data
-			if (!is_null($options['skipDependent']) || !is_null($options['withLastEventUnacknowledged'])) {
-				$postLimit = $options['limit'];
-				$sqlParts['limit'] = null;
-			}
-			else {
-				$sqlParts['limit'] = $options['limit'];
-			}
+		if (!zbx_ctype_digit($options['limit']) || !$options['limit']) {
+			$options['limit'] = null;
 		}
 
-		$triggerids = array();
-
 		$sqlParts = $this->applyQueryNodeOptions($this->tableName(), $this->tableAlias(), $options, $sqlParts);
-		$dbRes = DBselect($this->createSelectQueryFromParts($sqlParts), $sqlParts['limit']);
-		while ($trigger = DBfetch($dbRes)) {
-			if (!is_null($options['countOutput'])) {
+
+		// return count or grouped counts via direct SQL count
+		if (!is_null($options['countOutput']) && !$this->requiresPostSqlFiltering($options)) {
+			$dbRes = DBselect($this->createSelectQueryFromParts($sqlParts), $options['limit']);
+			while ($trigger = DBfetch($dbRes)) {
 				if (!is_null($options['groupCount'])) {
 					$result[] = $trigger;
 				}
@@ -587,180 +580,71 @@ class CTrigger extends CTriggerGeneral {
 					$result = $trigger['rowscount'];
 				}
 			}
-			else {
-				$triggerids[$trigger['triggerid']] = $trigger['triggerid'];
-
-				if ($options['output'] == API_OUTPUT_SHORTEN) {
-					$result[$trigger['triggerid']] = array('triggerid' => $trigger['triggerid']);
-				}
-				else {
-					if (!isset($result[$trigger['triggerid']])) {
-						$result[$trigger['triggerid']] = array();
-					}
-					if (!is_null($options['selectHosts']) && !isset($result[$trigger['triggerid']]['hosts'])) {
-						$result[$trigger['triggerid']]['hosts'] = array();
-					}
-					if (!is_null($options['selectItems']) && !isset($result[$trigger['triggerid']]['items'])) {
-						$result[$trigger['triggerid']]['items'] = array();
-					}
-					if (!is_null($options['selectFunctions']) && !isset($result[$trigger['triggerid']]['functions'])) {
-						$result[$trigger['triggerid']]['functions'] = array();
-					}
-					if (!is_null($options['selectDependencies']) && !isset($result[$trigger['triggerid']]['dependencies'])) {
-						$result[$trigger['triggerid']]['dependencies'] = array();
-					}
-					if (!is_null($options['selectDiscoveryRule']) && !isset($result[$trigger['triggerid']]['discoveryRule'])) {
-						$result[$trigger['triggerid']]['discoveryRule'] = array();
-					}
-
-					// groups
-					if (isset($trigger['groupid']) && is_null($options['selectGroups'])) {
-						if (!isset($result[$trigger['triggerid']]['groups'])) {
-							$result[$trigger['triggerid']]['groups'] = array();
-						}
-
-						$result[$trigger['triggerid']]['groups'][] = array('groupid' => $trigger['groupid']);
-						unset($trigger['groupid']);
-					}
-
-					// hostids
-					if (isset($trigger['hostid']) && is_null($options['selectHosts'])) {
-						if (!isset($result[$trigger['triggerid']]['hosts'])) {
-							$result[$trigger['triggerid']]['hosts'] = array();
-						}
-
-						$result[$trigger['triggerid']]['hosts'][] = array('hostid' => $trigger['hostid']);
-
-						if (is_null($options['expandData'])) {
-							unset($trigger['hostid']);
-						}
-					}
-					// itemids
-					if (isset($trigger['itemid']) && is_null($options['selectItems'])) {
-						if (!isset($result[$trigger['triggerid']]['items'])) {
-							$result[$trigger['triggerid']]['items'] = array();
-						}
-
-						$result[$trigger['triggerid']]['items'][] = array('itemid' => $trigger['itemid']);
-						unset($trigger['itemid']);
-					}
-
-					$result[$trigger['triggerid']] += $trigger;
-				}
-			}
-		}
-
-		if (!is_null($options['countOutput'])) {
 			return $result;
 		}
 
-		// skipDependent
-		if (!is_null($options['skipDependent'])) {
-			$tids = $triggerids;
-			$map = array();
+		$triggers = zbx_toHash($this->customFetch($this->createSelectQueryFromParts($sqlParts), $options), 'triggerid');
 
-			do {
-				$dbResult = DBselect(
-					'SELECT d.triggerid_down,d.triggerid_up,t.value'.
-					' FROM trigger_depends d,triggers t'.
-					' WHERE '.dbConditionInt('d.triggerid_down', $tids).
-						' AND d.triggerid_up=t.triggerid'
-				);
-				$tids = array();
-				while ($row = DBfetch($dbResult)) {
-					if (TRIGGER_VALUE_TRUE == $row['value']) {
-						if (isset($map[$row['triggerid_down']])) {
-							foreach ($map[$row['triggerid_down']] as $triggerid => $state) {
-								unset($result[$triggerid]);
-								unset($triggerids[$triggerid]);
-							}
-						}
-						else {
-							unset($result[$row['triggerid_down']]);
-							unset($triggerids[$row['triggerid_down']]);
-						}
-					}
-					else {
-						if (isset($map[$row['triggerid_down']])) {
-							if (!isset($map[$row['triggerid_up']])) {
-								$map[$row['triggerid_up']] = array();
-							}
+		// return count for post SQL filtered result sets
+		if (!is_null($options['countOutput'])) {
+			return count($triggers);
+		}
 
-							$map[$row['triggerid_up']] += $map[$row['triggerid_down']];
-						}
-						else {
-							if (!isset($map[$row['triggerid_up']])) {
-								$map[$row['triggerid_up']] = array();
-							}
+		$triggerids = array_keys($triggers);
+		sort($triggerids);
 
-							$map[$row['triggerid_up']][$row['triggerid_down']] = 1;
-						}
-						$tids[] = $row['triggerid_up'];
-					}
+		// format result array
+		foreach ($triggers as $trigger) {
+			if ($options['output'] == API_OUTPUT_SHORTEN) {
+				$result[$trigger['triggerid']] = array('triggerid' => $trigger['triggerid']);
+			}
+			else {
+				if (!isset($result[$trigger['triggerid']])) {
+					$result[$trigger['triggerid']] = array();
 				}
-			} while (!empty($tids));
-		}
-
-		// withLastEventUnacknowledged
-		if (!is_null($options['withLastEventUnacknowledged'])) {
-			$eventids = array();
-			$eventsDb = DBselect(
-				'SELECT MAX(e.eventid) AS eventid,e.objectid'.
-				' FROM events e'.
-				' WHERE e.object='.EVENT_OBJECT_TRIGGER.
-					' AND '.dbConditionInt('e.objectid', $triggerids).
-					' AND '.dbConditionInt('e.value', array(TRIGGER_VALUE_TRUE)).
-					' AND e.value_changed='.TRIGGER_VALUE_CHANGED_YES.
-				' GROUP BY e.objectid'
-			);
-			while ($event = DBfetch($eventsDb)) {
-				$eventids[] = $event['eventid'];
-			}
-
-			$correctTriggerids = array();
-			$triggersDb = DBselect(
-				'SELECT e.objectid'.
-				' FROM events e '.
-				' WHERE '.dbConditionInt('e.eventid', $eventids).
-					' AND e.acknowledged=0'
-			);
-			while ($trigger = DBfetch($triggersDb)) {
-				$correctTriggerids[$trigger['objectid']] = $trigger['objectid'];
-			}
-			foreach ($result as $triggerid => $trigger) {
-				if (!isset($correctTriggerids[$triggerid])) {
-					unset($result[$triggerid]);
-					unset($triggerids[$triggerid]);
+				if (!is_null($options['selectHosts']) && !isset($result[$trigger['triggerid']]['hosts'])) {
+					$result[$trigger['triggerid']]['hosts'] = array();
 				}
+				if (!is_null($options['selectItems']) && !isset($result[$trigger['triggerid']]['items'])) {
+					$result[$trigger['triggerid']]['items'] = array();
+				}
+				if (!is_null($options['selectFunctions']) && !isset($result[$trigger['triggerid']]['functions'])) {
+					$result[$trigger['triggerid']]['functions'] = array();
+				}
+				if (!is_null($options['selectDependencies']) && !isset($result[$trigger['triggerid']]['dependencies'])) {
+					$result[$trigger['triggerid']]['dependencies'] = array();
+				}
+				if (!is_null($options['selectDiscoveryRule']) && !isset($result[$trigger['triggerid']]['discoveryRule'])) {
+					$result[$trigger['triggerid']]['discoveryRule'] = array();
+				}
+
+				$result[$trigger['triggerid']] += $trigger;
+
 			}
-		}
-
-		if (!is_null($options['selectLastEvent']) && str_in_array($options['selectLastEvent'], $subselectsAllowedOutputs)) {
-			foreach ($result as $triggerId => $trigger) {
-				$lastEvent = API::Event()->get(array(
-					'object' => EVENT_SOURCE_TRIGGERS,
-					'triggerids' => $triggerId,
-					'output' => $options['selectLastEvent'],
-					'nopermissions' => true,
-					'filter' => array('value_changed' => TRIGGER_VALUE_CHANGED_YES),
-					'sortfield' => array('eventid'),
-					'sortorder' => ZBX_SORT_DOWN,
-					'limit' => 1
-				));
-
-				$result[$triggerId]['lastEvent'] = $lastEvent ? reset($lastEvent) : array();
-			}
-		}
-
-		// limit selected triggers after result set is truncated by previous filters (skipDependent, withLastEventUnacknowledged)
-		if ($postLimit) {
-			$result = array_slice($result, 0, $postLimit, true);
-			$triggerids = array_slice($triggerids, 0, $postLimit, true);
 		}
 
 		/*
 		 * Adding objects
 		 */
+		// adding last event
+		if (!is_null($options['selectLastEvent']) && str_in_array($options['selectLastEvent'], $subselectsAllowedOutputs)) {
+			$select = $options['selectLastEvent'] == API_OUTPUT_REFER ? 'e.eventid, e.objectid' : 'e.*';
+			$lastEvents = DBfetchArrayAssoc(DBselect(
+				'SELECT '.$select.' FROM events e JOIN ('.
+					'SELECT  max(eventid) as lasteventid FROM events e'.
+					' WHERE '.dbConditionInt('e.objectid', $triggerids).
+						' AND '.DBin_node('e.objectid').
+						' AND e.object='.EVENT_SOURCE_TRIGGERS.
+						' AND e.value_changed='.TRIGGER_VALUE_CHANGED_YES.
+					' GROUP BY e.objectid'.
+				') ee ON e.eventid=ee.lasteventid'
+			), 'objectid');
+
+			foreach ($result as $triggerId => $trigger) {
+				$result[$triggerId]['lastEvent'] = isset($lastEvents[$triggerId]) ? $lastEvents[$triggerId] : array();
+			}
+		}
+
 		// adding trigger dependencies
 		if (!is_null($options['selectDependencies']) && str_in_array($options['selectDependencies'], $subselectsAllowedOutputs)) {
 			$deps = array();
@@ -796,6 +680,9 @@ class CTrigger extends CTriggerGeneral {
 		}
 
 		// adding groups
+		if ($options['groupids'] !== null && $options['selectGroups'] === null) {
+			$options['selectGroups'] = API_OUTPUT_REFER;
+		}
 		if (!is_null($options['selectGroups']) && str_in_array($options['selectGroups'], $subselectsAllowedOutputs)) {
 			$objParams = array(
 				'nodeids' => $options['nodeids'],
@@ -815,6 +702,9 @@ class CTrigger extends CTriggerGeneral {
 		}
 
 		// adding hosts
+		if ($options['hostids'] !== null && $options['selectHosts'] === null) {
+			$options['selectHosts'] = API_OUTPUT_REFER;
+		}
 		if (!is_null($options['selectHosts'])) {
 			$objParams = array(
 				'nodeids' => $options['nodeids'],
@@ -892,6 +782,9 @@ class CTrigger extends CTriggerGeneral {
 		}
 
 		// adding items
+		if ($options['itemids'] !== null && $options['selectItems'] === null) {
+			$options['selectItems'] = API_OUTPUT_REFER;
+		}
 		if (!is_null($options['selectItems']) && (is_array($options['selectItems']) || str_in_array($options['selectItems'], $subselectsAllowedOutputs))) {
 			$objParams = array(
 				'nodeids' => $options['nodeids'],
@@ -2120,5 +2013,91 @@ class CTrigger extends CTriggerGeneral {
 		}
 
 		return $sqlParts;
+	}
+
+	protected function requiresPostSqlFiltering(array $options) {
+		return $options['skipDependent'] !== null || $options['withLastEventUnacknowledged'] !== null;
+	}
+
+	protected function applyPostSqlFiltering(array $triggers, array $options) {
+		$triggers = zbx_toHash($triggers, 'triggerid');
+
+		// unset triggers which are dependant on at least one problem trigger upstream into dependency tree
+		if ($options['skipDependent'] !== null) {
+			$triggerIds = zbx_objectValues($triggers, 'triggerid');
+			$map = array();
+
+			do {
+				$dbResult = DBselect(
+					'SELECT d.triggerid_down,d.triggerid_up,t.value'.
+						' FROM trigger_depends d,triggers t'.
+						' WHERE '.dbConditionInt('d.triggerid_down', $triggerIds).
+						' AND d.triggerid_up=t.triggerid'
+				);
+				$triggerIds = array();
+				while ($row = DBfetch($dbResult)) {
+					if (TRIGGER_VALUE_TRUE == $row['value']) {
+						if (isset($map[$row['triggerid_down']])) {
+							foreach ($map[$row['triggerid_down']] as $triggerId => $state) {
+								unset($triggers[$triggerId]);
+							}
+						}
+						else {
+							unset($triggers[$row['triggerid_down']]);
+						}
+					}
+					else {
+						if (isset($map[$row['triggerid_down']])) {
+							if (!isset($map[$row['triggerid_up']])) {
+								$map[$row['triggerid_up']] = array();
+							}
+
+							$map[$row['triggerid_up']] += $map[$row['triggerid_down']];
+						}
+						else {
+							if (!isset($map[$row['triggerid_up']])) {
+								$map[$row['triggerid_up']] = array();
+							}
+
+							$map[$row['triggerid_up']][$row['triggerid_down']] = 1;
+						}
+						$triggerIds[] = $row['triggerid_up'];
+					}
+				}
+			} while (!empty($triggerIds));
+		}
+
+		// unset triggers whose last event isn't unacknowledged
+		if ($options['withLastEventUnacknowledged'] !== null) {
+			$triggerIds = zbx_objectValues($triggers, 'triggerid');
+			$eventIds = array();
+			$eventsDb = DBselect(
+				'SELECT MAX(e.eventid) AS eventid,e.objectid'.
+					' FROM events e'.
+					' WHERE e.object='.EVENT_OBJECT_TRIGGER.
+					' AND '.dbConditionInt('e.objectid', $triggerIds).
+					' AND '.dbConditionInt('e.value', array(TRIGGER_VALUE_TRUE)).
+					' AND e.value_changed='.TRIGGER_VALUE_CHANGED_YES.
+					' GROUP BY e.objectid'
+			);
+			while ($event = DBfetch($eventsDb)) {
+				$eventIds[] = $event['eventid'];
+			}
+
+			$correctTriggerIds = DBfetchArrayAssoc(DBselect(
+				'SELECT e.objectid'.
+					' FROM events e '.
+					' WHERE '.dbConditionInt('e.eventid', $eventIds).
+					' AND e.acknowledged=0'
+			), 'objectid');
+
+			foreach ($triggers as $triggerId => $trigger) {
+				if (!isset($correctTriggerIds[$triggerId])) {
+					unset($triggers[$triggerId]);
+				}
+			}
+		}
+
+		return $triggers;
 	}
 }

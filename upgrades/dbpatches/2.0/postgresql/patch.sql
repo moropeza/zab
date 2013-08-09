@@ -911,36 +911,75 @@ DROP LANGUAGE 'plpgsql';
 
 -- adding web.test.error[<web check>] items
 
-CREATE SEQUENCE items_seq;
-CREATE SEQUENCE httptestitem_seq;
-CREATE SEQUENCE items_applications_seq;
+CREATE LANGUAGE 'plpgsql';
 
-SELECT setval('items_seq', max(itemid)) FROM items;
-SELECT setval('httptestitem_seq', max(httptestitemid)) FROM httptestitem;
-SELECT setval('items_applications_seq', max(itemappid)) FROM items_applications;
+CREATE OR REPLACE FUNCTION zbx_add_web_error_items()
+RETURNS void AS $$
+DECLARE
+	httptest_nodeid INT;
+	init_nodeid BIGINT;
+	min_nodeid BIGINT;
+	max_nodeid BIGINT;
+	node_cursor CURSOR FOR (SELECT DISTINCT httptestid / 100000000000000 FROM httptest);
+	res BIGINT;
+BEGIN
 
-INSERT INTO items (itemid, hostid, type, name, key_, value_type, units, delay, history, trends, status)
-	SELECT NEXTVAL('items_seq'), hostid, type, 'Last error message of scenario ''$1''', 'web.test.error' || SUBSTR(key_, STRPOS(key_, '[')), 1, '', delay, history, 0, status
-	FROM items
-	WHERE type = 9
-		AND key_ LIKE 'web.test.fail%';
+	OPEN node_cursor;
+	LOOP
+		FETCH node_cursor INTO httptest_nodeid;
+		IF NOT FOUND THEN
+			EXIT;
+		END IF;
 
-INSERT INTO httptestitem (httptestitemid, httptestid, itemid, type)
-	SELECT NEXTVAL('httptestitem_seq'), ht.httptestid, i.itemid, 4
-	FROM httptest ht,applications a,items i
-	WHERE ht.applicationid=a.applicationid
-		AND a.hostid=i.hostid
-		AND 'web.test.error[' || ht.name || ']' = i.key_;
+		min_nodeid := httptest_nodeid * 100000000000000;
+		max_nodeid := min_nodeid + 99999999999999;
+		init_nodeid := (httptest_nodeid * 1000 + httptest_nodeid) * 100000000000;
 
-INSERT INTO items_applications (itemappid, applicationid, itemid)
-	SELECT NEXTVAL('items_applications_seq'), ht.applicationid, hti.itemid
-	FROM httptest ht, httptestitem hti
-	WHERE ht.httptestid = hti.httptestid
-		AND hti.type = 4;
+		CREATE SEQUENCE items_seq;
+		CREATE SEQUENCE httptestitem_seq;
+		CREATE SEQUENCE items_applications_seq;
 
-DROP SEQUENCE items_applications_seq;
-DROP SEQUENCE httptestitem_seq;
-DROP SEQUENCE items_seq;
+		SELECT setval('items_seq', GREATEST(MAX(itemid), init_nodeid)) INTO res FROM items WHERE itemid BETWEEN min_nodeid AND max_nodeid;
+		SELECT setval('httptestitem_seq', GREATEST(MAX(httptestitemid), init_nodeid)) INTO res FROM httptestitem WHERE httptestitemid BETWEEN min_nodeid AND max_nodeid;
+		SELECT setval('items_applications_seq', GREATEST(MAX(itemappid), init_nodeid)) INTO res FROM items_applications WHERE itemappid BETWEEN min_nodeid AND max_nodeid;
+
+		INSERT INTO items (itemid, hostid, type, name, key_, value_type, units, delay, history, trends, status)
+			SELECT NEXTVAL('items_seq'), hostid, type, 'Last error message of scenario ''$1''', 'web.test.error' || SUBSTR(key_, STRPOS(key_, '[')), 1, '', delay, history, 0, status
+			FROM items
+			WHERE type = 9
+				AND key_ LIKE 'web.test.fail%'
+				AND itemid BETWEEN min_nodeid AND max_nodeid;
+
+		INSERT INTO httptestitem (httptestitemid, httptestid, itemid, type)
+			SELECT NEXTVAL('httptestitem_seq'), ht.httptestid, i.itemid, 4
+			FROM httptest ht,applications a,items i
+			WHERE ht.applicationid=a.applicationid
+				AND a.hostid=i.hostid
+				AND 'web.test.error[' || ht.name || ']' = i.key_
+				AND itemid BETWEEN min_nodeid AND max_nodeid;
+
+		INSERT INTO items_applications (itemappid, applicationid, itemid)
+			SELECT NEXTVAL('items_applications_seq'), ht.applicationid, hti.itemid
+			FROM httptest ht, httptestitem hti
+			WHERE ht.httptestid = hti.httptestid
+				AND hti.type = 4
+				AND itemid BETWEEN min_nodeid AND max_nodeid;
+
+		DROP SEQUENCE items_applications_seq;
+		DROP SEQUENCE httptestitem_seq;
+		DROP SEQUENCE items_seq;
+
+	END LOOP;
+
+	CLOSE node_cursor;
+END;
+$$ LANGUAGE 'plpgsql';
+
+SELECT zbx_add_web_error_items();
+
+DROP FUNCTION zbx_add_web_error_items();
+
+DROP LANGUAGE 'plpgsql';
 
 DELETE FROM ids WHERE table_name IN ('items', 'httptestitem', 'items_applications');
 
@@ -1772,82 +1811,49 @@ ALTER TABLE ONLY events ALTER eventid DROP DEFAULT,
 
 -- Begin event redesign patch
 
-CREATE TEMPORARY TABLE tmp_events_eventid (eventid bigint PRIMARY KEY,prev_value integer,value integer);
-CREATE INDEX tmp_events_index on events (source, object, objectid, clock, eventid, value);
+CREATE LANGUAGE plpgsql;
 
--- Which OK events should have value_changed flag set?
--- Those that have a PROBLEM event (or no event) before them.
+CREATE OR REPLACE FUNCTION zbx_convert_events() RETURNS BOOLEAN AS $$
+	DECLARE prev_triggerid bigint;
+	DECLARE prev_value integer;
+	r RECORD;
+BEGIN
+	FOR r IN
+		SELECT e.eventid, t.triggerid, e.value, t.type
+		FROM events e
+			JOIN triggers t ON t.triggerid = e.objectid
+		WHERE e.source = 0
+			AND e.object = 0
+			AND e.value IN (0, 1)
+		ORDER BY e.objectid, e.clock, e.eventid
+	LOOP
 
-INSERT INTO tmp_events_eventid (eventid,prev_value,value)
-(
-	SELECT e1.eventid,(SELECT e2.value
-				FROM events e2
-				WHERE e2.source=e1.source
-					AND e2.object=e1.object
-					AND e2.objectid=e1.objectid
-					AND (e2.clock<e1.clock OR (e2.clock=e1.clock AND e2.eventid<e1.eventid))
-					AND e2.value<2					-- TRIGGER_VALUE_UNKNOWN
-				ORDER BY e2.source DESC,
-						e2.object DESC,
-						e2.objectid DESC,
-						e2.clock DESC,
-						e2.eventid DESC,
-						e2.value DESC
-				LIMIT 1),e1.value
-		FROM events e1
-		WHERE e1.source=0							-- EVENT_SOURCE_TRIGGERS
-			AND e1.object=0 						-- EVENT_OBJECT_TRIGGER
-			AND e1.value=0							-- TRIGGER_VALUE_FALSE (OK)
-);
+	IF prev_triggerid IS NULL OR prev_triggerid <> r.triggerid THEN
+		prev_value := NULL;
+	END IF;
 
--- Which PROBLEM events should have value_changed flag set?
--- (1) Those that have an OK event (or no event) before them.
--- (2) Those that came from a "MULTIPLE PROBLEM" trigger.
+	IF r.value = 0 THEN
+		IF prev_value IS NULL OR prev_value = 1 THEN
+			UPDATE events set value_changed = 1 WHERE eventid = r.eventid;
+		END IF;
+	ELSE
+		IF r.type = 1 OR prev_value IS NULL OR prev_value = 0 THEN
+			UPDATE events set value_changed = 1 WHERE eventid = r.eventid;
+		END IF;
+	END IF;
 
-INSERT INTO tmp_events_eventid (eventid,prev_value,value)
-(
-	SELECT e1.eventid,(SELECT e2.value
-				FROM events e2
-				WHERE e2.source=e1.source
-					AND e2.object=e1.object
-					AND e2.objectid=e1.objectid
-					AND (e2.clock<e1.clock OR (e2.clock=e1.clock AND e2.eventid<e1.eventid))
-					AND e2.value<2					-- TRIGGER_VALUE_UNKNOWN
-				ORDER BY e2.source DESC,
-						e2.object DESC,
-						e2.objectid DESC,
-						e2.clock DESC,
-						e2.eventid DESC,
-						e2.value DESC
-				LIMIT 1),e1.value
-		FROM events e1,triggers t
-		WHERE e1.source=0							-- EVENT_SOURCE_TRIGGERS
-			AND e1.object=0 						-- EVENT_OBJECT_TRIGGER
-			AND e1.objectid=t.triggerid
-			AND e1.value=1							-- TRIGGER_VALUE_TRUE
-			AND t.type=0							-- TRIGGER_TYPE_NORMAL
-);
+	prev_value := r.value;
+	prev_triggerid := r.triggerid;
 
-INSERT INTO tmp_events_eventid (eventid,value)
-(
-	SELECT e1.eventid,e1.value
-		FROM events e1,triggers t
-		WHERE e1.source=0							-- EVENT_SOURCE_TRIGGERS
-			AND e1.object=0 						-- EVENT_OBJECT_TRIGGER
-			AND e1.objectid=t.triggerid
-			AND e1.value=1							-- TRIGGER_VALUE_TRUE (PROBLEM)
-			AND t.type=1							-- TRIGGER_TYPE_MULTIPLE_TRUE
-);
+	END LOOP;
 
-DELETE FROM tmp_events_eventid WHERE prev_value = value;
+	RETURN 1;
+END;
+$$ LANGUAGE plpgsql;
 
--- Update the value_changed flag.
+SELECT zbx_convert_events();
 
-DROP INDEX tmp_events_index;
-
-UPDATE events SET value_changed=1 WHERE EXISTS (SELECT 1 FROM tmp_events_eventid WHERE tmp_events_eventid.eventid=events.eventid);
-
-DROP TABLE tmp_events_eventid;
+DROP FUNCTION zbx_convert_events();
 
 -- End event redesign patch
 
