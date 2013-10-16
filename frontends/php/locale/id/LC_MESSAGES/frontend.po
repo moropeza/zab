@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Zabbix 2.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-07-24 15:52+0300\n"
+"POT-Creation-Date: 2013-09-25 00:33+0300\n"
 "PO-Revision-Date: 2012-10-30 11:01+0200\n"
 "Last-Translator: busel7 <bonny.useful@gmail.com>\n"
 "Language-Team: none\n"
@@ -51,13 +51,13 @@ msgid "%1$s Item"
 msgid_plural "%1$s Items"
 msgstr[0] "%1$s Buah"
 
-#: include/page_header.php:480
+#: include/page_header.php:481
 #, php-format
 msgid "%1$s failed login attempt logged. Last failed attempt was from %2$s on %3$s at %4$s."
 msgid_plural "%1$s failed login attempts logged. Last failed attempt was from %2$s on %3$s at %4$s."
 msgstr[0] "%1$s gagal mencoba login. Upaya gagal terakhir dari %2$s pada %3$s pada %4$s."
 
-#: include/blocks.inc.php:982
+#: include/blocks.inc.php:984
 #, php-format
 msgid "%2$d of %1$d issue is shown"
 msgid_plural "%2$d of %1$d issues are shown"
@@ -203,7 +203,7 @@ msgid "Account is blocked for %s seconds"
 msgstr "Akun diblokir selama %s detik"
 
 #: events.php:565 events.php:578 include/actions.inc.php:245
-#: include/blocks.inc.php:901 include/blocks.inc.php:1418
+#: include/blocks.inc.php:903 include/blocks.inc.php:1420
 #: include/events.inc.php:137 include/events.inc.php:210
 #: include/views/configuration.action.edit.php:938
 msgid "Ack"
@@ -308,8 +308,8 @@ msgstr "Aksi operasi"
 msgid "Action updated"
 msgstr "Aksi diperbarui"
 
-#: events.php:566 events.php:579 include/blocks.inc.php:902
-#: include/blocks.inc.php:1419 include/events.inc.php:138
+#: events.php:566 events.php:579 include/blocks.inc.php:904
+#: include/blocks.inc.php:1421 include/events.inc.php:138
 #: include/menu.inc.php:193 include/views/administration.auditacts.list.php:29
 #: include/views/administration.auditacts.list.php:32
 #: include/views/administration.auditlogs.list.php:29
@@ -344,9 +344,9 @@ msgstr "Aktif sejak"
 msgid "Active till"
 msgstr "Aktif sampai"
 
-#: dashconf.php:211 include/blocks.inc.php:1141 include/blocks.inc.php:1147
-#: include/blocks.inc.php:1261 include/blocks.inc.php:1306
-#: include/blocks.inc.php:1312 include/forms.inc.php:1705
+#: dashconf.php:211 include/blocks.inc.php:1143 include/blocks.inc.php:1149
+#: include/blocks.inc.php:1263 include/blocks.inc.php:1308
+#: include/blocks.inc.php:1314 include/forms.inc.php:1705
 #: include/forms.inc.php:2009 include/reports.inc.php:332
 #: include/reports.inc.php:428 include/reports.inc.php:468
 #: include/views/administration.auditlogs.list.php:45
@@ -465,7 +465,7 @@ msgstr "Administrasi"
 msgid "Advanced labels"
 msgstr "Advanced labels"
 
-#: include/blocks.inc.php:899 include/blocks.inc.php:1416
+#: include/blocks.inc.php:901 include/blocks.inc.php:1418
 #: include/events.inc.php:136 include/events.inc.php:210
 #: include/events.inc.php:213 tr_status.php:288
 msgid "Age"
@@ -494,7 +494,7 @@ msgid "Agent or SNMP or JMX or IPMI interface"
 msgstr "Agen atau SNMP atau JMX atau IPMI interface"
 
 #: include/hosts.inc.php:119 include/views/administration.users.edit.php:49
-#: include/views/administration.users.list.php:54 popup.php:896 users.php:43
+#: include/views/administration.users.list.php:54 popup.php:896 users.php:45
 msgid "Alias"
 msgstr "alias"
 
@@ -502,10 +502,10 @@ msgstr "alias"
 msgid "Align icons"
 msgstr "Meluruskan icon"
 
-#: dashconf.php:173 dashconf.php:254 include/blocks.inc.php:1240
-#: include/blocks.inc.php:1249 include/blocks.inc.php:1294
-#: include/blocks.inc.php:1378 include/blocks.inc.php:1387
-#: include/nodes.inc.php:156 include/page_header.php:331
+#: dashconf.php:173 dashconf.php:254 include/blocks.inc.php:1242
+#: include/blocks.inc.php:1251 include/blocks.inc.php:1296
+#: include/blocks.inc.php:1380 include/blocks.inc.php:1389
+#: include/nodes.inc.php:156 include/page_header.php:332
 #: include/reports.inc.php:554
 #: include/views/administration.auditlogs.list.php:42
 #: include/views/administration.auditlogs.list.php:52
@@ -735,7 +735,7 @@ msgstr "Pendaftaran otomatis"
 msgid "Auto-login"
 msgstr "Login-otomatis"
 
-#: include/views/administration.users.edit.php:120 profile.php:47 users.php:60
+#: include/views/administration.users.edit.php:120 profile.php:50 users.php:62
 msgid "Auto-logout (min 90 seconds)"
 msgstr "Logout-otomatis (minimal 90 detik)"
 
@@ -799,7 +799,7 @@ msgctxt "Byte short"
 msgid "B"
 msgstr "B"
 
-#: include/page_header.php:224
+#: include/page_header.php:225
 msgid "BACK"
 msgstr "KEMBALI"
 
@@ -916,7 +916,7 @@ msgstr "KONFIGURASI PROTOTIPE GRAFIK"
 msgid "CONFIGURATION OF GRAPHS"
 msgstr "KONFIGURASI GRAFIK"
 
-#: adm.gui.php:107
+#: adm.gui.php:110
 msgid "CONFIGURATION OF GUI"
 msgstr "KONFIGURASI GUI"
 
@@ -1095,7 +1095,7 @@ msgstr "Tidak dapat memutuskan hubungan template"
 msgid "Canada (136 characters)"
 msgstr "Kanada (136 karakter)"
 
-#: include/classes/class.cbuttoncancel.php:25 include/config.inc.php:262
+#: include/classes/class.cbuttoncancel.php:25 include/config.inc.php:267
 #: include/forms.inc.php:1707 include/forms.inc.php:2010
 #: include/js.inc.php:222 include/setup.inc.php:137
 #: include/views/configuration.action.edit.php:946
@@ -1225,11 +1225,11 @@ msgstr "Tidak dapat menambah template"
 msgid "Cannot add trigger"
 msgstr "Tidak dapat menambah trigger"
 
-#: users.php:196
+#: users.php:198
 msgid "Cannot add user"
 msgstr "Tidak dapat menambah user"
 
-#: users.php:150
+#: users.php:152
 msgid "Cannot add user. Both passwords must be equal."
 msgstr "Tidak dapat menambah user. Kedua password harus sama."
 
@@ -1522,7 +1522,7 @@ msgstr "Tidak dapat menghapus trigger."
 msgid "Cannot delete triggers created by low level discovery."
 msgstr "Tidak dapat menghapus trigger yang dibuat oleh discovery tingkat bawah."
 
-#: users.php:232 users.php:318
+#: users.php:234 users.php:320
 msgid "Cannot delete user"
 msgstr "Tidak dapat menghapus user"
 
@@ -1768,7 +1768,7 @@ msgstr "Tidak dapat merubah \"templateid\" untuk prototipe trigger \"%1$s\"."
 msgid "Cannot switch host for interface."
 msgstr "Tidak bisa merubah host untuk interface."
 
-#: users.php:294
+#: users.php:296
 msgid "Cannot unblock users"
 msgstr "Tidak dapat membuka blokir user"
 
@@ -1851,7 +1851,7 @@ msgstr "Tidak dapat perbarui aplikasi"
 msgid "Cannot update comment"
 msgstr "Tidak dapat perbarui komentar"
 
-#: adm.gui.php:66 adm.housekeeper.php:53 adm.other.php:58
+#: adm.gui.php:69 adm.housekeeper.php:53 adm.other.php:58
 #: adm.triggerdisplayoptions.php:65 adm.triggerseverities.php:69
 #: adm.workingtime.php:46
 msgid "Cannot update configuration"
@@ -1987,7 +1987,7 @@ msgstr "Tidak dapat perbarui template"
 msgid "Cannot update trigger"
 msgstr "Tidak dapat perbarui trigger"
 
-#: profile.php:173 users.php:189 users.php:251 users.php:271
+#: profile.php:176 users.php:191 users.php:253 users.php:273
 msgid "Cannot update user"
 msgstr "Tidak dapat perbarui user"
 
@@ -1995,7 +1995,7 @@ msgstr "Tidak dapat perbarui user"
 msgid "Cannot update user media."
 msgstr "Tidak dapat perbarui media user."
 
-#: profile.php:110 users.php:147
+#: profile.php:113 users.php:149
 msgid "Cannot update user. Both passwords must be equal."
 msgstr "Tidak dapat perbarui user. Kedua password harus sama."
 
@@ -2418,7 +2418,7 @@ msgstr "Konfigurasi web pemantauan"
 msgid "Configuration of working time"
 msgstr "Konfigurasi waktu kerja"
 
-#: adm.gui.php:66 adm.housekeeper.php:53 adm.other.php:58
+#: adm.gui.php:69 adm.housekeeper.php:53 adm.other.php:58
 #: adm.triggerdisplayoptions.php:65 adm.triggerseverities.php:69
 #: adm.workingtime.php:46
 msgid "Configuration updated"
@@ -2761,7 +2761,7 @@ msgstr "Tanggal saat ini BUKAN N"
 msgid "Current host"
 msgstr "Host saat ini"
 
-#: include/page_header.php:363
+#: include/page_header.php:364
 msgid "Current node"
 msgstr "Node saat ini"
 
@@ -3036,7 +3036,7 @@ msgstr "Hari minggu BUKAN N"
 msgid "Days"
 msgstr "Hari"
 
-#: include/page_header.php:249
+#: include/page_header.php:250
 msgid "Debug"
 msgstr "Debug"
 
@@ -3099,7 +3099,7 @@ msgstr "Standar judul"
 msgid "Default theme"
 msgstr "Standar theme"
 
-#: adm.gui.php:70
+#: adm.gui.php:73
 #, php-format
 msgid "Default theme \"%1$s\"."
 msgstr "Standar theme \"%1$s\"."
@@ -3498,8 +3498,8 @@ msgstr "Status deployment"
 msgid "Description"
 msgstr "Deskripsi"
 
-#: include/actions.inc.php:868 include/blocks.inc.php:714
-#: include/config.inc.php:344
+#: include/actions.inc.php:868 include/blocks.inc.php:716
+#: include/config.inc.php:349
 #: include/views/administration.auditlogs.list.php:92
 #: include/views/administration.mediatypes.list.php:43
 #: include/views/configuration.action.edit.php:317
@@ -3712,7 +3712,7 @@ msgid "Discovery object"
 msgstr "Obyek penemuan"
 
 #: include/actions.inc.php:70 include/audit.inc.php:44
-#: include/blocks.inc.php:1112 include/forms.inc.php:1018
+#: include/blocks.inc.php:1114 include/forms.inc.php:1018
 #: include/views/configuration.discovery.edit.php:76
 #: include/views/configuration.discovery.list.php:29
 #: include/views/monitoring.discovery.php:34
@@ -3838,7 +3838,7 @@ msgstr "Selesai"
 msgid "Dot"
 msgstr "Titik"
 
-#: include/blocks.inc.php:1114
+#: include/blocks.inc.php:1116
 msgctxt "discovery results in dashboard"
 msgid "Down"
 msgstr "Mati"
@@ -3889,12 +3889,12 @@ msgstr "Menggambar gaya"
 msgid "Dropdown first entry"
 msgstr "Dropdown catatan pertama"
 
-#: adm.gui.php:74
+#: adm.gui.php:77
 #, php-format
 msgid "Dropdown first entry \"%1$s\"."
 msgstr "Drowdown catatan pertama \"%1$s\"."
 
-#: adm.gui.php:75
+#: adm.gui.php:78
 #, php-format
 msgid "Dropdown remember selected \"%1$s\"."
 msgstr "Dropdown ingat yang dipilih \"%1$s\"."
@@ -3956,7 +3956,7 @@ msgctxt "Exa short"
 msgid "E"
 msgstr "E"
 
-#: include/config.inc.php:311
+#: include/config.inc.php:316
 msgid "ERROR"
 msgstr "ERROR"
 
@@ -4239,7 +4239,7 @@ msgstr "ID event dari catatan entri terakhir cocok dengan ekspresi reguler T, la
 msgid "Event acknowledged"
 msgstr "Pemberitahuan event"
 
-#: adm.gui.php:71
+#: adm.gui.php:74
 #, php-format
 msgid "Event acknowledges \"%1$s\"."
 msgstr "Pemberitahuan event \"%1$s\"."
@@ -4416,7 +4416,7 @@ msgstr "FTP"
 msgid "Fail"
 msgstr "Gagal"
 
-#: include/actions.inc.php:961 include/blocks.inc.php:1023
+#: include/actions.inc.php:961 include/blocks.inc.php:1025
 msgid "Failed"
 msgstr "Gagal"
 
@@ -4433,15 +4433,15 @@ msgstr "Gagal untuk perbarui template"
 msgid "Failure Audit"
 msgstr "Kegagalan Audit"
 
-#: dashboard.php:259 include/blocks.inc.php:1134
+#: dashboard.php:259 include/blocks.inc.php:1136
 msgid "Favourite graphs"
 msgstr "Grafik favorit"
 
-#: dashboard.php:273 include/blocks.inc.php:1259
+#: dashboard.php:273 include/blocks.inc.php:1261
 msgid "Favourite maps"
 msgstr "Peta favorit"
 
-#: dashboard.php:266 include/blocks.inc.php:1304
+#: dashboard.php:266 include/blocks.inc.php:1306
 msgid "Favourite screens"
 msgstr "Layar favorit"
 
@@ -4553,7 +4553,7 @@ msgstr "Tetap"
 msgid "Flexible intervals"
 msgstr "Fleksibel interval"
 
-#: profile.php:113 users.php:154
+#: profile.php:116 users.php:156
 msgid "For guest, password must be empty"
 msgstr "Untuk guest, password harus kosong"
 
@@ -4631,7 +4631,7 @@ msgstr "G"
 msgid "GSM modem"
 msgstr "Modem GSM"
 
-#: adm.gui.php:92 adm.housekeeper.php:71 adm.iconmapping.php:109
+#: adm.gui.php:95 adm.housekeeper.php:71 adm.iconmapping.php:109
 #: adm.images.php:131 adm.macros.php:158 adm.other.php:104 adm.regexps.php:208
 #: adm.triggerdisplayoptions.php:73 adm.triggerseverities.php:79
 #: adm.valuemapping.php:125 adm.workingtime.php:61
@@ -4656,7 +4656,7 @@ msgstr "Pembuatan dalam %s det"
 msgid "German (de_DE)"
 msgstr "German (de_DE)"
 
-#: include/page_header.php:235
+#: include/page_header.php:236
 msgid "Get support"
 msgstr "Minta bantuan"
 
@@ -4716,7 +4716,7 @@ msgstr "Google Chrome"
 msgid "Gradient line"
 msgstr "Garis gradasi"
 
-#: include/audit.inc.php:29 include/blocks.inc.php:1141
+#: include/audit.inc.php:29 include/blocks.inc.php:1143
 #: include/screens.inc.php:30 include/views/configuration.graph.edit.php:287
 #: include/views/monitoring.charts.php:27
 #: include/views/monitoring.history.php:60 latest.php:318 latest.php:495
@@ -4840,7 +4840,7 @@ msgstr "Grafik dengan nama \"%1$s\" sudah ada dalam grafik atau prototipe grafik
 msgid "Graph with same name but other type exist."
 msgstr "Grafik dengan nama yang sama tetapi tipe lain sudah ada."
 
-#: dashboard.php:260 hosts.php:686 hosts.php:765 include/blocks.inc.php:1240
+#: dashboard.php:260 hosts.php:686 hosts.php:765 include/blocks.inc.php:1242
 #: include/html.inc.php:464 include/html.inc.php:468 include/items.inc.php:802
 #: include/menu.inc.php:62 include/triggers.inc.php:1311
 #: include/views/configuration.graph.list.php:56
@@ -4967,13 +4967,13 @@ msgid "H.i"
 msgstr "H.i"
 
 #: include/classes/class.cchart.php:1233 include/classes/class.cchart.php:1292
-#: include/page_header.php:485
+#: include/page_header.php:486
 msgid "H:i"
 msgstr "H:i"
 
-#: include/blocks.inc.php:363 include/blocks.inc.php:702
-#: include/blocks.inc.php:770 include/blocks.inc.php:980
-#: include/blocks.inc.php:1070 include/blocks.inc.php:1128
+#: include/blocks.inc.php:365 include/blocks.inc.php:704
+#: include/blocks.inc.php:772 include/blocks.inc.php:982
+#: include/blocks.inc.php:1072 include/blocks.inc.php:1130
 #: include/classes/screens/CScreenSystemStatus.php:47
 #: include/views/configuration.item.list.php:102
 msgid "H:i:s"
@@ -5027,7 +5027,7 @@ msgstr "Hardware (Detail lengkap)"
 msgid "Height"
 msgstr "Tinggi"
 
-#: include/page_header.php:233 include/views/general.login.php:38
+#: include/page_header.php:234 include/views/general.login.php:38
 msgid "Help"
 msgstr "Bantuan"
 
@@ -5066,7 +5066,7 @@ msgstr "Sembunyikan yang dipilih"
 msgid "High"
 msgstr "Tinggi"
 
-#: history.php:27 include/forms.inc.php:853 include/page_header.php:455
+#: history.php:27 include/forms.inc.php:853 include/page_header.php:456
 #: include/views/configuration.item.list.php:59
 #: include/views/configuration.item.prototype.list.php:54 jsLoader.php:108
 #: latest.php:196 latest.php:321 latest.php:498
@@ -5106,9 +5106,9 @@ msgstr "Luruskan horisontal"
 #: hostinventories.php:157 httpconf.php:190 httpconf.php:289 httpconf.php:313
 #: httpconf.php:331 httpconf.php:351 httpmon.php:121 httpmon.php:141
 #: include/actions.inc.php:64 include/audit.inc.php:27
-#: include/blocks.inc.php:588 include/blocks.inc.php:635
-#: include/blocks.inc.php:886 include/blocks.inc.php:896
-#: include/blocks.inc.php:1414 include/classes/screens/CScreenEvents.php:46
+#: include/blocks.inc.php:590 include/blocks.inc.php:637
+#: include/blocks.inc.php:888 include/blocks.inc.php:898
+#: include/blocks.inc.php:1416 include/classes/screens/CScreenEvents.php:46
 #: include/classes/screens/CScreenHostgroupTriggers.php:121
 #: include/classes/screens/CScreenHostTriggers.php:63
 #: include/classes/screens/CScreenHostTriggers.php:123
@@ -5197,8 +5197,8 @@ msgid "Host deleted"
 msgstr "Host dihapus"
 
 #: include/actions.inc.php:60 include/audit.inc.php:35
-#: include/blocks.inc.php:185 include/blocks.inc.php:372
-#: include/blocks.inc.php:1021 include/forms.inc.php:486
+#: include/blocks.inc.php:185 include/blocks.inc.php:374
+#: include/blocks.inc.php:1023 include/forms.inc.php:486
 #: include/maps.inc.php:25 include/reports.inc.php:111
 #: include/views/administration.script.list.php:42
 #: include/views/configuration.hostgroups.edit.php:63
@@ -5381,7 +5381,7 @@ msgstr "Tiap jam"
 msgid "Hours"
 msgstr "Jam"
 
-#: adm.gui.php:93 adm.housekeeper.php:72 adm.iconmapping.php:110
+#: adm.gui.php:96 adm.housekeeper.php:72 adm.iconmapping.php:110
 #: adm.images.php:132 adm.macros.php:159 adm.other.php:105 adm.regexps.php:209
 #: adm.triggerdisplayoptions.php:74 adm.triggerseverities.php:80
 #: adm.valuemapping.php:126 adm.workingtime.php:62
@@ -5609,7 +5609,7 @@ msgstr "Peta ikon diperbarui"
 msgid "Icon map with iconmapid \"%s\" does not exist."
 msgstr "Peta ikon dengan iconmapid \"%s\" tidak ada."
 
-#: adm.gui.php:95 adm.housekeeper.php:74 adm.iconmapping.php:112
+#: adm.gui.php:98 adm.housekeeper.php:74 adm.iconmapping.php:112
 #: adm.iconmapping.php:168 adm.images.php:134 adm.macros.php:161
 #: adm.other.php:107 adm.regexps.php:211 adm.triggerdisplayoptions.php:76
 #: adm.triggerseverities.php:82 adm.valuemapping.php:128
@@ -5630,7 +5630,7 @@ msgstr "Peta ikon tidak dinon-aktifkan"
 msgid "Icons"
 msgstr "Ikon"
 
-#: include/config.inc.php:258
+#: include/config.inc.php:263
 msgid "If you think this message is wrong, please consult your administrators about getting the necessary permissions."
 msgstr "Jika menurut Anda pesan ini salah, mohon hubungi administrator Anda untuk mendapatkan izin yang diperlukan."
 
@@ -5669,7 +5669,7 @@ msgstr ""
 msgid "Image updated"
 msgstr "Gambar diperbarui"
 
-#: adm.gui.php:94 adm.housekeeper.php:73 adm.iconmapping.php:111
+#: adm.gui.php:97 adm.housekeeper.php:73 adm.iconmapping.php:111
 #: adm.images.php:133 adm.macros.php:160 adm.other.php:106 adm.regexps.php:210
 #: adm.triggerdisplayoptions.php:75 adm.triggerseverities.php:81
 #: adm.valuemapping.php:127 adm.workingtime.php:63
@@ -6345,7 +6345,7 @@ msgstr "Kesalahan item y min untuk grafik \"%1$s\"."
 msgid "Indonesian (id_ID)"
 msgstr "Indonesian (id_ID)"
 
-#: include/blocks.inc.php:900 include/blocks.inc.php:1417
+#: include/blocks.inc.php:902 include/blocks.inc.php:1419
 #: include/classes/class.cformlist.php:65 tr_status.php:286
 msgid "Info"
 msgstr "Info"
@@ -6505,8 +6505,8 @@ msgstr "Mode inventaris"
 msgid "Is online?"
 msgstr "Apakah online?"
 
-#: include/blocks.inc.php:888 include/blocks.inc.php:897
-#: include/blocks.inc.php:1415
+#: include/blocks.inc.php:890 include/blocks.inc.php:899
+#: include/blocks.inc.php:1417
 msgid "Issue"
 msgstr "Isu"
 
@@ -6514,7 +6514,7 @@ msgstr "Isu"
 msgid "It is not possible to filter by user password."
 msgstr "Tidak memungkinkan untuk menyaring berdasarkan password user."
 
-#: include/page_header.php:262
+#: include/page_header.php:263
 msgid "It is not possible to logout from HTTP authentication."
 msgstr "Tidak memungkinkan untuk logout melalui otentikasi HTTP."
 
@@ -6926,7 +6926,7 @@ msgstr "365 hari terakhir"
 msgid "Last 7 days"
 msgstr "7 hari terakhir"
 
-#: include/blocks.inc.php:890 include/blocks.inc.php:898 tr_status.php:287
+#: include/blocks.inc.php:892 include/blocks.inc.php:900 tr_status.php:287
 msgid "Last change"
 msgstr "Perubahan terakhir"
 
@@ -7157,8 +7157,8 @@ msgstr "Log jebakan SNMP yang tidak sama"
 msgid "Logged in as"
 msgstr "Masuk sebagai"
 
-#: auditlogs.php:143 include/config.inc.php:261 include/menu.inc.php:285
-#: include/page_header.php:270
+#: auditlogs.php:143 include/config.inc.php:266 include/menu.inc.php:285
+#: include/page_header.php:271
 #: include/views/administration.auditlogs.list.php:43
 #: include/views/administration.authentication.edit.php:64
 #: include/views/administration.users.list.php:60
@@ -7183,7 +7183,7 @@ msgstr ""
 msgid "Login name or password is incorrect."
 msgstr "Login nama atau passwordk salah."
 
-#: auditlogs.php:146 include/page_header.php:261 include/page_header.php:265
+#: auditlogs.php:146 include/page_header.php:262 include/page_header.php:266
 #: include/views/administration.auditlogs.list.php:44
 msgid "Logout"
 msgstr "Keluar"
@@ -7276,7 +7276,7 @@ msgstr "Makro dengan globalmacroid \"%1$s\" tidak ada."
 msgid "Macro with hostmacroid \"%1$s\" does not exist."
 msgstr "Makro dengan hostmacroid \"%1$s\" tidak ada."
 
-#: adm.gui.php:97 adm.housekeeper.php:76 adm.iconmapping.php:114
+#: adm.gui.php:100 adm.housekeeper.php:76 adm.iconmapping.php:114
 #: adm.images.php:136 adm.macros.php:163 adm.other.php:109 adm.regexps.php:213
 #: adm.triggerdisplayoptions.php:78 adm.triggerseverities.php:84
 #: adm.valuemapping.php:130 adm.workingtime.php:66
@@ -7334,11 +7334,11 @@ msgstr "Tipe pemeliharaan"
 msgid "Maintenance updated"
 msgstr "Pemeliharaan diperbarui"
 
-#: include/blocks.inc.php:928 tr_status.php:623
+#: include/blocks.inc.php:930 tr_status.php:623
 msgid "Maintenance with data collection"
 msgstr "Pemeliharaan dengan koleksi data"
 
-#: include/blocks.inc.php:927 tr_status.php:622
+#: include/blocks.inc.php:929 tr_status.php:622
 msgid "Maintenance without data collection"
 msgstr "Pemeliharaan tanpa koleksi data"
 
@@ -7360,7 +7360,7 @@ msgstr "Manual"
 msgid "Manual Logout"
 msgstr "Manual Logout"
 
-#: include/audit.inc.php:40 include/blocks.inc.php:1261
+#: include/audit.inc.php:40 include/blocks.inc.php:1263
 #: include/maps.inc.php:27 include/screens.inc.php:34
 #: include/views/configuration.sysmap.edit.php:201
 #: include/views/js/configuration.sysmaps.js.php:16
@@ -7420,7 +7420,7 @@ msgstr "Nilai pemetaan \"%1$s\" tidak unik."
 msgid "Mappings"
 msgstr "Pemetaan"
 
-#: dashboard.php:274 include/blocks.inc.php:1294 include/menu.inc.php:72
+#: dashboard.php:274 include/blocks.inc.php:1296 include/menu.inc.php:72
 #: include/menu.inc.php:206 include/views/conf.import.php:36 popup.php:97
 #: sysmaps.php:251
 msgid "Maps"
@@ -7474,21 +7474,21 @@ msgstr "Node master \"ID\" harus kosong."
 msgid "Master node already exists."
 msgstr "Node master sudah ada."
 
-#: adm.gui.php:38 include/views/administration.general.gui.edit.php:39
+#: adm.gui.php:41 include/views/administration.general.gui.edit.php:39
 msgid "Max count of elements to show inside table cell"
 msgstr "Hitung max elemen untuk menampilkan didalam sel tabel"
 
-#: adm.gui.php:76
+#: adm.gui.php:79
 #, php-format
 msgid "Max count of elements to show inside table cell \"%1$s\"."
 msgstr "Hitung max elemen untuk menampilkan didalam sel tabel \"%1$s\"."
 
-#: adm.gui.php:35 include/views/administration.general.gui.edit.php:45
+#: adm.gui.php:38 include/views/administration.general.gui.edit.php:45
 msgid "Max count of events per trigger to show"
 msgstr "Hitung max dari event per trigger untuk ditampilkan"
 
 #: include/classes/class.cwidget.php:124 include/classes/class.cwidget.php:127
-#: include/config.inc.php:346
+#: include/config.inc.php:351
 msgid "Maximize"
 msgstr "Perbesar"
 
@@ -7657,7 +7657,7 @@ msgid "Min severity"
 msgstr "Keparahan minimum"
 
 #: include/classes/class.cwidget.php:124 include/classes/class.cwidget.php:127
-#: include/config.inc.php:346
+#: include/config.inc.php:351
 msgid "Minimize"
 msgstr "Perkecil"
 
@@ -7730,7 +7730,7 @@ msgstr "Hilangnya item \"%1$s\" untuk host \"%2$s\"."
 msgid "Missing items for graph \"%1$s\"."
 msgstr "Hilangnya item untuk grafik \"%1$s\"."
 
-#: include/graphs.inc.php:321
+#: include/graphs.inc.php:326
 #, php-format
 msgid "Missing key \"%1$s\" for host \"%2$s\"."
 msgstr "Hilangnya kunci \"%1$s\" untuk host \"%2$s\"."
@@ -7900,7 +7900,7 @@ msgstr "Otentikasi NTLM"
 #: popup.php:1813 popup_right.php:75 popup_usrgrp.php:92 queue.php:250
 #: report2.php:236 screenconf.php:50 services.php:42 slideconf.php:38
 #: sysmaps.php:48 sysmaps.php:257 trigger_prototypes.php:41 triggers.php:41
-#: tr_status.php:293 users.php:44
+#: tr_status.php:293 users.php:46
 msgid "Name"
 msgstr "Nama"
 
@@ -8000,7 +8000,7 @@ msgstr "Lanjut"
 msgid "Next check"
 msgstr "Pemeriksaan selanjutnya"
 
-#: events.php:760 include/config.inc.php:563 include/events.inc.php:301
+#: events.php:760 include/config.inc.php:568 include/events.inc.php:301
 #: include/events.inc.php:319 include/forms.inc.php:1922
 #: include/triggers.inc.php:1608
 #: include/views/administration.users.list.php:75
@@ -8173,7 +8173,7 @@ msgstr "Tidak ada interval fleksibel yang didefinisikan."
 msgid "No graph ID provided for screen element."
 msgstr "Tidak ada ID grafik yang disediakan untuk element layar."
 
-#: include/graphs.inc.php:289
+#: include/graphs.inc.php:294
 #, php-format
 msgid "No graph item with graphid \"%s\"."
 msgstr "Tidak ada item grafik dengan graphid \"%s\"."
@@ -8440,7 +8440,7 @@ msgstr "Tidak ada izin untuk akses sistem."
 #: api/classes/CTrigger.php:1357 api/classes/CTriggerPrototype.php:822
 #: api/classes/CTriggerPrototype.php:920 api/classes/CUserMacro.php:824
 #: api/classes/CUserMacro.php:933 api/classes/CWebCheck.php:444
-#: include/config.inc.php:244 report6.php:159
+#: include/config.inc.php:249 report6.php:159
 msgid "No permissions to referred object or it does not exist!"
 msgstr "Tidak ada izin untuk objek yang dirujuk atau objek tidak ada!"
 
@@ -8506,7 +8506,7 @@ msgid "No scripts defined."
 msgstr "Tidak ada skrip yang didefinisikan."
 
 #: include/views/configuration.slideconf.list.php:37
-#: include/views/monitoring.slides.php:38 slides.php:145
+#: include/views/monitoring.slides.php:38 slides.php:146
 msgid "No slide shows defined."
 msgstr "Tidak ada slide show yang didefinisikan."
 
@@ -8582,10 +8582,10 @@ msgstr "Tidak ada skenario web yang didefinisikan."
 
 #: events.php:559 events.php:572 hostinventories.php:156 httpmon.php:140
 #: include/actions.inc.php:68 include/audit.inc.php:42
-#: include/blocks.inc.php:184 include/blocks.inc.php:371
-#: include/blocks.inc.php:895 include/blocks.inc.php:1020
-#: include/blocks.inc.php:1111 include/blocks.inc.php:1413
-#: include/classes/screens/CScreenEvents.php:45 include/page_header.php:354
+#: include/blocks.inc.php:184 include/blocks.inc.php:373
+#: include/blocks.inc.php:897 include/blocks.inc.php:1022
+#: include/blocks.inc.php:1113 include/blocks.inc.php:1415
+#: include/classes/screens/CScreenEvents.php:45 include/page_header.php:355
 #: include/triggers.inc.php:1582 include/views/administration.node.edit.php:83
 #: include/views/configuration.httpconf.list.php:66
 #: include/views/monitoring.discovery.php:42 latest.php:190 popup.php:491
@@ -8725,11 +8725,11 @@ msgstr "November"
 msgid "Now"
 msgstr "Sekarang"
 
-#: include/blocks.inc.php:725 include/blocks.inc.php:727
+#: include/blocks.inc.php:727 include/blocks.inc.php:729
 msgid "Number of hosts (monitored/not monitored/templates)"
 msgstr "Jumlah host (terpantau/tidak terpantau/template)"
 
-#: include/blocks.inc.php:734
+#: include/blocks.inc.php:736
 msgid "Number of items (monitored/disabled/not supported)"
 msgstr "Jumlah item (terpantau/non-aktif/tidak didukung)"
 
@@ -8773,11 +8773,11 @@ msgstr ""
 msgid "Number of successfully retrieved values V (which fulfill operator O) for period T is NOT N"
 msgstr ""
 
-#: include/blocks.inc.php:743
+#: include/blocks.inc.php:745
 msgid "Number of triggers (enabled/disabled)[problem/unknown/ok]"
 msgstr "Jumlah trigger (aktif/non-aktif)[masalah/tidak diketahui/baik]"
 
-#: include/blocks.inc.php:754
+#: include/blocks.inc.php:756
 msgid "Number of users (online)"
 msgstr "Jumlah user (online)"
 
@@ -8868,7 +8868,7 @@ msgstr "Oktober"
 msgid "Off"
 msgstr "Mati"
 
-#: include/actions.inc.php:958 include/blocks.inc.php:1022
+#: include/actions.inc.php:958 include/blocks.inc.php:1024
 #: include/classes/class.ctriggersinfo.php:134
 #: include/views/administration.users.list.php:86 report2.php:238
 #: report3.php:85
@@ -8961,7 +8961,7 @@ msgstr "Hanya Zabbix Admin yang dapat menghapus media user."
 msgid "Only characters are allowed."
 msgstr "Hanya karakter yang diperbolehkan."
 
-#: include/blocks.inc.php:735
+#: include/blocks.inc.php:737
 msgid "Only items assigned to enabled hosts are counted"
 msgstr "Hanya item yang ditugaskan ke host aktif yang dihitung"
 
@@ -8982,7 +8982,7 @@ msgstr "Hanya super admin yang dapat menghapus proxy."
 msgid "Only the last 20%% of the indicator is displayed."
 msgstr "Hanya sekitar 20%% indikator yang ditampilkan."
 
-#: include/blocks.inc.php:744
+#: include/blocks.inc.php:746
 msgid "Only triggers assigned to enabled hosts and depending on enabled items are counted"
 msgstr "Hanya trigger yang ditugaskan ke host aktif dan tergantung pada item aktif yang dihitung."
 
@@ -9080,7 +9080,7 @@ msgstr "Original"
 msgid "Original blue"
 msgstr "Original blue"
 
-#: adm.gui.php:102 adm.housekeeper.php:81 adm.iconmapping.php:119
+#: adm.gui.php:105 adm.housekeeper.php:81 adm.iconmapping.php:119
 #: adm.images.php:141 adm.macros.php:168 adm.other.php:114 adm.regexps.php:218
 #: adm.triggerdisplayoptions.php:83 adm.triggerseverities.php:89
 #: adm.valuemapping.php:135 adm.workingtime.php:71
@@ -9310,7 +9310,7 @@ msgstr "Palet"
 msgid "Palette #%1$s"
 msgstr "Palet #%1$s"
 
-#: include/blocks.inc.php:712
+#: include/blocks.inc.php:714
 #: include/views/configuration.screen.constructor.edit.php:191
 #: include/views/configuration.screen.constructor.edit.php:219
 #: include/views/configuration.screen.constructor.edit.php:273
@@ -9400,7 +9400,7 @@ msgstr "Password (sekali lagi)"
 msgid "Password required for media type."
 msgstr "Password yang dibutuhkan untuk tipe media."
 
-#: profile.php:116 users.php:157
+#: profile.php:119 users.php:159
 msgid "Password should not be empty"
 msgstr "Password tidak seharusnya kosong"
 
@@ -9599,7 +9599,7 @@ msgstr "Telepon B POC utama"
 msgid "Primary POC screen name"
 msgstr "Nama layar POC utama"
 
-#: include/page_header.php:240
+#: include/page_header.php:241
 msgid "Print"
 msgstr "Cetak"
 
@@ -9647,7 +9647,7 @@ msgstr "Masalah, jika setidaknya satu turunan memiliki masalah"
 msgid "Problems"
 msgstr "Masalah"
 
-#: include/page_header.php:246
+#: include/page_header.php:247
 msgid "Profile"
 msgstr "Profil"
 
@@ -9792,7 +9792,7 @@ msgstr "Pesan pemulihan"
 msgid "Recovery subject"
 msgstr "Judul pemulihan"
 
-#: include/views/administration.users.edit.php:121 profile.php:49 users.php:62
+#: include/views/administration.users.edit.php:121 profile.php:52 users.php:64
 msgid "Refresh (in seconds)"
 msgstr "Segarkan (dalam detik)"
 
@@ -9860,7 +9860,7 @@ msgstr "Ekspresi reguler tidak ada."
 msgid "Regular expression updated"
 msgstr "Ekspresi reguler diperbarui"
 
-#: adm.gui.php:96 adm.housekeeper.php:75 adm.iconmapping.php:113
+#: adm.gui.php:99 adm.housekeeper.php:75 adm.iconmapping.php:113
 #: adm.images.php:135 adm.macros.php:162 adm.other.php:108 adm.regexps.php:212
 #: adm.triggerdisplayoptions.php:77 adm.triggerseverities.php:83
 #: adm.valuemapping.php:129 adm.workingtime.php:65
@@ -9876,10 +9876,10 @@ msgstr "Ingatkan saya selama 30 hari"
 msgid "Remote command"
 msgstr "Perintah jarak jauh"
 
-#: include/blocks.inc.php:1154 include/blocks.inc.php:1240
-#: include/blocks.inc.php:1249 include/blocks.inc.php:1266
-#: include/blocks.inc.php:1294 include/blocks.inc.php:1317
-#: include/blocks.inc.php:1378 include/blocks.inc.php:1387
+#: include/blocks.inc.php:1156 include/blocks.inc.php:1242
+#: include/blocks.inc.php:1251 include/blocks.inc.php:1268
+#: include/blocks.inc.php:1296 include/blocks.inc.php:1319
+#: include/blocks.inc.php:1380 include/blocks.inc.php:1389
 #: include/views/administration.general.iconmap.edit.php:69
 #: include/views/administration.general.iconmap.edit.php:106
 #: include/views/common.macros.php:38
@@ -10010,7 +10010,7 @@ msgstr "Dibutuhkan perizinan host"
 msgid "Required performance (vps)"
 msgstr "Dibutuhkan performa (vps)"
 
-#: include/blocks.inc.php:755
+#: include/blocks.inc.php:757
 msgid "Required server performance, new values per second"
 msgstr "Dibutuhkan performa server, nilai baru per detik"
 
@@ -10131,6 +10131,10 @@ msgstr "Coba lagi"
 msgid "Right"
 msgstr "Kanan"
 
+#: include/locales.inc.php:66
+msgid "Romanian (ro_RO)"
+msgstr ""
+
 #: include/views/configuration.screen.constructor.edit.php:606
 #: screenedit.php:46
 msgid "Row span"
@@ -10145,7 +10149,7 @@ msgstr ""
 msgid "Rows"
 msgstr "Baris"
 
-#: include/views/administration.users.edit.php:122 profile.php:50 users.php:63
+#: include/views/administration.users.edit.php:122 profile.php:53 users.php:65
 msgid "Rows per page"
 msgstr "Baris per halaman"
 
@@ -10193,7 +10197,7 @@ msgstr "Jalankan perintah jarak jauh pada grup host"
 msgid "Run remote commands on hosts"
 msgstr "Jalankan perintah jarak jauh pada host"
 
-#: include/locales.inc.php:66
+#: include/locales.inc.php:67
 msgid "Russian (ru_RU)"
 msgstr "Russian (ru_RU)"
 
@@ -10498,7 +10502,7 @@ msgstr "Skenario"
 msgid "Schedule"
 msgstr "Jadwal"
 
-#: include/audit.inc.php:41 include/blocks.inc.php:1306
+#: include/audit.inc.php:41 include/blocks.inc.php:1308
 #: include/screens.inc.php:36 include/views/configuration.screen.edit.php:45
 #: include/views/configuration.screen.list.php:51
 #: include/views/configuration.slideconf.edit.php:48
@@ -10568,7 +10572,7 @@ msgstr "Layar dengan ID \"%s\" tidak ada."
 msgid "Screen with name \"%s\" does not exist."
 msgstr "Layar dengan nama \"%s\" tidak ada."
 
-#: dashboard.php:267 include/blocks.inc.php:1378 include/html.inc.php:477
+#: dashboard.php:267 include/blocks.inc.php:1380 include/html.inc.php:477
 #: include/html.inc.php:481 include/menu.inc.php:67 include/menu.inc.php:197
 #: include/views/configuration.screen.list.php:38
 #: include/views/configuration.template.edit.php:386
@@ -10639,7 +10643,7 @@ msgstr "Cari atribut"
 msgid "Search pattern is empty"
 msgstr "Pola pencarian kosong"
 
-#: adm.gui.php:39 include/views/administration.general.gui.edit.php:37
+#: adm.gui.php:42 include/views/administration.general.gui.edit.php:37
 msgid "Search/Filter elements limit"
 msgstr "Cari/Filter batas elemen"
 
@@ -10683,7 +10687,7 @@ msgid "Seconds"
 msgstr "Detik"
 
 #: events.php:358 include/forms.inc.php:489 include/forms.inc.php:507
-#: include/forms.inc.php:529 include/page_header.php:358
+#: include/forms.inc.php:529 include/page_header.php:359
 #: include/reports.inc.php:694
 #: include/views/administration.auditacts.list.php:45
 #: include/views/administration.auditlogs.list.php:59
@@ -10732,7 +10736,7 @@ msgstr "Detik"
 msgid "Select"
 msgstr "Pilih"
 
-#: include/page_header.php:324
+#: include/page_header.php:325
 msgid "Select Nodes"
 msgstr "Pilih Node"
 
@@ -10949,16 +10953,16 @@ msgstr "Tampilkan skenario non-aktif"
 msgid "Show disabled triggers"
 msgstr "Tampilkan trigger non-aktif"
 
-#: adm.gui.php:73
+#: adm.gui.php:76
 #, php-format
 msgid "Show events max \"%1$s\"."
 msgstr "Tampilkan event max \"%1$s\"."
 
-#: adm.gui.php:34 include/views/administration.general.gui.edit.php:43
+#: adm.gui.php:37 include/views/administration.general.gui.edit.php:43
 msgid "Show events not older than (in days)"
 msgstr "Tampilkan event yang tidak lebih lama dari (dalam hari)"
 
-#: adm.gui.php:72
+#: adm.gui.php:75
 #, php-format
 msgid "Show events not older than (in days) \"%1$s\"."
 msgstr "Tampilkan event yang tidak lebih lama dari (dalam hari) \"%1$s\"."
@@ -11045,11 +11049,11 @@ msgstr "Sederhana"
 msgid "Simple check"
 msgstr "Pemeriksaan sederhana"
 
-#: include/blocks.inc.php:1147 include/screens.inc.php:38
+#: include/blocks.inc.php:1149 include/screens.inc.php:38
 msgid "Simple graph"
 msgstr "Grafik sederhana"
 
-#: include/blocks.inc.php:1249 jsLoader.php:107
+#: include/blocks.inc.php:1251 jsLoader.php:107
 msgid "Simple graphs"
 msgstr "Grafik sederhana"
 
@@ -11089,7 +11093,7 @@ msgstr "Lokasi rak situs"
 msgid "Site state / province"
 msgstr "Provinsi situs"
 
-#: include/graphs.inc.php:352
+#: include/graphs.inc.php:357
 #, php-format
 msgid "Skipped copying of graph \"%1$s\" to host \"%2$s\"."
 msgstr "Abaikan menyalin grafik \"%1$s\" ke host \"%2$s\"."
@@ -11098,7 +11102,7 @@ msgstr "Abaikan menyalin grafik \"%1$s\" ke host \"%2$s\"."
 msgid "Slide"
 msgstr "Slide"
 
-#: include/audit.inc.php:45 include/blocks.inc.php:1312
+#: include/audit.inc.php:45 include/blocks.inc.php:1314
 #: include/views/monitoring.slides.php:69
 msgid "Slide show"
 msgstr "Slide show"
@@ -11130,12 +11134,12 @@ msgstr "Slide show diperbarui"
 msgid "Slide shows"
 msgstr "Slide show"
 
-#: include/blocks.inc.php:1387
+#: include/blocks.inc.php:1389
 #: include/views/configuration.slideconf.edit.php:96
 msgid "Slides"
 msgstr "Slide"
 
-#: include/locales.inc.php:67
+#: include/locales.inc.php:68
 msgid "Slovak (sk_SK)"
 msgstr "Slovak (sk_SK)"
 
@@ -11202,7 +11206,7 @@ msgstr "Urutan berdasarkan field \"%s\" tidak boleh."
 msgid "Source"
 msgstr "Sumber"
 
-#: include/locales.inc.php:68
+#: include/locales.inc.php:69
 msgid "Spanish (es_ES)"
 msgstr "Spanish (es_ES)"
 
@@ -11416,11 +11420,11 @@ msgid "Support"
 msgstr "Dukungan"
 
 #: include/views/administration.users.edit.php:51
-#: include/views/administration.users.list.php:56 popup.php:898 users.php:45
+#: include/views/administration.users.list.php:56 popup.php:898 users.php:47
 msgid "Surname"
 msgstr "Nama keluarga"
 
-#: include/locales.inc.php:69
+#: include/locales.inc.php:70
 msgid "Swedish (sv_SE)"
 msgstr "Swedish (sv_SE)"
 
@@ -11827,7 +11831,7 @@ msgstr "Terlalu banyak interface yang disediakan untuk proxy \"%s\"."
 msgid "Top"
 msgstr "Atas"
 
-#: include/blocks.inc.php:375 include/classes/class.chostsinfo.php:128
+#: include/blocks.inc.php:377 include/classes/class.chostsinfo.php:128
 #: queue.php:289
 msgid "Total"
 msgstr "Total"
@@ -11920,7 +11924,7 @@ msgstr "Trigger komentar"
 msgid "Trigger deleted"
 msgstr "Trigger dihapus"
 
-#: adm.gui.php:101 adm.housekeeper.php:80 adm.iconmapping.php:118
+#: adm.gui.php:104 adm.housekeeper.php:80 adm.iconmapping.php:118
 #: adm.images.php:140 adm.macros.php:167 adm.other.php:113 adm.regexps.php:217
 #: adm.triggerdisplayoptions.php:82 adm.triggerseverities.php:88
 #: adm.valuemapping.php:134 adm.workingtime.php:70
@@ -11977,7 +11981,7 @@ msgstr "Prototipe trigger"
 msgid "Trigger prototypes of"
 msgstr "Prototipe trigger dari"
 
-#: adm.gui.php:100 adm.housekeeper.php:79 adm.iconmapping.php:117
+#: adm.gui.php:103 adm.housekeeper.php:79 adm.iconmapping.php:117
 #: adm.images.php:139 adm.macros.php:166 adm.other.php:112 adm.regexps.php:216
 #: adm.triggerdisplayoptions.php:81 adm.triggerseverities.php:87
 #: adm.valuemapping.php:133 adm.workingtime.php:69
@@ -12071,7 +12075,7 @@ msgstr "Sel"
 msgid "Tuesday"
 msgstr "Selasa"
 
-#: include/locales.inc.php:70
+#: include/locales.inc.php:71
 msgid "Turkish (tr_TR)"
 msgstr ""
 
@@ -12204,11 +12208,11 @@ msgstr "USA (160 karakter)"
 msgid "USER PROFILE"
 msgstr "PROFIL USER"
 
-#: include/config.inc.php:755
+#: include/config.inc.php:760
 msgid "UTF-8"
 msgstr "UTF-8"
 
-#: include/locales.inc.php:71
+#: include/locales.inc.php:72
 msgid "Ukrainian (uk_UA)"
 msgstr "Ukrainian (uk_UA)"
 
@@ -12261,7 +12265,7 @@ msgstr "Unit"
 #: include/actions.inc.php:190 include/actions.inc.php:198
 #: include/actions.inc.php:212 include/actions.inc.php:223
 #: include/actions.inc.php:251 include/actions.inc.php:570
-#: include/blocks.inc.php:1024 include/classes/class.chostsinfo.php:127
+#: include/blocks.inc.php:1026 include/classes/class.chostsinfo.php:127
 #: include/discovery.inc.php:128 include/discovery.inc.php:162
 #: include/events.inc.php:29 include/graphs.inc.php:37
 #: include/graphs.inc.php:77 include/hosts.inc.php:53 include/hosts.inc.php:80
@@ -12389,7 +12393,7 @@ msgstr "Tidak mendukung import ekstensi file \"%1$s\"."
 msgid "Unsupported import format \"%1$s\"."
 msgstr "Tidak mendukung format import \"%1$s\"."
 
-#: include/blocks.inc.php:1113
+#: include/blocks.inc.php:1115
 msgctxt "discovery results in dashboard"
 msgid "Up"
 msgstr "Nyala"
@@ -12431,9 +12435,9 @@ msgstr "Diperbarui"
 msgid "Updated status of host"
 msgstr "Status host diperbarui"
 
-#: include/blocks.inc.php:363 include/blocks.inc.php:702
-#: include/blocks.inc.php:770 include/blocks.inc.php:980
-#: include/blocks.inc.php:1070 include/blocks.inc.php:1128
+#: include/blocks.inc.php:365 include/blocks.inc.php:704
+#: include/blocks.inc.php:772 include/blocks.inc.php:982
+#: include/blocks.inc.php:1072 include/blocks.inc.php:1130
 #: include/classes/screens/CScreenSystemStatus.php:47
 #, php-format
 msgid "Updated: %s"
@@ -12521,7 +12525,7 @@ msgstr "User"
 msgid "User \"%s\" cannot be without user group."
 msgstr "User \"%s\" tidak bisa tanpa grup user."
 
-#: users.php:196
+#: users.php:198
 msgid "User added"
 msgstr "User ditambah"
 
@@ -12546,7 +12550,7 @@ msgstr "User tidak dapat merubah status untuk dirinya sendiri"
 msgid "User cannot change status of himself."
 msgstr "User tidak dapat merubah status untuk dirinya sendiri."
 
-#: users.php:232 users.php:318
+#: users.php:234 users.php:320
 msgid "User deleted"
 msgstr "User dihapus"
 
@@ -12626,7 +12630,7 @@ msgstr "Profil user"
 msgid "User type"
 msgstr "Tipe user"
 
-#: profile.php:173 users.php:189 users.php:251 users.php:271
+#: profile.php:176 users.php:191 users.php:253 users.php:273
 msgid "User updated"
 msgstr "User diperbarui"
 
@@ -12659,11 +12663,11 @@ msgstr "User (online)"
 msgid "Users status updated"
 msgstr "Status user diperbarui"
 
-#: users.php:294
+#: users.php:296
 msgid "Users unblocked"
 msgstr "User dibuka blokir"
 
-#: include/blocks.inc.php:713 include/classes/class.cpie.php:309
+#: include/blocks.inc.php:715 include/classes/class.cpie.php:309
 #: include/classes/screens/CScreenEvents.php:48
 #: include/classes/screens/CScreenHistory.php:168
 #: include/classes/screens/CScreenHistory.php:266 include/reports.inc.php:383
@@ -12739,7 +12743,7 @@ msgstr "Peta nilai diperbarui"
 msgid "Value map with valuemapid \"%1$s\" does not exist."
 msgstr "Peta nilai dengan valuemapid \"%1$s\" tidak ada."
 
-#: adm.gui.php:98 adm.housekeeper.php:77 adm.iconmapping.php:115
+#: adm.gui.php:101 adm.housekeeper.php:77 adm.iconmapping.php:115
 #: adm.images.php:137 adm.macros.php:164 adm.other.php:110 adm.regexps.php:214
 #: adm.triggerdisplayoptions.php:79 adm.triggerseverities.php:85
 #: adm.valuemapping.php:131 adm.valuemapping.php:187 adm.workingtime.php:67
@@ -12874,13 +12878,13 @@ msgstr "Peringatan. Nilai untuk field \"%1$s\" tidak benar: tidak boleh kosong."
 msgid "Warning. Incorrect value for field \"%1$s\": must be between %2$s and %3$s."
 msgstr "Peringatan. Nilai untuk field \"%1$s\" tidak benar: harus antara %2$s dan %3$s."
 
-#: include/classes/screens/CScreenBase.php:339 include/graphs.inc.php:401
+#: include/classes/screens/CScreenBase.php:339 include/graphs.inc.php:406
 #, php-format
 msgid "Warning. Maximum time period to display is %1$s day."
 msgid_plural "Warning. Maximum time period to display is %1$s days."
 msgstr[0] "Peringatan. Maksimum periode waktu yang ditampilkan adalah %1$s hari."
 
-#: include/classes/screens/CScreenBase.php:334 include/graphs.inc.php:394
+#: include/classes/screens/CScreenBase.php:334 include/graphs.inc.php:399
 #, php-format
 msgid "Warning. Minimum time period to display is %1$s hour."
 msgid_plural "Warning. Minimum time period to display is %1$s hours."
@@ -12957,7 +12961,7 @@ msgstr "Dengan koleksi data"
 msgid "With last event unacknowledged"
 msgstr "Dengan event pemberitahuan terakhir"
 
-#: include/blocks.inc.php:374
+#: include/blocks.inc.php:376
 msgid "With problems"
 msgstr "Dengan masalah"
 
@@ -12970,7 +12974,7 @@ msgstr "Dengan trigger"
 msgid "With unacknowledged events"
 msgstr "Dengan event pemberitahuan"
 
-#: include/blocks.inc.php:373
+#: include/blocks.inc.php:375
 msgid "Without problems"
 msgstr "Tanpa masalah"
 
@@ -12982,7 +12986,7 @@ msgstr "Tanpa trigger"
 msgid "Wizard"
 msgstr "Pemandu"
 
-#: adm.gui.php:99 adm.housekeeper.php:78 adm.iconmapping.php:116
+#: adm.gui.php:102 adm.housekeeper.php:78 adm.iconmapping.php:116
 #: adm.images.php:138 adm.macros.php:165 adm.other.php:111 adm.regexps.php:215
 #: adm.triggerdisplayoptions.php:80 adm.triggerseverities.php:86
 #: adm.valuemapping.php:132 adm.workingtime.php:68
@@ -13178,8 +13182,8 @@ msgstr "Tahun"
 msgid "Yearly"
 msgstr "Tahunan"
 
-#: events.php:760 include/blocks.inc.php:722
-#: include/classes/class.cserverinfo.php:35 include/config.inc.php:563
+#: events.php:760 include/blocks.inc.php:724
+#: include/classes/class.cserverinfo.php:35 include/config.inc.php:568
 #: include/events.inc.php:304 include/events.inc.php:322
 #: include/forms.inc.php:1922 include/triggers.inc.php:1608
 #: include/views/administration.users.list.php:74
@@ -13199,7 +13203,7 @@ msgstr "Anda tidak dapat memilih beberapa bahasa, karena locale untuk mereka tid
 msgid "You are not allowed to alter privileges for user \"%s\"."
 msgstr "Anda tidak diizinkan mengubah hak pengguna untuk user \"%s\"."
 
-#: include/config.inc.php:251
+#: include/config.inc.php:256
 msgid "You are not logged in."
 msgstr "Anda belum login."
 
@@ -13207,7 +13211,7 @@ msgstr "Anda belum login."
 msgid "You can not switch hosts for current selection."
 msgstr "Anda tidak dapat mengganti host pada yang terpilih."
 
-#: include/config.inc.php:252
+#: include/config.inc.php:257
 msgid "You cannot view this URL as a"
 msgstr "Anda tidak dapat menampilkan URL ini sebagai"
 
@@ -13266,7 +13270,7 @@ msgstr "Anda tidak memiliki hak untuk perbarui user lain."
 msgid "You do not have permissions to update user or user does not exist."
 msgstr "Anda tidak memiliki hak untuk perbarui user atau user tidak ada."
 
-#: include/config.inc.php:256
+#: include/config.inc.php:261
 msgid "You must login to view this page."
 msgstr "Anda harus login untuk menampilkan halaman ini."
 
@@ -13356,11 +13360,11 @@ msgstr ""
 "1. IP/DNS server salah pada \"zabbix.conf.php\";\n"
 "2. Konfigurasi jaringan salah.\n"
 
-#: include/blocks.inc.php:723
+#: include/blocks.inc.php:725
 msgid "Zabbix server IP or port is not set!"
 msgstr "IP server Zabbix atau port belum ditentukan!"
 
-#: adm.gui.php:40
+#: adm.gui.php:43
 msgid "Zabbix server activity check interval"
 msgstr "Pemeriksaan interval aktifitas server Zabbix"
 
@@ -13372,11 +13376,11 @@ msgstr "Info server Zabbix"
 msgid "Zabbix server is not running: the information displayed may not be current."
 msgstr "Server Zabbix tidak berjalan: Informasi yang ditampilkan mungkin tidak saat ini."
 
-#: include/blocks.inc.php:721
+#: include/blocks.inc.php:723
 msgid "Zabbix server is running"
 msgstr "Server Zabbix berjalan"
 
-#: adm.gui.php:77
+#: adm.gui.php:80
 #, php-format
 msgid "Zabbix server is running check interval \"%1$s\"."
 msgstr "Server Zabbix sedang berjalan pemeriksaan interval \"%1$s\"."
@@ -13474,7 +13478,7 @@ msgctxt "day short"
 msgid "d"
 msgstr "d"
 
-#: include/maintenances.inc.php:57 include/page_header.php:484
+#: include/maintenances.inc.php:57 include/page_header.php:485
 #: include/translateDefines.inc.php:42
 #: include/views/configuration.item.list.php:101 report3.php:134
 msgid "d M Y"
@@ -13487,7 +13491,7 @@ msgid "d M Y H:i"
 msgstr "d M Y H:i"
 
 #: acknow.php:162 events.php:282 httpdetails.php:115 httpmon.php:242
-#: include/acknow.inc.php:59 include/blocks.inc.php:954
+#: include/acknow.inc.php:59 include/blocks.inc.php:956
 #: include/classes/screens/CScreenEvents.php:63
 #: include/classes/screens/CScreenPlainText.php:95 include/events.inc.php:116
 #: include/events.inc.php:187 include/events.inc.php:243
@@ -13711,7 +13715,7 @@ msgstr "harus user LDAP yang valid"
 msgid "no"
 msgstr "tidak"
 
-#: include/blocks.inc.php:1438 include/classes/class.cchart.php:1825
+#: include/blocks.inc.php:1440 include/classes/class.cchart.php:1825
 #: include/classes/class.cpie.php:320 include/maps.inc.php:435
 #: include/maps.inc.php:479
 #, php-format
@@ -13746,7 +13750,7 @@ msgstr "tidak terkirim"
 msgid "now"
 msgstr "sekarang"
 
-#: include/blocks.inc.php:348 include/blocks.inc.php:692
+#: include/blocks.inc.php:350 include/blocks.inc.php:694
 #: include/func.inc.php:1718
 msgid "of"
 msgstr "dari"

@@ -675,8 +675,12 @@ static int	process_proxyconfig_table(const ZBX_TABLE *table, struct zbx_json_par
 		zbx_vector_uint64_t *del, char **error)
 {
 	const char		*__function_name = "process_proxyconfig_table";
+
 	int			f, fields_count = 0, insert, is_null, i, ret = FAIL, id_field_nr = 0,
 				move_out = 0, move_field_nr = 0;
+#ifdef HAVE_MYSQL
+	int			ex_fields_count = 0;
+#endif
 	const ZBX_FIELD		*fields[ZBX_MAX_FIELDS];
 	struct zbx_json_parse	jp_data, jp_row;
 	char			buf[MAX_STRING_LEN], *esc;
@@ -744,6 +748,28 @@ static int	process_proxyconfig_table(const ZBX_TABLE *table, struct zbx_json_par
 			goto out;
 		}
 	}
+
+#ifdef HAVE_MYSQL
+	/* MySQL: BLOB and TEXT columns doesn't have a default value; we shall add them into an insert statement */
+	for (i = 0; NULL != table->fields[i].name; i++)
+	{
+		switch (table->fields[i].type)
+		{
+			case ZBX_TYPE_BLOB:
+			case ZBX_TYPE_TEXT:
+				for (f = 0; f < fields_count; f++)
+				{
+					if (fields[f] == &table->fields[i])
+						break;
+				}
+
+				if (f == fields_count)
+					fields[fields_count + ex_fields_count++] = &table->fields[i];
+
+				break;
+		}
+	}
+#endif
 
 	/* get the entries (line 8 in T1) */
 	if (FAIL == zbx_json_brackets_by_name(jp_obj, ZBX_PROTO_TAG_DATA, &jp_data))
@@ -981,8 +1007,15 @@ static int	process_proxyconfig_table(const ZBX_TABLE *table, struct zbx_json_par
 		{
 			zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, "insert into %s (", table->table);
 
+#ifdef HAVE_MYSQL
+			for (f = 0; f < fields_count + ex_fields_count; f++)
+#else
 			for (f = 0; f < fields_count; f++)
-				zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, "%s,", fields[f]->name);
+#endif
+			{
+				zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, fields[f]->name);
+				zbx_chrcpy_alloc(&sql, &sql_alloc, &sql_offset, ',');
+			}
 
 			sql_offset--;
 			zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, ") values (" ZBX_FS_UI64 ",", recid);
@@ -1073,6 +1106,10 @@ static int	process_proxyconfig_table(const ZBX_TABLE *table, struct zbx_json_par
 		sql_offset--;
 		if (0 != insert)
 		{
+#ifdef HAVE_MYSQL
+			for (f = fields_count; f < fields_count + ex_fields_count; f++)
+				zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, ",''");
+#endif
 			zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, ");\n");
 		}
 		else
@@ -1415,7 +1452,7 @@ void	process_host_availability(struct zbx_json_parse *jp)
 	const char		*p = NULL;
 	char			tmp[HOST_ERROR_LEN_MAX], *sql = NULL, *error_esc;
 	size_t			sql_alloc = 4 * ZBX_KIBIBYTE, sql_offset = 0, tmp_offset;
-	int			availability_alloc = 0, availability_num = 0, availability_last = 0;
+	int			availability_alloc = 0, availability_num = 0;
 	zbx_host_availability_t	*availability = NULL;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
@@ -1452,7 +1489,6 @@ void	process_host_availability(struct zbx_json_parse *jp)
 		}
 
 		tmp_offset = sql_offset;
-		availability_last = availability_num;
 
 		zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, "update hosts set ");
 
@@ -1548,14 +1584,15 @@ void	process_host_availability(struct zbx_json_parse *jp)
 			zbx_free(error_esc);
 		}
 
-		if (availability_last == availability_num)
+		sql_offset--;
+
+		if (',' != sql[sql_offset])
 		{
 			zabbix_log(LOG_LEVEL_WARNING, "invalid host availability data");
 			sql_offset = tmp_offset;
 			continue;
 		}
 
-		sql_offset--;
 		zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, " where hostid=" ZBX_FS_UI64 ";\n", hostid);
 
 		DBexecute_overflowed_sql(&sql, &sql_alloc, &sql_offset);
@@ -1673,11 +1710,12 @@ static int	proxy_get_history_data(struct zbx_json *j, const ZBX_HISTORY_TABLE *h
 {
 	const char	*__function_name = "proxy_get_history_data";
 	size_t		offset = 0;
-	int		f, records = 0;
+	int		f, records = 0, records_lim = ZBX_MAX_HRECORDS, retries = 1;
 	char		sql[MAX_STRING_LEN];
 	DB_RESULT	result;
 	DB_ROW		row;
 	zbx_uint64_t	id;
+	struct timespec	t_sleep = { 0, 100000000L }, t_rem;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() table:'%s'", __function_name, ht->table);
 
@@ -1689,20 +1727,40 @@ static int	proxy_get_history_data(struct zbx_json *j, const ZBX_HISTORY_TABLE *h
 
 	for (f = 0; NULL != ht->fields[f].field; f++)
 		offset += zbx_snprintf(sql + offset, sizeof(sql) - offset, ",%s", ht->fields[f].field);
-
-	offset += zbx_snprintf(sql + offset, sizeof(sql) - offset, " from %s%s p"
+try_again:
+	zbx_snprintf(sql + offset, sizeof(sql) - offset, " from %s%s p"
 			" where %sp.id>" ZBX_FS_UI64 " order by p.id",
 			ht->from, ht->table,
 			ht->where,
 			id);
 
-	result = DBselectN(sql, ZBX_MAX_HRECORDS);
+	result = DBselectN(sql, records_lim);
 
 	while (NULL != (row = DBfetch(result)))
 	{
-		zbx_json_addobject(j, NULL);
-
 		ZBX_STR2UINT64(*lastid, row[0]);
+
+		if (1 < *lastid - id)
+		{
+			/* At least one record is missing. It can happen if some DB syncer process has */
+			/* started but yet committed a transaction or a rollback occurred in a DB syncer. */
+			if (0 < retries--)
+			{
+				DBfree_result(result);
+				zabbix_log(LOG_LEVEL_DEBUG, "%s() " ZBX_FS_UI64 " record(s) missing. Waiting %f sec,"
+						" retrying.", __function_name, *lastid - id - 1,
+						(double)t_sleep.tv_sec + (double)t_sleep.tv_nsec / 1.0e9);
+				nanosleep(&t_sleep, &t_rem);
+				goto try_again;
+			}
+			else
+			{
+				zabbix_log(LOG_LEVEL_DEBUG, "%s() " ZBX_FS_UI64 " record(s) missing. No more retries.",
+						__function_name, *lastid - id - 1);
+			}
+		}
+
+		zbx_json_addobject(j, NULL);
 
 		for (f = 0; NULL != ht->fields[f].field; f++)
 		{
@@ -1715,6 +1773,9 @@ static int	proxy_get_history_data(struct zbx_json *j, const ZBX_HISTORY_TABLE *h
 		records++;
 
 		zbx_json_close(j);
+
+		id = *lastid;
+		records_lim--;
 	}
 
 	DBfree_result(result);

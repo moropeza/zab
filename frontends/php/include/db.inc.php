@@ -150,7 +150,7 @@ function DBconnect(&$error) {
 					);
 					db2_set_option($DB['DB'], $options, 1);
 					if (isset($DB['SCHEMA']) && ($DB['SCHEMA'] != '')) {
-						DBexecute("SET CURRENT SCHEMA='".$DB['SCHEMA']."'");
+						DBexecute('SET CURRENT SCHEMA='.zbx_dbstr($DB['SCHEMA']));
 					}
 				}
 				break;
@@ -563,7 +563,7 @@ function DBfetch(&$cursor, $convertNulls = true) {
 
 	$result = false;
 
-	if (!isset($DB['DB']) || empty($DB['DB'])) {
+	if (!isset($DB['DB']) || empty($DB['DB']) || is_bool($cursor)) {
 		return $result;
 	}
 
@@ -1080,13 +1080,13 @@ function dbConditionInt($fieldName, array $values, $notIn = false, $sort = true)
 		return '1=0';
 	}
 
-	$values = array_unique($values);
+	$values = array_keys(array_flip($values));
 
 	if ($sort) {
 		natsort($values);
-	}
 
-	zbx_cleanHashes($values);
+		$values = array_values($values);
+	}
 
 	$betweens = array();
 	$data = array();

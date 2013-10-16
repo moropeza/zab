@@ -252,7 +252,7 @@ function resolveMapLabelMacrosAll(array $selement) {
 			$res = DBselect('SELECT hi.ip,hi.dns,hi.useip,h.host,h.name,hi.type AS interfacetype'.
 					' FROM interface hi,hosts h'.
 					' WHERE hi.hostid=h.hostid'.
-						' AND hi.main=1 AND hi.hostid='.$selement['elementid']);
+						' AND hi.main=1 AND hi.hostid='.zbx_dbstr($selement['elementid']));
 
 			// process interface priorities
 			$tmpPriority = 0;
@@ -272,7 +272,7 @@ function resolveMapLabelMacrosAll(array $selement) {
 					' WHERE h.hostid=hi.hostid'.
 						' AND hi.hostid=i.hostid'.
 						' AND i.itemid=f.itemid'.
-						' AND hi.main=1 AND f.triggerid='.$selement['elementid'].
+						' AND hi.main=1 AND f.triggerid='.zbx_dbstr($selement['elementid']).
 					' ORDER BY f.functionid');
 
 			// process interface priorities, build $hostsByFunctionId array
@@ -473,7 +473,7 @@ function resolveMapLabelMacros($label, $replaceHosts = null) {
 				'SELECT '.$function.'(value) AS value'.
 				' FROM '.$history_table[$item['value_type']].
 				' WHERE clock>'.(time() - $parameter).
-				' AND itemid='.$item['itemid']
+				' AND itemid='.zbx_dbstr($item['itemid'])
 			);
 			if (null === ($row = DBfetch($result))) {
 				$label = str_replace($expr, '('._('no data').')', $label);
@@ -502,7 +502,7 @@ function get_map_elements($db_element, &$elements) {
 			$db_mapselements = DBselect(
 				'SELECT DISTINCT se.elementtype,se.elementid'.
 				' FROM sysmaps_elements se'.
-				' WHERE se.sysmapid='.$db_element['elementid']
+				' WHERE se.sysmapid='.zbx_dbstr($db_element['elementid'])
 			);
 			while ($db_mapelement = DBfetch($db_mapselements)) {
 				get_map_elements($db_mapelement, $elements);
@@ -1067,14 +1067,16 @@ function getSelementsInfo($sysmap) {
 		$all_hosts = array_merge($all_hosts, $hosts);
 		foreach ($hosts as $host) {
 			foreach ($host['groups'] as $group) {
-				foreach ($hostgroups_map[$group['groupid']] as $belongs_to_sel) {
-					$selements[$belongs_to_sel]['hosts'][$host['hostid']] = $host['hostid'];
+				if (isset($hostgroups_map[$group['groupid']])) {
+					foreach ($hostgroups_map[$group['groupid']] as $belongs_to_sel) {
+						$selements[$belongs_to_sel]['hosts'][$host['hostid']] = $host['hostid'];
 
-					// add hosts to hosts_map for trigger selection;
-					if (!isset($hosts_map[$host['hostid']])) {
-						$hosts_map[$host['hostid']] = array();
+						// add hosts to hosts_map for trigger selection;
+						if (!isset($hosts_map[$host['hostid']])) {
+							$hosts_map[$host['hostid']] = array();
+						}
+						$hosts_map[$host['hostid']][$belongs_to_sel] = $belongs_to_sel;
 					}
-					$hosts_map[$host['hostid']][$belongs_to_sel] = $belongs_to_sel;
 				}
 			}
 		}
@@ -1142,8 +1144,10 @@ function getSelementsInfo($sysmap) {
 
 		foreach ($triggers as $trigger) {
 			foreach ($trigger['hosts'] as $host) {
-				foreach ($hosts_map[$host['hostid']] as $belongs_to_sel) {
-					$selements[$belongs_to_sel]['triggers'][$trigger['triggerid']] = $trigger['triggerid'];
+				if (isset($hosts_map[$host['hostid']])) {
+					foreach ($hosts_map[$host['hostid']] as $belongs_to_sel) {
+						$selements[$belongs_to_sel]['triggers'][$trigger['triggerid']] = $trigger['triggerid'];
+					}
 				}
 			}
 		}

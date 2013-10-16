@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Zabbix 2.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-07-24 15:52+0300\n"
+"POT-Creation-Date: 2013-09-25 00:33+0300\n"
 "PO-Revision-Date: \n"
 "Last-Translator: Konstantin <konstantin.buravcov@zabbix.com>\n"
 "Language-Team: Zabbix <info@zabbix.com>\n"
@@ -51,13 +51,13 @@ msgid "%1$s Item"
 msgid_plural "%1$s Items"
 msgstr[0] ""
 
-#: include/page_header.php:480
+#: include/page_header.php:481
 #, php-format
 msgid "%1$s failed login attempt logged. Last failed attempt was from %2$s on %3$s at %4$s."
 msgid_plural "%1$s failed login attempts logged. Last failed attempt was from %2$s on %3$s at %4$s."
 msgstr[0] ""
 
-#: include/blocks.inc.php:982
+#: include/blocks.inc.php:984
 #, php-format
 msgid "%2$d of %1$d issue is shown"
 msgid_plural "%2$d of %1$d issues are shown"
@@ -203,7 +203,7 @@ msgid "Account is blocked for %s seconds"
 msgstr ""
 
 #: events.php:565 events.php:578 include/actions.inc.php:245
-#: include/blocks.inc.php:901 include/blocks.inc.php:1418
+#: include/blocks.inc.php:903 include/blocks.inc.php:1420
 #: include/events.inc.php:137 include/events.inc.php:210
 #: include/views/configuration.action.edit.php:938
 msgid "Ack"
@@ -308,8 +308,8 @@ msgstr ""
 msgid "Action updated"
 msgstr "액션을 갱신하였습니다"
 
-#: events.php:566 events.php:579 include/blocks.inc.php:902
-#: include/blocks.inc.php:1419 include/events.inc.php:138
+#: events.php:566 events.php:579 include/blocks.inc.php:904
+#: include/blocks.inc.php:1421 include/events.inc.php:138
 #: include/menu.inc.php:193 include/views/administration.auditacts.list.php:29
 #: include/views/administration.auditacts.list.php:32
 #: include/views/administration.auditlogs.list.php:29
@@ -344,9 +344,9 @@ msgstr ""
 msgid "Active till"
 msgstr ""
 
-#: dashconf.php:211 include/blocks.inc.php:1141 include/blocks.inc.php:1147
-#: include/blocks.inc.php:1261 include/blocks.inc.php:1306
-#: include/blocks.inc.php:1312 include/forms.inc.php:1705
+#: dashconf.php:211 include/blocks.inc.php:1143 include/blocks.inc.php:1149
+#: include/blocks.inc.php:1263 include/blocks.inc.php:1308
+#: include/blocks.inc.php:1314 include/forms.inc.php:1705
 #: include/forms.inc.php:2009 include/reports.inc.php:332
 #: include/reports.inc.php:428 include/reports.inc.php:468
 #: include/views/administration.auditlogs.list.php:45
@@ -465,7 +465,7 @@ msgstr "관리"
 msgid "Advanced labels"
 msgstr ""
 
-#: include/blocks.inc.php:899 include/blocks.inc.php:1416
+#: include/blocks.inc.php:901 include/blocks.inc.php:1418
 #: include/events.inc.php:136 include/events.inc.php:210
 #: include/events.inc.php:213 tr_status.php:288
 msgid "Age"
@@ -494,7 +494,7 @@ msgid "Agent or SNMP or JMX or IPMI interface"
 msgstr ""
 
 #: include/hosts.inc.php:119 include/views/administration.users.edit.php:49
-#: include/views/administration.users.list.php:54 popup.php:896 users.php:43
+#: include/views/administration.users.list.php:54 popup.php:896 users.php:45
 msgid "Alias"
 msgstr "로그인 이름"
 
@@ -502,10 +502,10 @@ msgstr "로그인 이름"
 msgid "Align icons"
 msgstr ""
 
-#: dashconf.php:173 dashconf.php:254 include/blocks.inc.php:1240
-#: include/blocks.inc.php:1249 include/blocks.inc.php:1294
-#: include/blocks.inc.php:1378 include/blocks.inc.php:1387
-#: include/nodes.inc.php:156 include/page_header.php:331
+#: dashconf.php:173 dashconf.php:254 include/blocks.inc.php:1242
+#: include/blocks.inc.php:1251 include/blocks.inc.php:1296
+#: include/blocks.inc.php:1380 include/blocks.inc.php:1389
+#: include/nodes.inc.php:156 include/page_header.php:332
 #: include/reports.inc.php:554
 #: include/views/administration.auditlogs.list.php:42
 #: include/views/administration.auditlogs.list.php:52
@@ -735,7 +735,7 @@ msgstr ""
 msgid "Auto-login"
 msgstr ""
 
-#: include/views/administration.users.edit.php:120 profile.php:47 users.php:60
+#: include/views/administration.users.edit.php:120 profile.php:50 users.php:62
 msgid "Auto-logout (min 90 seconds)"
 msgstr ""
 
@@ -799,7 +799,7 @@ msgctxt "Byte short"
 msgid "B"
 msgstr ""
 
-#: include/page_header.php:224
+#: include/page_header.php:225
 msgid "BACK"
 msgstr ""
 
@@ -916,7 +916,7 @@ msgstr ""
 msgid "CONFIGURATION OF GRAPHS"
 msgstr "그래프 설정"
 
-#: adm.gui.php:107
+#: adm.gui.php:110
 msgid "CONFIGURATION OF GUI"
 msgstr ""
 
@@ -1095,7 +1095,7 @@ msgstr ""
 msgid "Canada (136 characters)"
 msgstr ""
 
-#: include/classes/class.cbuttoncancel.php:25 include/config.inc.php:262
+#: include/classes/class.cbuttoncancel.php:25 include/config.inc.php:267
 #: include/forms.inc.php:1707 include/forms.inc.php:2010
 #: include/js.inc.php:222 include/setup.inc.php:137
 #: include/views/configuration.action.edit.php:946
@@ -1225,11 +1225,11 @@ msgstr ""
 msgid "Cannot add trigger"
 msgstr "트리거를 추가할 수 없습니다"
 
-#: users.php:196
+#: users.php:198
 msgid "Cannot add user"
 msgstr "사용자를 추가할 수 없습니다"
 
-#: users.php:150
+#: users.php:152
 msgid "Cannot add user. Both passwords must be equal."
 msgstr "사용자를 추가할 수 없습니다. 암호가 일치하지 않습니다."
 
@@ -1522,7 +1522,7 @@ msgstr "트리거를 삭제할 수 없습니다"
 msgid "Cannot delete triggers created by low level discovery."
 msgstr ""
 
-#: users.php:232 users.php:318
+#: users.php:234 users.php:320
 msgid "Cannot delete user"
 msgstr "사용자를 삭제할 수 없습니다"
 
@@ -1768,7 +1768,7 @@ msgstr ""
 msgid "Cannot switch host for interface."
 msgstr ""
 
-#: users.php:294
+#: users.php:296
 msgid "Cannot unblock users"
 msgstr ""
 
@@ -1851,7 +1851,7 @@ msgstr "애플리케이션을 갱신할 수 없습니다"
 msgid "Cannot update comment"
 msgstr "주석을 갱신할 수 없습니다"
 
-#: adm.gui.php:66 adm.housekeeper.php:53 adm.other.php:58
+#: adm.gui.php:69 adm.housekeeper.php:53 adm.other.php:58
 #: adm.triggerdisplayoptions.php:65 adm.triggerseverities.php:69
 #: adm.workingtime.php:46
 msgid "Cannot update configuration"
@@ -1987,7 +1987,7 @@ msgstr ""
 msgid "Cannot update trigger"
 msgstr "트리거를 갱신할 수 없습니다"
 
-#: profile.php:173 users.php:189 users.php:251 users.php:271
+#: profile.php:176 users.php:191 users.php:253 users.php:273
 msgid "Cannot update user"
 msgstr "사용자를 갱신할 수 없습니다"
 
@@ -1995,7 +1995,7 @@ msgstr "사용자를 갱신할 수 없습니다"
 msgid "Cannot update user media."
 msgstr ""
 
-#: profile.php:110 users.php:147
+#: profile.php:113 users.php:149
 msgid "Cannot update user. Both passwords must be equal."
 msgstr "사용자를 갱신할 수 없습니다. 암호가 일치하지 않습니다."
 
@@ -2418,7 +2418,7 @@ msgstr ""
 msgid "Configuration of working time"
 msgstr ""
 
-#: adm.gui.php:66 adm.housekeeper.php:53 adm.other.php:58
+#: adm.gui.php:69 adm.housekeeper.php:53 adm.other.php:58
 #: adm.triggerdisplayoptions.php:65 adm.triggerseverities.php:69
 #: adm.workingtime.php:46
 msgid "Configuration updated"
@@ -2751,7 +2751,7 @@ msgstr ""
 msgid "Current host"
 msgstr ""
 
-#: include/page_header.php:363
+#: include/page_header.php:364
 msgid "Current node"
 msgstr "현재 노드"
 
@@ -3026,7 +3026,7 @@ msgstr ""
 msgid "Days"
 msgstr ""
 
-#: include/page_header.php:249
+#: include/page_header.php:250
 msgid "Debug"
 msgstr ""
 
@@ -3089,7 +3089,7 @@ msgstr ""
 msgid "Default theme"
 msgstr ""
 
-#: adm.gui.php:70
+#: adm.gui.php:73
 #, php-format
 msgid "Default theme \"%1$s\"."
 msgstr ""
@@ -3488,8 +3488,8 @@ msgstr ""
 msgid "Description"
 msgstr "이름"
 
-#: include/actions.inc.php:868 include/blocks.inc.php:714
-#: include/config.inc.php:344
+#: include/actions.inc.php:868 include/blocks.inc.php:716
+#: include/config.inc.php:349
 #: include/views/administration.auditlogs.list.php:92
 #: include/views/administration.mediatypes.list.php:43
 #: include/views/configuration.action.edit.php:317
@@ -3702,7 +3702,7 @@ msgid "Discovery object"
 msgstr ""
 
 #: include/actions.inc.php:70 include/audit.inc.php:44
-#: include/blocks.inc.php:1112 include/forms.inc.php:1018
+#: include/blocks.inc.php:1114 include/forms.inc.php:1018
 #: include/views/configuration.discovery.edit.php:76
 #: include/views/configuration.discovery.list.php:29
 #: include/views/monitoring.discovery.php:34
@@ -3828,7 +3828,7 @@ msgstr ""
 msgid "Dot"
 msgstr "점선"
 
-#: include/blocks.inc.php:1114
+#: include/blocks.inc.php:1116
 msgctxt "discovery results in dashboard"
 msgid "Down"
 msgstr ""
@@ -3879,12 +3879,12 @@ msgstr "종류"
 msgid "Dropdown first entry"
 msgstr ""
 
-#: adm.gui.php:74
+#: adm.gui.php:77
 #, php-format
 msgid "Dropdown first entry \"%1$s\"."
 msgstr ""
 
-#: adm.gui.php:75
+#: adm.gui.php:78
 #, php-format
 msgid "Dropdown remember selected \"%1$s\"."
 msgstr ""
@@ -3946,7 +3946,7 @@ msgctxt "Exa short"
 msgid "E"
 msgstr ""
 
-#: include/config.inc.php:311
+#: include/config.inc.php:316
 msgid "ERROR"
 msgstr ""
 
@@ -4229,7 +4229,7 @@ msgstr ""
 msgid "Event acknowledged"
 msgstr ""
 
-#: adm.gui.php:71
+#: adm.gui.php:74
 #, php-format
 msgid "Event acknowledges \"%1$s\"."
 msgstr ""
@@ -4406,7 +4406,7 @@ msgstr "FTP"
 msgid "Fail"
 msgstr "실패"
 
-#: include/actions.inc.php:961 include/blocks.inc.php:1023
+#: include/actions.inc.php:961 include/blocks.inc.php:1025
 msgid "Failed"
 msgstr ""
 
@@ -4423,15 +4423,15 @@ msgstr ""
 msgid "Failure Audit"
 msgstr ""
 
-#: dashboard.php:259 include/blocks.inc.php:1134
+#: dashboard.php:259 include/blocks.inc.php:1136
 msgid "Favourite graphs"
 msgstr ""
 
-#: dashboard.php:273 include/blocks.inc.php:1259
+#: dashboard.php:273 include/blocks.inc.php:1261
 msgid "Favourite maps"
 msgstr ""
 
-#: dashboard.php:266 include/blocks.inc.php:1304
+#: dashboard.php:266 include/blocks.inc.php:1306
 msgid "Favourite screens"
 msgstr ""
 
@@ -4543,7 +4543,7 @@ msgstr "고정"
 msgid "Flexible intervals"
 msgstr ""
 
-#: profile.php:113 users.php:154
+#: profile.php:116 users.php:156
 msgid "For guest, password must be empty"
 msgstr ""
 
@@ -4621,7 +4621,7 @@ msgstr ""
 msgid "GSM modem"
 msgstr "GSM 모뎀"
 
-#: adm.gui.php:92 adm.housekeeper.php:71 adm.iconmapping.php:109
+#: adm.gui.php:95 adm.housekeeper.php:71 adm.iconmapping.php:109
 #: adm.images.php:131 adm.macros.php:158 adm.other.php:104 adm.regexps.php:208
 #: adm.triggerdisplayoptions.php:73 adm.triggerseverities.php:79
 #: adm.valuemapping.php:125 adm.workingtime.php:61
@@ -4646,7 +4646,7 @@ msgstr ""
 msgid "German (de_DE)"
 msgstr "독일어 (de_DE)"
 
-#: include/page_header.php:235
+#: include/page_header.php:236
 msgid "Get support"
 msgstr "서포트"
 
@@ -4706,7 +4706,7 @@ msgstr ""
 msgid "Gradient line"
 msgstr ""
 
-#: include/audit.inc.php:29 include/blocks.inc.php:1141
+#: include/audit.inc.php:29 include/blocks.inc.php:1143
 #: include/screens.inc.php:30 include/views/configuration.graph.edit.php:287
 #: include/views/monitoring.charts.php:27
 #: include/views/monitoring.history.php:60 latest.php:318 latest.php:495
@@ -4830,7 +4830,7 @@ msgstr ""
 msgid "Graph with same name but other type exist."
 msgstr ""
 
-#: dashboard.php:260 hosts.php:686 hosts.php:765 include/blocks.inc.php:1240
+#: dashboard.php:260 hosts.php:686 hosts.php:765 include/blocks.inc.php:1242
 #: include/html.inc.php:464 include/html.inc.php:468 include/items.inc.php:802
 #: include/menu.inc.php:62 include/triggers.inc.php:1311
 #: include/views/configuration.graph.list.php:56
@@ -4957,13 +4957,13 @@ msgid "H.i"
 msgstr ""
 
 #: include/classes/class.cchart.php:1233 include/classes/class.cchart.php:1292
-#: include/page_header.php:485
+#: include/page_header.php:486
 msgid "H:i"
 msgstr ""
 
-#: include/blocks.inc.php:363 include/blocks.inc.php:702
-#: include/blocks.inc.php:770 include/blocks.inc.php:980
-#: include/blocks.inc.php:1070 include/blocks.inc.php:1128
+#: include/blocks.inc.php:365 include/blocks.inc.php:704
+#: include/blocks.inc.php:772 include/blocks.inc.php:982
+#: include/blocks.inc.php:1072 include/blocks.inc.php:1130
 #: include/classes/screens/CScreenSystemStatus.php:47
 #: include/views/configuration.item.list.php:102
 msgid "H:i:s"
@@ -5017,7 +5017,7 @@ msgstr ""
 msgid "Height"
 msgstr "높이"
 
-#: include/page_header.php:233 include/views/general.login.php:38
+#: include/page_header.php:234 include/views/general.login.php:38
 msgid "Help"
 msgstr "도움말"
 
@@ -5056,7 +5056,7 @@ msgstr "선택 항목 감추기"
 msgid "High"
 msgstr "중증 장애"
 
-#: history.php:27 include/forms.inc.php:853 include/page_header.php:455
+#: history.php:27 include/forms.inc.php:853 include/page_header.php:456
 #: include/views/configuration.item.list.php:59
 #: include/views/configuration.item.prototype.list.php:54 jsLoader.php:108
 #: latest.php:196 latest.php:321 latest.php:498
@@ -5096,9 +5096,9 @@ msgstr "가로 위치"
 #: hostinventories.php:157 httpconf.php:190 httpconf.php:289 httpconf.php:313
 #: httpconf.php:331 httpconf.php:351 httpmon.php:121 httpmon.php:141
 #: include/actions.inc.php:64 include/audit.inc.php:27
-#: include/blocks.inc.php:588 include/blocks.inc.php:635
-#: include/blocks.inc.php:886 include/blocks.inc.php:896
-#: include/blocks.inc.php:1414 include/classes/screens/CScreenEvents.php:46
+#: include/blocks.inc.php:590 include/blocks.inc.php:637
+#: include/blocks.inc.php:888 include/blocks.inc.php:898
+#: include/blocks.inc.php:1416 include/classes/screens/CScreenEvents.php:46
 #: include/classes/screens/CScreenHostgroupTriggers.php:121
 #: include/classes/screens/CScreenHostTriggers.php:63
 #: include/classes/screens/CScreenHostTriggers.php:123
@@ -5187,8 +5187,8 @@ msgid "Host deleted"
 msgstr "호스트를 삭제하였습니다"
 
 #: include/actions.inc.php:60 include/audit.inc.php:35
-#: include/blocks.inc.php:185 include/blocks.inc.php:372
-#: include/blocks.inc.php:1021 include/forms.inc.php:486
+#: include/blocks.inc.php:185 include/blocks.inc.php:374
+#: include/blocks.inc.php:1023 include/forms.inc.php:486
 #: include/maps.inc.php:25 include/reports.inc.php:111
 #: include/views/administration.script.list.php:42
 #: include/views/configuration.hostgroups.edit.php:63
@@ -5371,7 +5371,7 @@ msgstr ""
 msgid "Hours"
 msgstr ""
 
-#: adm.gui.php:93 adm.housekeeper.php:72 adm.iconmapping.php:110
+#: adm.gui.php:96 adm.housekeeper.php:72 adm.iconmapping.php:110
 #: adm.images.php:132 adm.macros.php:159 adm.other.php:105 adm.regexps.php:209
 #: adm.triggerdisplayoptions.php:74 adm.triggerseverities.php:80
 #: adm.valuemapping.php:126 adm.workingtime.php:62
@@ -5599,7 +5599,7 @@ msgstr ""
 msgid "Icon map with iconmapid \"%s\" does not exist."
 msgstr ""
 
-#: adm.gui.php:95 adm.housekeeper.php:74 adm.iconmapping.php:112
+#: adm.gui.php:98 adm.housekeeper.php:74 adm.iconmapping.php:112
 #: adm.iconmapping.php:168 adm.images.php:134 adm.macros.php:161
 #: adm.other.php:107 adm.regexps.php:211 adm.triggerdisplayoptions.php:76
 #: adm.triggerseverities.php:82 adm.valuemapping.php:128
@@ -5620,7 +5620,7 @@ msgstr ""
 msgid "Icons"
 msgstr ""
 
-#: include/config.inc.php:258
+#: include/config.inc.php:263
 msgid "If you think this message is wrong, please consult your administrators about getting the necessary permissions."
 msgstr ""
 
@@ -5659,7 +5659,7 @@ msgstr ""
 msgid "Image updated"
 msgstr "이미지를 갱신하였습니다"
 
-#: adm.gui.php:94 adm.housekeeper.php:73 adm.iconmapping.php:111
+#: adm.gui.php:97 adm.housekeeper.php:73 adm.iconmapping.php:111
 #: adm.images.php:133 adm.macros.php:160 adm.other.php:106 adm.regexps.php:210
 #: adm.triggerdisplayoptions.php:75 adm.triggerseverities.php:81
 #: adm.valuemapping.php:127 adm.workingtime.php:63
@@ -6335,7 +6335,7 @@ msgstr ""
 msgid "Indonesian (id_ID)"
 msgstr ""
 
-#: include/blocks.inc.php:900 include/blocks.inc.php:1417
+#: include/blocks.inc.php:902 include/blocks.inc.php:1419
 #: include/classes/class.cformlist.php:65 tr_status.php:286
 msgid "Info"
 msgstr ""
@@ -6495,8 +6495,8 @@ msgstr ""
 msgid "Is online?"
 msgstr "로그인 상태"
 
-#: include/blocks.inc.php:888 include/blocks.inc.php:897
-#: include/blocks.inc.php:1415
+#: include/blocks.inc.php:890 include/blocks.inc.php:899
+#: include/blocks.inc.php:1417
 msgid "Issue"
 msgstr ""
 
@@ -6504,7 +6504,7 @@ msgstr ""
 msgid "It is not possible to filter by user password."
 msgstr ""
 
-#: include/page_header.php:262
+#: include/page_header.php:263
 msgid "It is not possible to logout from HTTP authentication."
 msgstr ""
 
@@ -6916,7 +6916,7 @@ msgstr ""
 msgid "Last 7 days"
 msgstr ""
 
-#: include/blocks.inc.php:890 include/blocks.inc.php:898 tr_status.php:287
+#: include/blocks.inc.php:892 include/blocks.inc.php:900 tr_status.php:287
 msgid "Last change"
 msgstr "최근 갱신"
 
@@ -7147,8 +7147,8 @@ msgstr ""
 msgid "Logged in as"
 msgstr ""
 
-#: auditlogs.php:143 include/config.inc.php:261 include/menu.inc.php:285
-#: include/page_header.php:270
+#: auditlogs.php:143 include/config.inc.php:266 include/menu.inc.php:285
+#: include/page_header.php:271
 #: include/views/administration.auditlogs.list.php:43
 #: include/views/administration.authentication.edit.php:64
 #: include/views/administration.users.list.php:60
@@ -7173,7 +7173,7 @@ msgstr ""
 msgid "Login name or password is incorrect."
 msgstr ""
 
-#: auditlogs.php:146 include/page_header.php:261 include/page_header.php:265
+#: auditlogs.php:146 include/page_header.php:262 include/page_header.php:266
 #: include/views/administration.auditlogs.list.php:44
 msgid "Logout"
 msgstr "로그아웃"
@@ -7266,7 +7266,7 @@ msgstr ""
 msgid "Macro with hostmacroid \"%1$s\" does not exist."
 msgstr ""
 
-#: adm.gui.php:97 adm.housekeeper.php:76 adm.iconmapping.php:114
+#: adm.gui.php:100 adm.housekeeper.php:76 adm.iconmapping.php:114
 #: adm.images.php:136 adm.macros.php:163 adm.other.php:109 adm.regexps.php:213
 #: adm.triggerdisplayoptions.php:78 adm.triggerseverities.php:84
 #: adm.valuemapping.php:130 adm.workingtime.php:66
@@ -7324,11 +7324,11 @@ msgstr ""
 msgid "Maintenance updated"
 msgstr ""
 
-#: include/blocks.inc.php:928 tr_status.php:623
+#: include/blocks.inc.php:930 tr_status.php:623
 msgid "Maintenance with data collection"
 msgstr ""
 
-#: include/blocks.inc.php:927 tr_status.php:622
+#: include/blocks.inc.php:929 tr_status.php:622
 msgid "Maintenance without data collection"
 msgstr ""
 
@@ -7350,7 +7350,7 @@ msgstr ""
 msgid "Manual Logout"
 msgstr ""
 
-#: include/audit.inc.php:40 include/blocks.inc.php:1261
+#: include/audit.inc.php:40 include/blocks.inc.php:1263
 #: include/maps.inc.php:27 include/screens.inc.php:34
 #: include/views/configuration.sysmap.edit.php:201
 #: include/views/js/configuration.sysmaps.js.php:16
@@ -7410,7 +7410,7 @@ msgstr ""
 msgid "Mappings"
 msgstr ""
 
-#: dashboard.php:274 include/blocks.inc.php:1294 include/menu.inc.php:72
+#: dashboard.php:274 include/blocks.inc.php:1296 include/menu.inc.php:72
 #: include/menu.inc.php:206 include/views/conf.import.php:36 popup.php:97
 #: sysmaps.php:251
 msgid "Maps"
@@ -7464,21 +7464,21 @@ msgstr ""
 msgid "Master node already exists."
 msgstr ""
 
-#: adm.gui.php:38 include/views/administration.general.gui.edit.php:39
+#: adm.gui.php:41 include/views/administration.general.gui.edit.php:39
 msgid "Max count of elements to show inside table cell"
 msgstr ""
 
-#: adm.gui.php:76
+#: adm.gui.php:79
 #, php-format
 msgid "Max count of elements to show inside table cell \"%1$s\"."
 msgstr ""
 
-#: adm.gui.php:35 include/views/administration.general.gui.edit.php:45
+#: adm.gui.php:38 include/views/administration.general.gui.edit.php:45
 msgid "Max count of events per trigger to show"
 msgstr ""
 
 #: include/classes/class.cwidget.php:124 include/classes/class.cwidget.php:127
-#: include/config.inc.php:346
+#: include/config.inc.php:351
 msgid "Maximize"
 msgstr ""
 
@@ -7647,7 +7647,7 @@ msgid "Min severity"
 msgstr ""
 
 #: include/classes/class.cwidget.php:124 include/classes/class.cwidget.php:127
-#: include/config.inc.php:346
+#: include/config.inc.php:351
 msgid "Minimize"
 msgstr ""
 
@@ -7720,7 +7720,7 @@ msgstr ""
 msgid "Missing items for graph \"%1$s\"."
 msgstr ""
 
-#: include/graphs.inc.php:321
+#: include/graphs.inc.php:326
 #, php-format
 msgid "Missing key \"%1$s\" for host \"%2$s\"."
 msgstr ""
@@ -7890,7 +7890,7 @@ msgstr ""
 #: popup.php:1813 popup_right.php:75 popup_usrgrp.php:92 queue.php:250
 #: report2.php:236 screenconf.php:50 services.php:42 slideconf.php:38
 #: sysmaps.php:48 sysmaps.php:257 trigger_prototypes.php:41 triggers.php:41
-#: tr_status.php:293 users.php:44
+#: tr_status.php:293 users.php:46
 msgid "Name"
 msgstr "이름"
 
@@ -7990,7 +7990,7 @@ msgstr ""
 msgid "Next check"
 msgstr "다음 검사"
 
-#: events.php:760 include/config.inc.php:563 include/events.inc.php:301
+#: events.php:760 include/config.inc.php:568 include/events.inc.php:301
 #: include/events.inc.php:319 include/forms.inc.php:1922
 #: include/triggers.inc.php:1608
 #: include/views/administration.users.list.php:75
@@ -8163,7 +8163,7 @@ msgstr ""
 msgid "No graph ID provided for screen element."
 msgstr ""
 
-#: include/graphs.inc.php:289
+#: include/graphs.inc.php:294
 #, php-format
 msgid "No graph item with graphid \"%s\"."
 msgstr ""
@@ -8430,7 +8430,7 @@ msgstr ""
 #: api/classes/CTrigger.php:1357 api/classes/CTriggerPrototype.php:822
 #: api/classes/CTriggerPrototype.php:920 api/classes/CUserMacro.php:824
 #: api/classes/CUserMacro.php:933 api/classes/CWebCheck.php:444
-#: include/config.inc.php:244 report6.php:159
+#: include/config.inc.php:249 report6.php:159
 msgid "No permissions to referred object or it does not exist!"
 msgstr ""
 
@@ -8496,7 +8496,7 @@ msgid "No scripts defined."
 msgstr ""
 
 #: include/views/configuration.slideconf.list.php:37
-#: include/views/monitoring.slides.php:38 slides.php:145
+#: include/views/monitoring.slides.php:38 slides.php:146
 msgid "No slide shows defined."
 msgstr ""
 
@@ -8572,10 +8572,10 @@ msgstr ""
 
 #: events.php:559 events.php:572 hostinventories.php:156 httpmon.php:140
 #: include/actions.inc.php:68 include/audit.inc.php:42
-#: include/blocks.inc.php:184 include/blocks.inc.php:371
-#: include/blocks.inc.php:895 include/blocks.inc.php:1020
-#: include/blocks.inc.php:1111 include/blocks.inc.php:1413
-#: include/classes/screens/CScreenEvents.php:45 include/page_header.php:354
+#: include/blocks.inc.php:184 include/blocks.inc.php:373
+#: include/blocks.inc.php:897 include/blocks.inc.php:1022
+#: include/blocks.inc.php:1113 include/blocks.inc.php:1415
+#: include/classes/screens/CScreenEvents.php:45 include/page_header.php:355
 #: include/triggers.inc.php:1582 include/views/administration.node.edit.php:83
 #: include/views/configuration.httpconf.list.php:66
 #: include/views/monitoring.discovery.php:42 latest.php:190 popup.php:491
@@ -8715,11 +8715,11 @@ msgstr ""
 msgid "Now"
 msgstr ""
 
-#: include/blocks.inc.php:725 include/blocks.inc.php:727
+#: include/blocks.inc.php:727 include/blocks.inc.php:729
 msgid "Number of hosts (monitored/not monitored/templates)"
 msgstr "호스트 수 (감시/미감시/템플릿)"
 
-#: include/blocks.inc.php:734
+#: include/blocks.inc.php:736
 msgid "Number of items (monitored/disabled/not supported)"
 msgstr "아이템 수(감시/미감시/취득불가)"
 
@@ -8763,11 +8763,11 @@ msgstr ""
 msgid "Number of successfully retrieved values V (which fulfill operator O) for period T is NOT N"
 msgstr ""
 
-#: include/blocks.inc.php:743
+#: include/blocks.inc.php:745
 msgid "Number of triggers (enabled/disabled)[problem/unknown/ok]"
 msgstr "트리거 수(활성/비활성)[장애/알 수 없음/ok]"
 
-#: include/blocks.inc.php:754
+#: include/blocks.inc.php:756
 msgid "Number of users (online)"
 msgstr "사용자 수 (온라인)"
 
@@ -8858,7 +8858,7 @@ msgstr ""
 msgid "Off"
 msgstr "OFF"
 
-#: include/actions.inc.php:958 include/blocks.inc.php:1022
+#: include/actions.inc.php:958 include/blocks.inc.php:1024
 #: include/classes/class.ctriggersinfo.php:134
 #: include/views/administration.users.list.php:86 report2.php:238
 #: report3.php:85
@@ -8951,7 +8951,7 @@ msgstr ""
 msgid "Only characters are allowed."
 msgstr ""
 
-#: include/blocks.inc.php:735
+#: include/blocks.inc.php:737
 msgid "Only items assigned to enabled hosts are counted"
 msgstr ""
 
@@ -8972,7 +8972,7 @@ msgstr ""
 msgid "Only the last 20%% of the indicator is displayed."
 msgstr ""
 
-#: include/blocks.inc.php:744
+#: include/blocks.inc.php:746
 msgid "Only triggers assigned to enabled hosts and depending on enabled items are counted"
 msgstr ""
 
@@ -9070,7 +9070,7 @@ msgstr "변경 안함"
 msgid "Original blue"
 msgstr ""
 
-#: adm.gui.php:102 adm.housekeeper.php:81 adm.iconmapping.php:119
+#: adm.gui.php:105 adm.housekeeper.php:81 adm.iconmapping.php:119
 #: adm.images.php:141 adm.macros.php:168 adm.other.php:114 adm.regexps.php:218
 #: adm.triggerdisplayoptions.php:83 adm.triggerseverities.php:89
 #: adm.valuemapping.php:135 adm.workingtime.php:71
@@ -9300,7 +9300,7 @@ msgstr ""
 msgid "Palette #%1$s"
 msgstr ""
 
-#: include/blocks.inc.php:712
+#: include/blocks.inc.php:714
 #: include/views/configuration.screen.constructor.edit.php:191
 #: include/views/configuration.screen.constructor.edit.php:219
 #: include/views/configuration.screen.constructor.edit.php:273
@@ -9390,7 +9390,7 @@ msgstr "암호 확인"
 msgid "Password required for media type."
 msgstr ""
 
-#: profile.php:116 users.php:157
+#: profile.php:119 users.php:159
 msgid "Password should not be empty"
 msgstr ""
 
@@ -9589,7 +9589,7 @@ msgstr ""
 msgid "Primary POC screen name"
 msgstr ""
 
-#: include/page_header.php:240
+#: include/page_header.php:241
 msgid "Print"
 msgstr ""
 
@@ -9637,7 +9637,7 @@ msgstr ""
 msgid "Problems"
 msgstr "장애"
 
-#: include/page_header.php:246
+#: include/page_header.php:247
 msgid "Profile"
 msgstr "프로파일"
 
@@ -9782,7 +9782,7 @@ msgstr ""
 msgid "Recovery subject"
 msgstr ""
 
-#: include/views/administration.users.edit.php:121 profile.php:49 users.php:62
+#: include/views/administration.users.edit.php:121 profile.php:52 users.php:64
 msgid "Refresh (in seconds)"
 msgstr "새로 고침(초)"
 
@@ -9850,7 +9850,7 @@ msgstr ""
 msgid "Regular expression updated"
 msgstr ""
 
-#: adm.gui.php:96 adm.housekeeper.php:75 adm.iconmapping.php:113
+#: adm.gui.php:99 adm.housekeeper.php:75 adm.iconmapping.php:113
 #: adm.images.php:135 adm.macros.php:162 adm.other.php:108 adm.regexps.php:212
 #: adm.triggerdisplayoptions.php:77 adm.triggerseverities.php:83
 #: adm.valuemapping.php:129 adm.workingtime.php:65
@@ -9866,10 +9866,10 @@ msgstr ""
 msgid "Remote command"
 msgstr "원격 명령"
 
-#: include/blocks.inc.php:1154 include/blocks.inc.php:1240
-#: include/blocks.inc.php:1249 include/blocks.inc.php:1266
-#: include/blocks.inc.php:1294 include/blocks.inc.php:1317
-#: include/blocks.inc.php:1378 include/blocks.inc.php:1387
+#: include/blocks.inc.php:1156 include/blocks.inc.php:1242
+#: include/blocks.inc.php:1251 include/blocks.inc.php:1268
+#: include/blocks.inc.php:1296 include/blocks.inc.php:1319
+#: include/blocks.inc.php:1380 include/blocks.inc.php:1389
 #: include/views/administration.general.iconmap.edit.php:69
 #: include/views/administration.general.iconmap.edit.php:106
 #: include/views/common.macros.php:38
@@ -10000,7 +10000,7 @@ msgstr ""
 msgid "Required performance (vps)"
 msgstr ""
 
-#: include/blocks.inc.php:755
+#: include/blocks.inc.php:757
 msgid "Required server performance, new values per second"
 msgstr ""
 
@@ -10121,6 +10121,10 @@ msgstr "재실행"
 msgid "Right"
 msgstr "오른쪽"
 
+#: include/locales.inc.php:66
+msgid "Romanian (ro_RO)"
+msgstr ""
+
 #: include/views/configuration.screen.constructor.edit.php:606
 #: screenedit.php:46
 msgid "Row span"
@@ -10135,7 +10139,7 @@ msgstr ""
 msgid "Rows"
 msgstr "행"
 
-#: include/views/administration.users.edit.php:122 profile.php:50 users.php:63
+#: include/views/administration.users.edit.php:122 profile.php:53 users.php:65
 msgid "Rows per page"
 msgstr ""
 
@@ -10183,7 +10187,7 @@ msgstr ""
 msgid "Run remote commands on hosts"
 msgstr ""
 
-#: include/locales.inc.php:66
+#: include/locales.inc.php:67
 msgid "Russian (ru_RU)"
 msgstr "러시아어 (ru_RU)"
 
@@ -10488,7 +10492,7 @@ msgstr "시나리오"
 msgid "Schedule"
 msgstr ""
 
-#: include/audit.inc.php:41 include/blocks.inc.php:1306
+#: include/audit.inc.php:41 include/blocks.inc.php:1308
 #: include/screens.inc.php:36 include/views/configuration.screen.edit.php:45
 #: include/views/configuration.screen.list.php:51
 #: include/views/configuration.slideconf.edit.php:48
@@ -10558,7 +10562,7 @@ msgstr ""
 msgid "Screen with name \"%s\" does not exist."
 msgstr ""
 
-#: dashboard.php:267 include/blocks.inc.php:1378 include/html.inc.php:477
+#: dashboard.php:267 include/blocks.inc.php:1380 include/html.inc.php:477
 #: include/html.inc.php:481 include/menu.inc.php:67 include/menu.inc.php:197
 #: include/views/configuration.screen.list.php:38
 #: include/views/configuration.template.edit.php:386
@@ -10629,7 +10633,7 @@ msgstr ""
 msgid "Search pattern is empty"
 msgstr ""
 
-#: adm.gui.php:39 include/views/administration.general.gui.edit.php:37
+#: adm.gui.php:42 include/views/administration.general.gui.edit.php:37
 msgid "Search/Filter elements limit"
 msgstr ""
 
@@ -10673,7 +10677,7 @@ msgid "Seconds"
 msgstr "초"
 
 #: events.php:358 include/forms.inc.php:489 include/forms.inc.php:507
-#: include/forms.inc.php:529 include/page_header.php:358
+#: include/forms.inc.php:529 include/page_header.php:359
 #: include/reports.inc.php:694
 #: include/views/administration.auditacts.list.php:45
 #: include/views/administration.auditlogs.list.php:59
@@ -10722,7 +10726,7 @@ msgstr "초"
 msgid "Select"
 msgstr "선택"
 
-#: include/page_header.php:324
+#: include/page_header.php:325
 msgid "Select Nodes"
 msgstr ""
 
@@ -10939,16 +10943,16 @@ msgstr "비활성 시나리오 보이기"
 msgid "Show disabled triggers"
 msgstr "비활성 트리거 보이기"
 
-#: adm.gui.php:73
+#: adm.gui.php:76
 #, php-format
 msgid "Show events max \"%1$s\"."
 msgstr ""
 
-#: adm.gui.php:34 include/views/administration.general.gui.edit.php:43
+#: adm.gui.php:37 include/views/administration.general.gui.edit.php:43
 msgid "Show events not older than (in days)"
 msgstr ""
 
-#: adm.gui.php:72
+#: adm.gui.php:75
 #, php-format
 msgid "Show events not older than (in days) \"%1$s\"."
 msgstr ""
@@ -11035,11 +11039,11 @@ msgstr "표준"
 msgid "Simple check"
 msgstr "간단 검사"
 
-#: include/blocks.inc.php:1147 include/screens.inc.php:38
+#: include/blocks.inc.php:1149 include/screens.inc.php:38
 msgid "Simple graph"
 msgstr "단순 그래프"
 
-#: include/blocks.inc.php:1249 jsLoader.php:107
+#: include/blocks.inc.php:1251 jsLoader.php:107
 msgid "Simple graphs"
 msgstr ""
 
@@ -11079,7 +11083,7 @@ msgstr ""
 msgid "Site state / province"
 msgstr ""
 
-#: include/graphs.inc.php:352
+#: include/graphs.inc.php:357
 #, php-format
 msgid "Skipped copying of graph \"%1$s\" to host \"%2$s\"."
 msgstr ""
@@ -11088,7 +11092,7 @@ msgstr ""
 msgid "Slide"
 msgstr ""
 
-#: include/audit.inc.php:45 include/blocks.inc.php:1312
+#: include/audit.inc.php:45 include/blocks.inc.php:1314
 #: include/views/monitoring.slides.php:69
 msgid "Slide show"
 msgstr "슬라이드쇼"
@@ -11120,12 +11124,12 @@ msgstr ""
 msgid "Slide shows"
 msgstr "슬라이드쇼"
 
-#: include/blocks.inc.php:1387
+#: include/blocks.inc.php:1389
 #: include/views/configuration.slideconf.edit.php:96
 msgid "Slides"
 msgstr "슬라이드"
 
-#: include/locales.inc.php:67
+#: include/locales.inc.php:68
 msgid "Slovak (sk_SK)"
 msgstr ""
 
@@ -11192,7 +11196,7 @@ msgstr ""
 msgid "Source"
 msgstr "소스"
 
-#: include/locales.inc.php:68
+#: include/locales.inc.php:69
 msgid "Spanish (es_ES)"
 msgstr "스페인어 (es_ES)"
 
@@ -11406,11 +11410,11 @@ msgid "Support"
 msgstr ""
 
 #: include/views/administration.users.edit.php:51
-#: include/views/administration.users.list.php:56 popup.php:898 users.php:45
+#: include/views/administration.users.list.php:56 popup.php:898 users.php:47
 msgid "Surname"
 msgstr "성"
 
-#: include/locales.inc.php:69
+#: include/locales.inc.php:70
 msgid "Swedish (sv_SE)"
 msgstr "스웨덴어 (sv_SE)"
 
@@ -11817,7 +11821,7 @@ msgstr ""
 msgid "Top"
 msgstr "위쪽"
 
-#: include/blocks.inc.php:375 include/classes/class.chostsinfo.php:128
+#: include/blocks.inc.php:377 include/classes/class.chostsinfo.php:128
 #: queue.php:289
 msgid "Total"
 msgstr "합계"
@@ -11910,7 +11914,7 @@ msgstr "트리거 주석"
 msgid "Trigger deleted"
 msgstr "트리거를 삭제하였습니다"
 
-#: adm.gui.php:101 adm.housekeeper.php:80 adm.iconmapping.php:118
+#: adm.gui.php:104 adm.housekeeper.php:80 adm.iconmapping.php:118
 #: adm.images.php:140 adm.macros.php:167 adm.other.php:113 adm.regexps.php:217
 #: adm.triggerdisplayoptions.php:82 adm.triggerseverities.php:88
 #: adm.valuemapping.php:134 adm.workingtime.php:70
@@ -11967,7 +11971,7 @@ msgstr ""
 msgid "Trigger prototypes of"
 msgstr ""
 
-#: adm.gui.php:100 adm.housekeeper.php:79 adm.iconmapping.php:117
+#: adm.gui.php:103 adm.housekeeper.php:79 adm.iconmapping.php:117
 #: adm.images.php:139 adm.macros.php:166 adm.other.php:112 adm.regexps.php:216
 #: adm.triggerdisplayoptions.php:81 adm.triggerseverities.php:87
 #: adm.valuemapping.php:133 adm.workingtime.php:69
@@ -12061,7 +12065,7 @@ msgstr ""
 msgid "Tuesday"
 msgstr "화"
 
-#: include/locales.inc.php:70
+#: include/locales.inc.php:71
 msgid "Turkish (tr_TR)"
 msgstr ""
 
@@ -12194,11 +12198,11 @@ msgstr ""
 msgid "USER PROFILE"
 msgstr "사용자 프로파일"
 
-#: include/config.inc.php:755
+#: include/config.inc.php:760
 msgid "UTF-8"
 msgstr "UTF-8"
 
-#: include/locales.inc.php:71
+#: include/locales.inc.php:72
 msgid "Ukrainian (uk_UA)"
 msgstr ""
 
@@ -12251,7 +12255,7 @@ msgstr "단위"
 #: include/actions.inc.php:190 include/actions.inc.php:198
 #: include/actions.inc.php:212 include/actions.inc.php:223
 #: include/actions.inc.php:251 include/actions.inc.php:570
-#: include/blocks.inc.php:1024 include/classes/class.chostsinfo.php:127
+#: include/blocks.inc.php:1026 include/classes/class.chostsinfo.php:127
 #: include/discovery.inc.php:128 include/discovery.inc.php:162
 #: include/events.inc.php:29 include/graphs.inc.php:37
 #: include/graphs.inc.php:77 include/hosts.inc.php:53 include/hosts.inc.php:80
@@ -12379,7 +12383,7 @@ msgstr ""
 msgid "Unsupported import format \"%1$s\"."
 msgstr ""
 
-#: include/blocks.inc.php:1113
+#: include/blocks.inc.php:1115
 msgctxt "discovery results in dashboard"
 msgid "Up"
 msgstr ""
@@ -12421,9 +12425,9 @@ msgstr "갱신"
 msgid "Updated status of host"
 msgstr ""
 
-#: include/blocks.inc.php:363 include/blocks.inc.php:702
-#: include/blocks.inc.php:770 include/blocks.inc.php:980
-#: include/blocks.inc.php:1070 include/blocks.inc.php:1128
+#: include/blocks.inc.php:365 include/blocks.inc.php:704
+#: include/blocks.inc.php:772 include/blocks.inc.php:982
+#: include/blocks.inc.php:1072 include/blocks.inc.php:1130
 #: include/classes/screens/CScreenSystemStatus.php:47
 #, php-format
 msgid "Updated: %s"
@@ -12511,7 +12515,7 @@ msgstr "사용자"
 msgid "User \"%s\" cannot be without user group."
 msgstr ""
 
-#: users.php:196
+#: users.php:198
 msgid "User added"
 msgstr "사용자를 추가하였습니다"
 
@@ -12536,7 +12540,7 @@ msgstr ""
 msgid "User cannot change status of himself."
 msgstr ""
 
-#: users.php:232 users.php:318
+#: users.php:234 users.php:320
 msgid "User deleted"
 msgstr "사용자를 삭제하였습니다"
 
@@ -12616,7 +12620,7 @@ msgstr "사용자 프로파일"
 msgid "User type"
 msgstr "사용자 종류"
 
-#: profile.php:173 users.php:189 users.php:251 users.php:271
+#: profile.php:176 users.php:191 users.php:253 users.php:273
 msgid "User updated"
 msgstr "사용자를 갱신하였습니다"
 
@@ -12649,11 +12653,11 @@ msgstr "사용자 (온라인)"
 msgid "Users status updated"
 msgstr ""
 
-#: users.php:294
+#: users.php:296
 msgid "Users unblocked"
 msgstr ""
 
-#: include/blocks.inc.php:713 include/classes/class.cpie.php:309
+#: include/blocks.inc.php:715 include/classes/class.cpie.php:309
 #: include/classes/screens/CScreenEvents.php:48
 #: include/classes/screens/CScreenHistory.php:168
 #: include/classes/screens/CScreenHistory.php:266 include/reports.inc.php:383
@@ -12729,7 +12733,7 @@ msgstr "값 매핑을 갱신하였습니다"
 msgid "Value map with valuemapid \"%1$s\" does not exist."
 msgstr ""
 
-#: adm.gui.php:98 adm.housekeeper.php:77 adm.iconmapping.php:115
+#: adm.gui.php:101 adm.housekeeper.php:77 adm.iconmapping.php:115
 #: adm.images.php:137 adm.macros.php:164 adm.other.php:110 adm.regexps.php:214
 #: adm.triggerdisplayoptions.php:79 adm.triggerseverities.php:85
 #: adm.valuemapping.php:131 adm.valuemapping.php:187 adm.workingtime.php:67
@@ -12864,13 +12868,13 @@ msgstr ""
 msgid "Warning. Incorrect value for field \"%1$s\": must be between %2$s and %3$s."
 msgstr ""
 
-#: include/classes/screens/CScreenBase.php:339 include/graphs.inc.php:401
+#: include/classes/screens/CScreenBase.php:339 include/graphs.inc.php:406
 #, php-format
 msgid "Warning. Maximum time period to display is %1$s day."
 msgid_plural "Warning. Maximum time period to display is %1$s days."
 msgstr[0] ""
 
-#: include/classes/screens/CScreenBase.php:334 include/graphs.inc.php:394
+#: include/classes/screens/CScreenBase.php:334 include/graphs.inc.php:399
 #, php-format
 msgid "Warning. Minimum time period to display is %1$s hour."
 msgid_plural "Warning. Minimum time period to display is %1$s hours."
@@ -12947,7 +12951,7 @@ msgstr ""
 msgid "With last event unacknowledged"
 msgstr ""
 
-#: include/blocks.inc.php:374
+#: include/blocks.inc.php:376
 msgid "With problems"
 msgstr ""
 
@@ -12960,7 +12964,7 @@ msgstr ""
 msgid "With unacknowledged events"
 msgstr ""
 
-#: include/blocks.inc.php:373
+#: include/blocks.inc.php:375
 msgid "Without problems"
 msgstr ""
 
@@ -12972,7 +12976,7 @@ msgstr ""
 msgid "Wizard"
 msgstr ""
 
-#: adm.gui.php:99 adm.housekeeper.php:78 adm.iconmapping.php:116
+#: adm.gui.php:102 adm.housekeeper.php:78 adm.iconmapping.php:116
 #: adm.images.php:138 adm.macros.php:165 adm.other.php:111 adm.regexps.php:215
 #: adm.triggerdisplayoptions.php:80 adm.triggerseverities.php:86
 #: adm.valuemapping.php:132 adm.workingtime.php:68
@@ -13168,8 +13172,8 @@ msgstr "년"
 msgid "Yearly"
 msgstr "연간"
 
-#: events.php:760 include/blocks.inc.php:722
-#: include/classes/class.cserverinfo.php:35 include/config.inc.php:563
+#: events.php:760 include/blocks.inc.php:724
+#: include/classes/class.cserverinfo.php:35 include/config.inc.php:568
 #: include/events.inc.php:304 include/events.inc.php:322
 #: include/forms.inc.php:1922 include/triggers.inc.php:1608
 #: include/views/administration.users.list.php:74
@@ -13189,7 +13193,7 @@ msgstr ""
 msgid "You are not allowed to alter privileges for user \"%s\"."
 msgstr ""
 
-#: include/config.inc.php:251
+#: include/config.inc.php:256
 msgid "You are not logged in."
 msgstr ""
 
@@ -13197,7 +13201,7 @@ msgstr ""
 msgid "You can not switch hosts for current selection."
 msgstr ""
 
-#: include/config.inc.php:252
+#: include/config.inc.php:257
 msgid "You cannot view this URL as a"
 msgstr ""
 
@@ -13256,7 +13260,7 @@ msgstr ""
 msgid "You do not have permissions to update user or user does not exist."
 msgstr ""
 
-#: include/config.inc.php:256
+#: include/config.inc.php:261
 msgid "You must login to view this page."
 msgstr ""
 
@@ -13343,11 +13347,11 @@ msgid ""
 "2. Incorrect network configuration.\n"
 msgstr ""
 
-#: include/blocks.inc.php:723
+#: include/blocks.inc.php:725
 msgid "Zabbix server IP or port is not set!"
 msgstr ""
 
-#: adm.gui.php:40
+#: adm.gui.php:43
 msgid "Zabbix server activity check interval"
 msgstr ""
 
@@ -13359,11 +13363,11 @@ msgstr ""
 msgid "Zabbix server is not running: the information displayed may not be current."
 msgstr ""
 
-#: include/blocks.inc.php:721
+#: include/blocks.inc.php:723
 msgid "Zabbix server is running"
 msgstr "ZABBIX 서버 가동 중"
 
-#: adm.gui.php:77
+#: adm.gui.php:80
 #, php-format
 msgid "Zabbix server is running check interval \"%1$s\"."
 msgstr ""
@@ -13461,7 +13465,7 @@ msgctxt "day short"
 msgid "d"
 msgstr ""
 
-#: include/maintenances.inc.php:57 include/page_header.php:484
+#: include/maintenances.inc.php:57 include/page_header.php:485
 #: include/translateDefines.inc.php:42
 #: include/views/configuration.item.list.php:101 report3.php:134
 msgid "d M Y"
@@ -13474,7 +13478,7 @@ msgid "d M Y H:i"
 msgstr ""
 
 #: acknow.php:162 events.php:282 httpdetails.php:115 httpmon.php:242
-#: include/acknow.inc.php:59 include/blocks.inc.php:954
+#: include/acknow.inc.php:59 include/blocks.inc.php:956
 #: include/classes/screens/CScreenEvents.php:63
 #: include/classes/screens/CScreenPlainText.php:95 include/events.inc.php:116
 #: include/events.inc.php:187 include/events.inc.php:243
@@ -13698,7 +13702,7 @@ msgstr ""
 msgid "no"
 msgstr ""
 
-#: include/blocks.inc.php:1438 include/classes/class.cchart.php:1825
+#: include/blocks.inc.php:1440 include/classes/class.cchart.php:1825
 #: include/classes/class.cpie.php:320 include/maps.inc.php:435
 #: include/maps.inc.php:479
 #, php-format
@@ -13733,7 +13737,7 @@ msgstr "미송신"
 msgid "now"
 msgstr ""
 
-#: include/blocks.inc.php:348 include/blocks.inc.php:692
+#: include/blocks.inc.php:350 include/blocks.inc.php:694
 #: include/func.inc.php:1718
 msgid "of"
 msgstr "of"
