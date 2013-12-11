@@ -20,11 +20,9 @@
 
 
 /**
- * File containing CScreenItem class for API.
+ * Class containing methods for operations with screen items.
+ *
  * @package API
- */
-/**
- * Class containing methods for operations with ScreenItems
  */
 class CScreenItem extends CZBXAPI {
 
@@ -104,10 +102,10 @@ class CScreenItem extends CZBXAPI {
 			// normal select query
 			else {
 				if ($options['preservekeys'] !== null) {
-					$result[$row['screenitemid']] = $this->unsetExtraFields($this->tableName(), $row, $options['output']);
+					$result[$row['screenitemid']] = $row;
 				}
 				else {
-					$result[] = $this->unsetExtraFields($this->tableName(), $row, $options['output']);
+					$result[] = $row;
 				}
 			}
 		}
@@ -474,13 +472,31 @@ class CScreenItem extends CZBXAPI {
 					self::exception(ZBX_API_ERROR_PARAMETERS, _('No URL provided for screen element.'));
 				}
 			}
+
+			// check fields specific to each resource type
+			// check "Show lines" field
+			switch ($screenItem['resourcetype']) {
+				case SCREEN_RESOURCE_ACTIONS:
+				case SCREEN_RESOURCE_EVENTS:
+				case SCREEN_RESOURCE_HOSTGROUP_TRIGGERS:
+				case SCREEN_RESOURCE_HOST_TRIGGERS:
+				case SCREEN_RESOURCE_PLAIN_TEXT:
+					if ($screenItem['elements'] < 1 || $screenItem['elements'] > 100) {
+						self::exception(ZBX_API_ERROR_PARAMETERS,
+							_s('Incorrect value "%1$s" for "%2$s" field: must be between %3$s and %4$s.',
+								$screenItem['elements'], 'elements', 1, 100
+							)
+						);
+					}
+					break;
+			}
 		}
 
 		// check host groups
 		if (!empty($hostgroups)) {
 			$result = API::HostGroup()->get(array(
 				'groupids' => $hostgroups,
-				'output' => API_OUTPUT_SHORTEN,
+				'output' => array('groupid'),
 				'preservekeys' => true
 			));
 			foreach ($hostgroups as $id) {
@@ -494,7 +510,7 @@ class CScreenItem extends CZBXAPI {
 		if ($hosts) {
 			$result = API::Host()->get(array(
 				'hostids' => $hosts,
-				'output' => API_OUTPUT_SHORTEN,
+				'output' => array('hostid'),
 				'preservekeys' => true
 			));
 			foreach ($hosts as $id) {
@@ -508,7 +524,7 @@ class CScreenItem extends CZBXAPI {
 		if ($graphs) {
 			$result = API::Graph()->get(array(
 				'graphids' => $graphs,
-				'output' => API_OUTPUT_SHORTEN,
+				'output' => array('graphid'),
 				'preservekeys' => true
 			));
 			foreach ($graphs as $id) {
@@ -522,7 +538,7 @@ class CScreenItem extends CZBXAPI {
 		if ($items) {
 			$result = API::Item()->get(array(
 				'itemids' => $items,
-				'output' => API_OUTPUT_SHORTEN,
+				'output' => array('itemid'),
 				'preservekeys' => true,
 				'webitems' => true
 			));
@@ -537,7 +553,7 @@ class CScreenItem extends CZBXAPI {
 		if ($maps) {
 			$result = API::Map()->get(array(
 				'sysmapids' => $maps,
-				'output' => API_OUTPUT_SHORTEN,
+				'output' => array('sysmapid'),
 				'preservekeys' => true
 			));
 			foreach ($maps as $id) {
@@ -551,7 +567,7 @@ class CScreenItem extends CZBXAPI {
 		if ($screens) {
 			$result = API::Screen()->get(array(
 				'screenids' => $screens,
-				'output' => API_OUTPUT_SHORTEN,
+				'output' => array('screenid'),
 				'preservekeys' => true
 			));
 			if (empty($result)) {

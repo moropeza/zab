@@ -34,12 +34,7 @@ class CScreenEvents extends CScreenBase {
 			'eventLimit' => $this->screenitem['elements']
 		);
 
-		$showUnknown = CProfile::get('web.events.filter.showUnknown', 0);
-		if ($showUnknown) {
-			$options['value'] = array(TRIGGER_VALUE_TRUE, TRIGGER_VALUE_FALSE);
-		}
-
-		$item = new CTableInfo(_('No events defined.'));
+		$item = new CTableInfo(_('No events found.'));
 		$item->setHeader(array(
 			_('Time'),
 			is_show_all_nodes() ? _('Node') : null,

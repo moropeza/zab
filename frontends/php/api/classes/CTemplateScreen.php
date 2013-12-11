@@ -21,11 +21,14 @@
 
 /**
  * Class containing methods for operations with template screens.
+ *
+ * @package API
  */
 class CTemplateScreen extends CScreen {
 
 	protected $tableName = 'screens';
 	protected $tableAlias = 's';
+	protected $sortColumns = array('screenid', 'name');
 
 	/**
 	 * Get Screen data
@@ -44,12 +47,6 @@ class CTemplateScreen extends CScreen {
 		$result = array();
 		$userType = self::$userData['type'];
 		$userid = self::$userData['userid'];
-
-		// allowed columns for sorting
-		$sortColumns = array('screenid', 'name');
-
-		// allowed output options for [ select_* ] params
-		$subselectsAllowedOutputs = array(API_OUTPUT_REFER, API_OUTPUT_EXTEND);
 
 		$sqlParts = array(
 			'select'	=> array('screens' => 's.screenid,s.templateid'),
@@ -88,18 +85,6 @@ class CTemplateScreen extends CScreen {
 		);
 		$options = zbx_array_merge($defOptions, $options);
 
-		if (is_array($options['output'])) {
-			unset($sqlParts['select']['screens']);
-
-			$dbTable = DB::getSchema('screens');
-			foreach ($options['output'] as $field) {
-				if (isset($dbTable['fields'][$field])) {
-					$sqlParts['select'][$field] = 's.'.$field;
-				}
-			}
-			$options['output'] = API_OUTPUT_CUSTOM;
-		}
-
 		if (!is_null($options['editable']) || (is_null($options['hostids']) && is_null($options['templateids']))) {
 			$options['noInheritance'] = 1;
 		}
@@ -127,7 +112,7 @@ class CTemplateScreen extends CScreen {
 			}
 			else {
 				// TODO: get screen
-				$permission = $options['editable'] ? PERM_READ_WRITE : PERM_READ_ONLY;
+				$permission = $options['editable'] ? PERM_READ_WRITE : PERM_READ;
 
 				$userGroups = getUserGroupsByUserId($userid);
 
@@ -139,7 +124,8 @@ class CTemplateScreen extends CScreen {
 									' AND '.dbConditionInt('r.groupid', $userGroups).
 						' WHERE s.templateid=hgg.hostid'.
 						' GROUP BY hgg.hostid'.
-						' HAVING MIN(r.permission)>='.$permission.
+						' HAVING MIN(r.permission)>'.PERM_DENY.
+							' AND MAX(r.permission)>='.$permission.
 						')';
 			}
 		}
@@ -178,11 +164,11 @@ class CTemplateScreen extends CScreen {
 		}
 
 		// hostids
+		$templatesChain = array();
 		if (!is_null($options['hostids'])) {
 			zbx_value2array($options['hostids']);
 
 			// collecting template chain
-			$templatesChain = array();
 			$linkedTemplateids = $options['hostids'];
 			$childTemplateids = $options['hostids'];
 
@@ -200,10 +186,6 @@ class CTemplateScreen extends CScreen {
 					createParentToChildRelation($templatesChain, $link, 'templateid', 'hostid');
 				}
 			}
-
-			if ($options['output'] != API_OUTPUT_EXTEND) {
-				$sqlParts['select']['templateid'] = 's.templateid';
-			}
 			if (!is_null($options['groupCount'])) {
 				$sqlParts['group']['templateid'] = 's.templateid';
 			}
@@ -220,70 +202,15 @@ class CTemplateScreen extends CScreen {
 			zbx_db_search('screens s', $options, $sqlParts);
 		}
 
-		// output
-		if ($options['output'] == API_OUTPUT_EXTEND) {
-			$sqlParts['select']['screens'] = 's.*';
-		}
-
-		// countOutput
-		if (!is_null($options['countOutput'])) {
-			$options['sortfield'] = '';
-			$sqlParts['select'] = array('count(DISTINCT s.screenid) as rowscount');
-
-			// groupCount
-			if (!is_null($options['groupCount'])) {
-				foreach ($sqlParts['group'] as $key => $fields) {
-					$sqlParts['select'][$key] = $fields;
-				}
-			}
-		}
-
-		// sorting
-		zbx_db_sorting($sqlParts, $options, $sortColumns, 's');
-
 		// limit
 		if (zbx_ctype_digit($options['limit']) && $options['limit']) {
 			$sqlParts['limit'] = $options['limit'];
 		}
 
-		$screenids = array();
-
-		$sqlParts['select'] = array_unique($sqlParts['select']);
-		$sqlParts['from'] = array_unique($sqlParts['from']);
-		$sqlParts['where'] = array_unique($sqlParts['where']);
-		$sqlParts['group'] = array_unique($sqlParts['group']);
-		$sqlParts['order'] = array_unique($sqlParts['order']);
-
-		$sqlSelect = '';
-		$sqlFrom = '';
-		$sqlWhere = '';
-		$sqlGroup = '';
-		$sqlOrder = '';
-		if (!empty($sqlParts['select'])) {
-			$sqlSelect .= implode(',', $sqlParts['select']);
-		}
-		if (!empty($sqlParts['from'])) {
-			$sqlFrom .= implode(',', $sqlParts['from']);
-		}
-		if (!empty($sqlParts['where'])) {
-			$sqlWhere .= ' AND '.implode(' AND ', $sqlParts['where']);
-		}
-		if (!empty($sqlParts['group'])) {
-			$sqlGroup .= ' GROUP BY '.implode(',', $sqlParts['group']);
-		}
-		if (!empty($sqlParts['order'])) {
-			$sqlOrder .= ' ORDER BY '.implode(',', $sqlParts['order']);
-		}
-		$sqlLimit = $sqlParts['limit'];
-
-		$sql = 'SELECT '.zbx_db_distinct($sqlParts).' '.$sqlSelect.
-				' FROM '.$sqlFrom.
-				' WHERE '.DBin_node('s.screenid', $nodeids).
-				$sqlWhere.
-				$sqlGroup.
-				$sqlOrder;
-
-		$res = DBselect($sql, $sqlLimit);
+		$sqlParts = $this->applyQueryOutputOptions($this->tableName(), $this->tableAlias(), $options, $sqlParts);
+		$sqlParts = $this->applyQuerySortOptions($this->tableName(), $this->tableAlias(), $options, $sqlParts);
+		$sqlParts = $this->applyQueryNodeOptions($this->tableName(), $this->tableAlias(), $options, $sqlParts);
+		$res = DBselect($this->createSelectQueryFromParts($sqlParts), $sqlParts['limit']);
 		while ($screen = DBfetch($res)) {
 			if (!is_null($options['countOutput'])) {
 				if (!is_null($options['groupCount'])) {
@@ -294,62 +221,56 @@ class CTemplateScreen extends CScreen {
 				}
 			}
 			else {
-				$screenids[$screen['screenid']] = $screen['screenid'];
-
-				if ($options['output'] == API_OUTPUT_SHORTEN) {
-					$result[$screen['screenid']] = array(
-						'screenid' => $screen['screenid'],
-						'templateid' => $screen['templateid']
-					);
+				if (!isset($result[$screen['screenid']])) {
+					$result[$screen['screenid']] = array();
 				}
-				else {
-					if (!isset($result[$screen['screenid']])) {
-						$result[$screen['screenid']] = array();
-					}
 
-					if (!is_null($options['selectScreenItems']) && !isset($result[$screen['screenid']]['screenitems'])) {
+				if (isset($screen['screenitemid']) && is_null($options['selectScreenItems'])) {
+					if (!isset($result[$screen['screenid']]['screenitems'])) {
 						$result[$screen['screenid']]['screenitems'] = array();
 					}
-
-					if (isset($screen['screenitemid']) && is_null($options['selectScreenItems'])) {
-						if (!isset($result[$screen['screenid']]['screenitems'])) {
-							$result[$screen['screenid']]['screenitems'] = array();
-						}
-						$result[$screen['screenid']]['screenitems'][] = array('screenitemid' => $screen['screenitemid']);
-						unset($screen['screenitemid']);
-					}
-					$result[$screen['screenid']] += $screen;
+					$result[$screen['screenid']]['screenitems'][] = array('screenitemid' => $screen['screenitemid']);
+					unset($screen['screenitemid']);
 				}
+				$result[$screen['screenid']] += $screen;
 			}
 		}
 
-		// hashing
-		$options['hostids'] = zbx_toHash($options['hostids']);
+		if ($options['countOutput'] !== null && $options['groupCount'] === null) {
+			return $result;
+		}
+
+		$screenIds = array_keys($result);
 
 		// adding screenitems
-		if (!is_null($options['selectScreenItems']) && str_in_array($options['selectScreenItems'], $subselectsAllowedOutputs)) {
-			$screensItems = array();
-			$dbSitems = DBselect('SELECT si.* FROM screens_items si WHERE '.dbConditionInt('si.screenid', $screenids));
-			while ($sitem = DBfetch($dbSitems)) {
-				// sorting
-				$screensItems[$sitem['screenitemid']] = $sitem;
-				switch ($sitem['resourcetype']) {
+		if ($options['selectScreenItems'] !== null && $options['selectScreenItems'] != API_OUTPUT_COUNT) {
+			$screenItems = API::getApi()->select('screens_items', array(
+				'output' => $this->outputExtend('screens_items',
+					array('screenid', 'screenitemid', 'resourcetype', 'resourceid'), $options['selectScreenItems']
+				),
+				'filter' => array('screenid' => $screenIds),
+				'preservekeys' => true,
+				'nodeids' => get_current_nodeid(true)
+			));
+			$relationMap = $this->createRelationMap($screenItems, 'screenid', 'screenitemid');
+
+			foreach ($screenItems as $screenItem) {
+				switch ($screenItem['resourcetype']) {
 					case SCREEN_RESOURCE_GRAPH:
-						$graphids[$sitem['resourceid']] = $sitem['resourceid'];
+						$graphids[$screenItem['resourceid']] = $screenItem['resourceid'];
 						break;
 					case SCREEN_RESOURCE_SIMPLE_GRAPH:
 					case SCREEN_RESOURCE_PLAIN_TEXT:
-						$itemids[$sitem['resourceid']] = $sitem['resourceid'];
+						$itemids[$screenItem['resourceid']] = $screenItem['resourceid'];
 						break;
 				}
 			}
 
-			foreach ($screensItems as $sitem) {
-				if (!isset($result[$sitem['screenid']]['screenitems'])) {
-					$result[$sitem['screenid']]['screenitems'] = array();
-				}
-				$result[$sitem['screenid']]['screenitems'][] = $sitem;
-			}
+			$screenItems = $this->unsetExtraFields($screenItems,
+				array('screenid', 'screenitemid', 'resourceid', 'resourcetype'),
+				$options['selectScreenItems']
+			);
+			$result = $relationMap->mapMany($result, $screenItems, 'screenitems');
 		}
 
 		// creating linkage of template -> real objects
@@ -365,6 +286,7 @@ class CTemplateScreen extends CScreen {
 
 				$dbGraphs = API::Graph()->get(array(
 					'output' => array('graphid', 'name'),
+					'selectHosts' => array('hostid'),
 					'hostids' => $options['hostids'],
 					'filter' => array('name' => zbx_objectValues($tplGraphs, 'name')),
 					'nopermissions' => true,
@@ -385,14 +307,14 @@ class CTemplateScreen extends CScreen {
 			// prepare items
 			if (!empty($itemids)) {
 				$tplItems = API::Item()->get(array(
-					'output' => array('itemid', 'key_'),
+					'output' => array('itemid', 'key_', 'hostid'),
 					'itemids' => $itemids,
 					'nopermissions' => true,
 					'preservekeys' => true
 				));
 
 				$dbItems = API::Item()->get(array(
-					'output' => array('itemid', 'key_'),
+					'output' => array('itemid', 'key_', 'hostid'),
 					'hostids' => $options['hostids'],
 					'filter' => array('key_' => zbx_objectValues($tplItems, 'key_')),
 					'nopermissions' => true,
@@ -411,7 +333,10 @@ class CTemplateScreen extends CScreen {
 			}
 		}
 
-		if (is_null($options['countOutput']) || (!is_null($options['countOutput']) && !is_null($options['groupCount']))) {
+		// hashing
+		$options['hostids'] = zbx_toHash($options['hostids']);
+		if (is_null($options['countOutput'])
+				|| (!is_null($options['countOutput']) && !is_null($options['groupCount']))) {
 			// creating copies of templated screens (inheritance)
 			// screenNum is needed due to we can't refer to screenid/hostid/templateid as they will repeat
 			$screenNum = 0;
@@ -463,6 +388,10 @@ class CTemplateScreen extends CScreen {
 			return $result;
 		}
 
+		if ($result) {
+			$result = $this->unsetExtraFields($result, array('templateid'), $options['output']);
+		}
+
 		// removing keys (hash -> array)
 		if (is_null($options['preservekeys'])) {
 			$result = zbx_cleanHashes($result);
@@ -480,7 +409,7 @@ class CTemplateScreen extends CScreen {
 		$options = array(
 			'filter' => zbx_array_mintersect($keyFields, $data),
 			'preservekeys' => true,
-			'output' => API_OUTPUT_SHORTEN,
+			'output' => array('screenid'),
 			'nopermissions' => true,
 			'limit' => 1
 		);
@@ -615,7 +544,7 @@ class CTemplateScreen extends CScreen {
 			// get same items on destination template
 			$resourceItemsMap = array();
 			$dbItems = DBselect(
-				'SELECT src.itemid as srcid,dest.itemid as destid'.
+				'SELECT src.itemid AS srcid,dest.itemid as destid'.
 						' FROM items dest,items src'.
 						' WHERE dest.key_=src.key_'.
 						' AND dest.hostid='.zbx_dbstr($templateId).
@@ -628,7 +557,7 @@ class CTemplateScreen extends CScreen {
 			// get same graphs on destination template
 			$resourceGraphsMap = array();
 			$dbItems = DBselect(
-				'SELECT src.graphid as srcid,dest.graphid as destid'.
+				'SELECT src.graphid AS srcid,dest.graphid as destid'.
 						' FROM graphs dest,graphs src,graphs_items destgi,items desti'.
 						' WHERE dest.name=src.name'.
 						' AND destgi.graphid=dest.graphid'.
@@ -754,7 +683,7 @@ class CTemplateScreen extends CScreen {
 					),
 					'preservekeys' => true,
 					'nopermissions' => true,
-					'output' => API_OUTPUT_SHORTEN
+					'output' => array('screenid')
 				));
 				$existScreen = reset($existScreens);
 
@@ -835,7 +764,6 @@ class CTemplateScreen extends CScreen {
 		$count = $this->get(array(
 			'nodeids' => get_current_nodeid(true),
 			'screenids' => $ids,
-			'output' => API_OUTPUT_SHORTEN,
 			'countOutput' => true
 		));
 
@@ -859,11 +787,21 @@ class CTemplateScreen extends CScreen {
 		$count = $this->get(array(
 			'nodeids' => get_current_nodeid(true),
 			'screenids' => $ids,
-			'output' => API_OUTPUT_SHORTEN,
 			'editable' => true,
 			'countOutput' => true
 		));
 
 		return (count($ids) == $count);
+	}
+
+	protected function applyQueryOutputOptions($tableName, $tableAlias, array $options, array $sqlParts) {
+		$sqlParts = parent::applyQueryOutputOptions($tableName, $tableAlias, $options, $sqlParts);
+
+		if ($options['countOutput'] === null) {
+			// request the templateid field for inheritance to work
+			$sqlParts = $this->addQuerySelect($this->fieldId('templateid'), $sqlParts);
+		}
+
+		return $sqlParts;
 	}
 }

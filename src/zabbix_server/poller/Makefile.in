@@ -43,11 +43,10 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/ax_lib_ibm_db2.m4 \
 	$(top_srcdir)/m4/ax_lib_postgresql.m4 \
 	$(top_srcdir)/m4/ax_lib_sqlite3.m4 $(top_srcdir)/m4/iconv.m4 \
 	$(top_srcdir)/m4/jabber.m4 $(top_srcdir)/m4/ldap.m4 \
-	$(top_srcdir)/m4/libcurl.m4 $(top_srcdir)/m4/libiodbc.m4 \
-	$(top_srcdir)/m4/libssh2.m4 $(top_srcdir)/m4/libunixodbc.m4 \
+	$(top_srcdir)/m4/libcurl.m4 $(top_srcdir)/m4/libssh2.m4 \
+	$(top_srcdir)/m4/libunixodbc.m4 $(top_srcdir)/m4/libxml2.m4 \
 	$(top_srcdir)/m4/netsnmp.m4 $(top_srcdir)/m4/openipmi.m4 \
-	$(top_srcdir)/m4/resolv.m4 $(top_srcdir)/m4/ucdsnmp.m4 \
-	$(top_srcdir)/configure.in
+	$(top_srcdir)/m4/resolv.m4 $(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -59,11 +58,21 @@ AR = ar
 ARFLAGS = cru
 libzbxpoller_a_AR = $(AR) $(ARFLAGS)
 libzbxpoller_a_LIBADD =
+am__libzbxpoller_a_SOURCES_DIST = checks_agent.c checks_agent.h \
+	checks_internal.c checks_internal.h checks_simple.c \
+	checks_simple.h checks_simple_vmware.c checks_simple_vmware.h \
+	checks_snmp.c checks_snmp.h checks_db.c checks_db.h \
+	checks_aggregate.c checks_aggregate.h checks_external.c \
+	checks_external.h checks_ipmi.c checks_ipmi.h checks_ssh.c \
+	checks_ssh.h checks_telnet.c checks_telnet.h checks_java.c \
+	checks_java.h checks_calculated.c checks_calculated.h poller.c \
+	poller.h
+@WITH_ODBC_TRUE@am__objects_1 = libzbxpoller_a-checks_db.$(OBJEXT)
 am_libzbxpoller_a_OBJECTS = libzbxpoller_a-checks_agent.$(OBJEXT) \
 	libzbxpoller_a-checks_internal.$(OBJEXT) \
 	libzbxpoller_a-checks_simple.$(OBJEXT) \
-	libzbxpoller_a-checks_snmp.$(OBJEXT) \
-	libzbxpoller_a-checks_db.$(OBJEXT) \
+	libzbxpoller_a-checks_simple_vmware.$(OBJEXT) \
+	libzbxpoller_a-checks_snmp.$(OBJEXT) $(am__objects_1) \
 	libzbxpoller_a-checks_aggregate.$(OBJEXT) \
 	libzbxpoller_a-checks_external.$(OBJEXT) \
 	libzbxpoller_a-checks_ipmi.$(OBJEXT) \
@@ -82,7 +91,7 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(libzbxpoller_a_SOURCES)
-DIST_SOURCES = $(libzbxpoller_a_SOURCES)
+DIST_SOURCES = $(am__libzbxpoller_a_SOURCES_DIST)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -121,9 +130,6 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
-IODBC_CFLAGS = @IODBC_CFLAGS@
-IODBC_LDFLAGS = @IODBC_LDFLAGS@
-IODBC_LIBS = @IODBC_LIBS@
 JABBER_CPPFLAGS = @JABBER_CPPFLAGS@
 JABBER_LDFLAGS = @JABBER_LDFLAGS@
 JABBER_LIBS = @JABBER_LIBS@
@@ -138,6 +144,11 @@ LIBCURL_LDFLAGS = @LIBCURL_LDFLAGS@
 LIBCURL_LIBS = @LIBCURL_LIBS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
+LIBXML2_CFLAGS = @LIBXML2_CFLAGS@
+LIBXML2_CONFIG = @LIBXML2_CONFIG@
+LIBXML2_LDFLAGS = @LIBXML2_LDFLAGS@
+LIBXML2_LIBS = @LIBXML2_LIBS@
+LIBXML2_VERSION = @LIBXML2_VERSION@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
 MKDIR_P = @MKDIR_P@
@@ -147,10 +158,7 @@ MYSQL_LDFLAGS = @MYSQL_LDFLAGS@
 MYSQL_LIBS = @MYSQL_LIBS@
 MYSQL_VERSION = @MYSQL_VERSION@
 OBJEXT = @OBJEXT@
-ODBC_CFLAGS = @ODBC_CFLAGS@
 ODBC_CONFIG = @ODBC_CONFIG@
-ODBC_LDFLAGS = @ODBC_LDFLAGS@
-ODBC_LIBS = @ODBC_LIBS@
 OPENIPMI_CFLAGS = @OPENIPMI_CFLAGS@
 OPENIPMI_LDFLAGS = @OPENIPMI_LDFLAGS@
 OPENIPMI_LIBS = @OPENIPMI_LIBS@
@@ -186,7 +194,6 @@ SERVER_LIBS = @SERVER_LIBS@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 SNMP_CFLAGS = @SNMP_CFLAGS@
-SNMP_CPPFLAGS = @SNMP_CPPFLAGS@
 SNMP_LDFLAGS = @SNMP_LDFLAGS@
 SNMP_LIBS = @SNMP_LIBS@
 SQLITE3_CPPFLAGS = @SQLITE3_CPPFLAGS@
@@ -254,12 +261,15 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 noinst_LIBRARIES = libzbxpoller.a
+@WITH_ODBC_FALSE@CHECKS_DB_SRC = 
+@WITH_ODBC_TRUE@CHECKS_DB_SRC = checks_db.c checks_db.h
 libzbxpoller_a_SOURCES = \
 	checks_agent.c checks_agent.h \
 	checks_internal.c checks_internal.h \
 	checks_simple.c checks_simple.h \
+	checks_simple_vmware.c checks_simple_vmware.h \
 	checks_snmp.c checks_snmp.h \
-	checks_db.c checks_db.h \
+	${CHECKS_DB_SRC} \
 	checks_aggregate.c checks_aggregate.h \
 	checks_external.c checks_external.h \
 	checks_ipmi.c checks_ipmi.h \
@@ -269,7 +279,7 @@ libzbxpoller_a_SOURCES = \
 	checks_calculated.c checks_calculated.h \
 	poller.c poller.h
 
-libzbxpoller_a_CFLAGS = -I@top_srcdir@/src/libs/zbxsysinfo/simple
+libzbxpoller_a_CFLAGS = -I@top_srcdir@/src/libs/zbxsysinfo/simple -I@top_srcdir@/src/libs/zbxdbcache
 all: all-am
 
 .SUFFIXES:
@@ -327,6 +337,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libzbxpoller_a-checks_ipmi.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libzbxpoller_a-checks_java.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libzbxpoller_a-checks_simple.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libzbxpoller_a-checks_simple_vmware.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libzbxpoller_a-checks_snmp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libzbxpoller_a-checks_ssh.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libzbxpoller_a-checks_telnet.Po@am__quote@
@@ -387,6 +398,20 @@ libzbxpoller_a-checks_simple.obj: checks_simple.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='checks_simple.c' object='libzbxpoller_a-checks_simple.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libzbxpoller_a_CFLAGS) $(CFLAGS) -c -o libzbxpoller_a-checks_simple.obj `if test -f 'checks_simple.c'; then $(CYGPATH_W) 'checks_simple.c'; else $(CYGPATH_W) '$(srcdir)/checks_simple.c'; fi`
+
+libzbxpoller_a-checks_simple_vmware.o: checks_simple_vmware.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libzbxpoller_a_CFLAGS) $(CFLAGS) -MT libzbxpoller_a-checks_simple_vmware.o -MD -MP -MF $(DEPDIR)/libzbxpoller_a-checks_simple_vmware.Tpo -c -o libzbxpoller_a-checks_simple_vmware.o `test -f 'checks_simple_vmware.c' || echo '$(srcdir)/'`checks_simple_vmware.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libzbxpoller_a-checks_simple_vmware.Tpo $(DEPDIR)/libzbxpoller_a-checks_simple_vmware.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='checks_simple_vmware.c' object='libzbxpoller_a-checks_simple_vmware.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libzbxpoller_a_CFLAGS) $(CFLAGS) -c -o libzbxpoller_a-checks_simple_vmware.o `test -f 'checks_simple_vmware.c' || echo '$(srcdir)/'`checks_simple_vmware.c
+
+libzbxpoller_a-checks_simple_vmware.obj: checks_simple_vmware.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libzbxpoller_a_CFLAGS) $(CFLAGS) -MT libzbxpoller_a-checks_simple_vmware.obj -MD -MP -MF $(DEPDIR)/libzbxpoller_a-checks_simple_vmware.Tpo -c -o libzbxpoller_a-checks_simple_vmware.obj `if test -f 'checks_simple_vmware.c'; then $(CYGPATH_W) 'checks_simple_vmware.c'; else $(CYGPATH_W) '$(srcdir)/checks_simple_vmware.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libzbxpoller_a-checks_simple_vmware.Tpo $(DEPDIR)/libzbxpoller_a-checks_simple_vmware.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='checks_simple_vmware.c' object='libzbxpoller_a-checks_simple_vmware.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libzbxpoller_a_CFLAGS) $(CFLAGS) -c -o libzbxpoller_a-checks_simple_vmware.obj `if test -f 'checks_simple_vmware.c'; then $(CYGPATH_W) 'checks_simple_vmware.c'; else $(CYGPATH_W) '$(srcdir)/checks_simple_vmware.c'; fi`
 
 libzbxpoller_a-checks_snmp.o: checks_snmp.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libzbxpoller_a_CFLAGS) $(CFLAGS) -MT libzbxpoller_a-checks_snmp.o -MD -MP -MF $(DEPDIR)/libzbxpoller_a-checks_snmp.Tpo -c -o libzbxpoller_a-checks_snmp.o `test -f 'checks_snmp.c' || echo '$(srcdir)/'`checks_snmp.c

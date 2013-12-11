@@ -25,18 +25,19 @@ $discoveryWidget = new CWidget();
 $createForm = new CForm('get');
 $createForm->cleanItems();
 $createForm->addItem(new CSubmit('form', _('Create discovery rule')));
-$discoveryWidget->addPageHeader(_('CONFIGURATION OF DISCOVERY RULE'), $createForm);
+$discoveryWidget->addPageHeader(_('CONFIGURATION OF DISCOVERY RULES'), $createForm);
 $discoveryWidget->addHeader(_('Discovery rule'));
 $discoveryWidget->addHeaderRowNumber();
 
 // create form
-$discoveryForm = new CForm('get');
+$discoveryForm = new CForm();
 $discoveryForm->setName('druleForm');
 
 // create table
-$discoveryTable = new CTableInfo(_('No discovery rules defined.'));
+$discoveryTable = new CTableInfo(_('No discovery rules found.'));
 $discoveryTable->setHeader(array(
 	new CCheckBox('all_drules', null, "checkAll('".$discoveryForm->getName()."', 'all_drules', 'g_druleid');"),
+	$this->data['displayNodes'] ? _('Node') : null,
 	make_sorting_header(_('Name'), 'name'),
 	_('IP range'),
 	_('Delay'),
@@ -54,6 +55,7 @@ foreach ($data['drules'] as $drule) {
 
 	$discoveryTable->addRow(array(
 		new CCheckBox('g_druleid['.$drule['druleid'].']', null, null, $drule['druleid']),
+		$this->data['displayNodes'] ? $drule['nodename'] : null,
 		$drule['description'],
 		$drule['iprange'],
 		$drule['delay'],

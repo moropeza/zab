@@ -55,11 +55,11 @@ if ((PAGE_TYPE_JS == $page['type']) || (PAGE_TYPE_HTML_BLOCK == $page['type'])) 
 }
 
 
-$admin = in_array($USER_DETAILS['type'], array(
+$admin = in_array(CWebUser::$data['type'], array(
 	USER_TYPE_ZABBIX_ADMIN,
 	USER_TYPE_SUPER_ADMIN
 ));
-$rows_per_page = $USER_DETAILS['rows_per_page'];
+$rows_per_page = CWebUser::$data['rows_per_page'];
 
 $searchWidget = new CWidget('search_wdgt');
 
@@ -71,7 +71,7 @@ if (zbx_empty($search)) {
 }
 $searchWidget->setClass('header');
 $searchWidget->addHeader(array(
-	_('SEARCH').': ',
+	_('SEARCH').NAME_DELIMITER,
 	bold($search)
 ), SPACE);
 
@@ -91,6 +91,8 @@ $params = array(
 	'selectGraphs' => API_OUTPUT_COUNT,
 	'selectApplications' => API_OUTPUT_COUNT,
 	'selectScreens' => API_OUTPUT_COUNT,
+	'selectHttpTests' => API_OUTPUT_COUNT,
+	'selectDiscoveries' => API_OUTPUT_COUNT,
 	'output' => array('name', 'status'),
 	'searchByAny' => true
 );
@@ -123,7 +125,7 @@ $params = array(
 $overalCount = API::Host()->get($params);
 $viewCount = count($hosts);
 
-$table = new CTableInfo();
+$table = new CTableInfo(_('No hosts found.'));
 $table->setHeader(array(
 	ZBX_DISTRIBUTED ? new CCol(_('Node')) : null,
 	new CCol(_('Hosts')),
@@ -132,11 +134,15 @@ $table->setHeader(array(
 	new CCol(_('Latest data')),
 	new CCol(_('Triggers')),
 	new CCol(_('Events')),
+	new CCol(_('Graphs')),
 	new CCol(_('Screens')),
+	new CCol(_('Web')),
 	new CCol(_('Applications')),
 	new CCol(_('Items')),
 	new CCol(_('Triggers')),
 	new CCol(_('Graphs')),
+	new CCol(_('Discovery')),
+	new CCol(_('Web'))
 ));
 
 foreach ($hosts as $hnum => $host) {
@@ -172,25 +178,23 @@ foreach ($hosts as $hnum => $host) {
 			new CLink(_('Graphs'), 'graphs.php?'.$link),
 			' ('.$host['graphs'].')'
 		);
+		$discoveryLink = array(
+			new CLink(_('Discovery'), 'host_discovery.php?'.$link),
+			' ('.$host['discoveries'].')'
+		);
+		$httpTestsLink = array(
+			new CLink(_('Web'), 'httpconf.php?'.$link),
+			' ('.$host['httpTests'].')'
+		);
 	}
 	else {
 		$host_link = new CSpan($caption, $style);
-		$applications_link = array(
-			new CSpan(_('Applications'), 'unknown'),
-			' ('.$host['applications'].')'
-		);
-		$items_link = array(
-			new CSpan(_('Items'), 'unknown'),
-			' ('.$host['items'].')'
-		);
-		$triggers_link = array(
-			new CSpan(_('Triggers'), 'unknown'),
-			' ('.$host['triggers'].')'
-		);
-		$graphs_link = array(
-			new CSpan(_('Graphs'), 'unknown'),
-			' ('.$host['graphs'].')'
-		);
+		$applications_link = _('Applications').' ('.$host['applications'].')';
+		$items_link = _('Items').' ('.$host['items'].')';
+		$triggers_link = _('Triggers').' ('.$host['triggers'].')';
+		$graphs_link = _('Graphs').' ('.$host['graphs'].')';
+		$discoveryLink = _('Discovery').' ('.$host['discoveries'].')';
+		$httpTestsLink = _('Web').' ('.$host['httpTests'].')';
 	}
 
 	$hostip = make_decoration($host['ip'], $search);
@@ -204,11 +208,15 @@ foreach ($hosts as $hnum => $host) {
 		new CLink(_('Latest data'), 'latest.php?'.$link),
 		new CLink(_('Triggers'), 'tr_status.php?'.$link),
 		new CLink(_('Events'), 'events.php?'.$link),
+		new CLink(_('Graphs'), 'charts.php?'.$link),
 		new CLink(_('Screens'), 'host_screen.php?hostid='.$hostid),
+		new CLink(_('Web'), 'httpmon.php?'.$link),
 		$applications_link,
 		$items_link,
 		$triggers_link,
 		$graphs_link,
+		$discoveryLink,
+		$httpTestsLink
 	));
 }
 
@@ -259,11 +267,13 @@ $header = array(
 	new CCol(_('Latest data')),
 	new CCol(_('Triggers')),
 	new CCol(_('Events')),
+	new CCol(_('Graphs')),
+	new CCol(_('Web')),
 	$admin ? new CCol(_('Hosts')) : null,
 	$admin ? new CCol(_('Templates')) : null,
 );
 
-$table = new CTableInfo();
+$table = new CTableInfo(_('No host groups found.'));
 $table->setHeader($header);
 
 foreach ($hostGroups as $hnum => $group) {
@@ -284,7 +294,7 @@ foreach ($hostGroups as $hnum => $group) {
 				);
 			}
 			else {
-				$hostsLink = new CSpan(_('Hosts').' (0)', 'unknown');
+				$hostsLink = _('Hosts').' (0)';
 			}
 
 			if ($group['templates']) {
@@ -294,7 +304,7 @@ foreach ($hostGroups as $hnum => $group) {
 				);
 			}
 			else {
-				$templatesLink = new CSpan(_('Templates').' (0)', 'unknown');
+				$templatesLink = _('Templates').' (0)';
 			}
 
 			$hgroup_link = new CLink($caption, 'hostgroups.php?form=update&'.$link);
@@ -311,6 +321,8 @@ foreach ($hostGroups as $hnum => $group) {
 		new CLink(_('Latest data'), 'latest.php?'.$link),
 		new CLink(_('Triggers'), 'tr_status.php?'.$link),
 		new CLink(_('Events'), 'events.php?'.$link),
+		new CLink(_('Graphs'), 'charts.php?'.$link),
+		new CLink(_('Web'), 'httpmon.php?'.$link),
 		$hostsLink,
 		$templatesLink
 	));
@@ -336,6 +348,8 @@ if ($admin) {
 		'selectGraphs' => API_OUTPUT_COUNT,
 		'selectApplications' => API_OUTPUT_COUNT,
 		'selectScreens' => API_OUTPUT_COUNT,
+		'selectHttpTests' => API_OUTPUT_COUNT,
+		'selectDiscoveries' => API_OUTPUT_COUNT,
 		'limit' => $rows_per_page
 	);
 	$db_templates = API::Template()->get($params);
@@ -370,13 +384,15 @@ if ($admin) {
 		new CCol(_('Triggers')),
 		new CCol(_('Graphs')),
 		new CCol(_('Screens')),
+		new CCol(_('Discovery')),
+		new CCol(_('Web')),
 	);
 
-	$table = new CTableInfo();
+	$table = new CTableInfo(_('No templates found.'));
 	$table->setHeader($header);
 
 	foreach ($templates as $tnum => $template) {
-		$templateid = $template['hostid'];
+		$templateid = $template['templateid'];
 
 		$group = reset($template['groups']);
 		$link = 'groupid='.$group['groupid'].'&hostid='.$templateid.'&switch_node='.id2nodeid($templateid);
@@ -405,29 +421,24 @@ if ($admin) {
 				new CLink(_('Screens'), 'screenconf.php?templateid='.$templateid),
 				' ('.$template['screens'].')'
 			);
+			$discoveryLink = array(
+				new CLink(_('Discovery'), 'host_discovery.php?'.$link),
+				' ('.$template['discoveries'].')'
+			);
+			$httpTestsLink = array(
+				new CLink(_('Web'), 'httpconf.php?'.$link),
+				' ('.$template['httpTests'].')'
+			);
 		}
 		else {
 			$template_link = new CSpan($caption);
-			$applications_link = array(
-				new CSpan(_('Applications'), 'unknown'),
-				' ('.$template['applications'].')'
-			);
-			$items_link = array(
-				new CSpan(_('Items'), 'unknown'),
-				' ('.$template['items'].')'
-			);
-			$triggers_link = array(
-				new CSpan(_('Triggers'), 'unknown'),
-				' ('.$template['triggers'].')'
-			);
-			$graphs_link = array(
-				new CSpan(_('Graphs'), 'unknown'),
-				' ('.$template['graphs'].')'
-			);
-			$screensLink = array(
-				new CSpan(_('Screens'), 'unknown'),
-				' ('.$template['screens'].')'
-			);
+			$applications_link = _('Applications').' ('.$template['applications'].')';
+			$items_link = _('Items').' ('.$template['items'].')';
+			$triggers_link = _('Triggers').' ('.$template['triggers'].')';
+			$graphs_link = _('Graphs').' ('.$template['graphs'].')';
+			$screensLink = _('Screens').' ('.$template['screens'].')';
+			$discoveryLink = _('Discovery').' ('.$template['discoveries'].')';
+			$httpTestsLink = _('Web').' ('.$template['httpTests'].')';
 		}
 
 		$table->addRow(array(
@@ -437,7 +448,9 @@ if ($admin) {
 			$items_link,
 			$triggers_link,
 			$graphs_link,
-			$screensLink
+			$screensLink,
+			$discoveryLink,
+			$httpTestsLink
 		));
 	}
 

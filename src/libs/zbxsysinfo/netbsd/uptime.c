@@ -20,7 +20,7 @@
 #include "common.h"
 #include "sysinfo.h"
 
-int	SYSTEM_UPTIME(const char *cmd, const char *param, unsigned flags, AGENT_RESULT *result)
+int	SYSTEM_UPTIME(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
 #if defined(HAVE_SYSINFO_UPTIME)
 	struct sysinfo info;
@@ -84,7 +84,7 @@ int	SYSTEM_UPTIME(const char *cmd, const char *param, unsigned flags, AGENT_RESU
 	/* make sure we do not divide by 0 */
 	assert(hz);
 
-	secs = kn->value.ul / hz;
+	secs = get_kstat_numeric_value(kn) / hz;
 
 	/* close kstat */
 	kstat_close(kc);

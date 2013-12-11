@@ -17,29 +17,28 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
-?>
-<?php
+
+
 require_once dirname(__FILE__).'/include/config.inc.php';
 require_once dirname(__FILE__).'/include/forms.inc.php';
 require_once dirname(__FILE__).'/include/discovery.inc.php';
 
-$page['title'] = _('Configuration of discovery');
+$page['title'] = _('Configuration of discovery rules');
 $page['file'] = 'discoveryconf.php';
 $page['hist_arg'] = array();
-$page['scripts'] = array();
 $page['type'] = detect_page_type();
 
 require_once dirname(__FILE__).'/include/page_header.php';
 
 // VAR	TYPE	OPTIONAL	FLAGS	VALIDATION	EXCEPTION
 $fields = array(
-	'druleid' =>		array(T_ZBX_INT, O_OPT, P_SYS,	DB_ID,		null),
+	'druleid' =>		array(T_ZBX_INT, O_OPT, P_SYS,	DB_ID,		'isset({form})&&{form}=="update"'),
 	'name' =>			array(T_ZBX_STR, O_OPT, null,	NOT_EMPTY,	'isset({save})'),
 	'proxy_hostid' =>	array(T_ZBX_INT, O_OPT, null,	DB_ID,		'isset({save})'),
 	'iprange' =>		array(T_ZBX_STR, O_OPT, null,	null,		'isset({save})'),
 	'delay' =>			array(T_ZBX_INT, O_OPT, null,	BETWEEN(1, SEC_PER_WEEK), 'isset({save})'),
 	'status' =>			array(T_ZBX_INT, O_OPT, null,	IN('0,1'),	null),
-	'uniqueness_criteria' => array(T_ZBX_INT, O_OPT, null, null,	'isset({save})', _('Device uniqueness criteria')),
+	'uniqueness_criteria' => array(T_ZBX_STR, O_OPT, null, null,	'isset({save})', _('Device uniqueness criteria')),
 	'g_druleid' =>		array(T_ZBX_INT, O_OPT, null,	DB_ID,		null),
 	'dchecks' =>		array(null, O_OPT, null,		null,		null),
 	// actions
@@ -74,20 +73,7 @@ if (isset($_REQUEST['druleid'])) {
 		access_deny();
 	}
 }
-if (isset($_REQUEST['go'])) {
-	if (!isset($_REQUEST['g_druleid']) || !is_array($_REQUEST['g_druleid'])) {
-		access_deny();
-	}
-	else {
-		$dbDRules = API::DRule()->get(array(
-			'druleids' => $_REQUEST['g_druleid'],
-			'countOutput' => true
-		));
-		if ($dbDRules != count($_REQUEST['g_druleid'])) {
-			access_deny();
-		}
-	}
-}
+
 $_REQUEST['go'] = get_request('go', 'none');
 
 // ajax
@@ -95,8 +81,9 @@ if (isset($_REQUEST['output']) && $_REQUEST['output'] == 'ajax') {
 	$ajaxResponse = new AjaxResponse;
 
 	if (isset($_REQUEST['ajaxaction']) && $_REQUEST['ajaxaction'] == 'validate') {
-		$ajaxdata = get_request('ajaxdata', array());
-		foreach ($ajaxdata as $check) {
+		$ajaxData = get_request('ajaxdata', array());
+
+		foreach ($ajaxData as $check) {
 			switch ($check['field']) {
 				case 'port':
 					if (!validate_port_list($check['value'])) {
@@ -105,6 +92,7 @@ if (isset($_REQUEST['output']) && $_REQUEST['output'] == 'ajax') {
 					break;
 				case 'itemKey':
 					$itemKey = new CItemKey($check['value']);
+
 					if (!$itemKey->isValid()) {
 						$ajaxResponse->error(_s('Incorrect key: "%1$s".', $itemKey->getError()));
 					}
@@ -112,6 +100,7 @@ if (isset($_REQUEST['output']) && $_REQUEST['output'] == 'ajax') {
 			}
 		}
 	}
+
 	$ajaxResponse->send();
 
 	require_once dirname(__FILE__).'/include/page_footer.php';
@@ -124,8 +113,9 @@ if (isset($_REQUEST['output']) && $_REQUEST['output'] == 'ajax') {
 if (isset($_REQUEST['save'])) {
 	$dChecks = get_request('dchecks', array());
 	$uniq = get_request('uniqueness_criteria', 0);
-	foreach($dChecks as $dcnum => $check){
-		$dChecks[$dcnum]['uniq'] = $uniq == $dcnum ? 1 : 0;
+
+	foreach ($dChecks as $dcnum => $check) {
+		$dChecks[$dcnum]['uniq'] = ($uniq == $dcnum) ? 1 : 0;
 	}
 
 	$discoveryRule = array(
@@ -139,63 +129,60 @@ if (isset($_REQUEST['save'])) {
 
 	if (isset($_REQUEST['druleid'])) {
 		$discoveryRule['druleid'] = get_request('druleid');
-		$result = API::drule()->update($discoveryRule);
+		$result = API::DRule()->update($discoveryRule);
 
-		$msg_ok = _('Discovery rule updated');
-		$msg_fail = _('Cannot update discovery rule');
+		$msgOk = _('Discovery rule updated');
+		$msgFail = _('Cannot update discovery rule');
 	}
 	else {
-		$result = API::drule()->create($discoveryRule);
+		$result = API::DRule()->create($discoveryRule);
 
-		$msg_ok = _('Discovery rule created');
-		$msg_fail = _('Cannot create discovery rule');
+		$msgOk = _('Discovery rule created');
+		$msgFail = _('Cannot create discovery rule');
 	}
-	show_messages($result, $msg_ok, $msg_fail);
+
+	show_messages($result, $msgOk, $msgFail);
 
 	if ($result) {
 		$druleid = reset($result['druleids']);
-		add_audit(isset($discoveryRule['druleid']) ? AUDIT_ACTION_UPDATE : AUDIT_ACTION_ADD, AUDIT_RESOURCE_DISCOVERY_RULE
-			, '['.$druleid.'] '.$discoveryRule['name']);
+		add_audit(isset($discoveryRule['druleid']) ? AUDIT_ACTION_UPDATE : AUDIT_ACTION_ADD,
+			AUDIT_RESOURCE_DISCOVERY_RULE,
+			'['.$druleid.'] '.$discoveryRule['name']
+		);
 		unset($_REQUEST['form']);
+		clearCookies($result);
 	}
 }
 elseif (isset($_REQUEST['delete']) && isset($_REQUEST['druleid'])) {
-	$result = delete_discovery_rule($_REQUEST['druleid']);
+	$result = API::DRule()->delete(array($_REQUEST['druleid']));
+
 	show_messages($result, _('Discovery rule deleted'), _('Cannot delete discovery rule'));
 
 	if ($result) {
-		add_audit(AUDIT_ACTION_DELETE, AUDIT_RESOURCE_DISCOVERY_RULE, '['.$_REQUEST['druleid'].']');
 		unset($_REQUEST['form'], $_REQUEST['druleid']);
+		clearCookies($result);
 	}
 }
 elseif (str_in_array($_REQUEST['go'], array('activate', 'disable')) && isset($_REQUEST['g_druleid'])) {
 	$status = ($_REQUEST['go'] == 'activate') ? DRULE_STATUS_ACTIVE : DRULE_STATUS_DISABLED;
 
-	$go_result = false;
+	$goResult = false;
 	foreach ($_REQUEST['g_druleid'] as $drid) {
-		if (DBexecute('UPDATE drules SET status='.$status.' WHERE druleid='.$drid)) {
+		if (DBexecute('UPDATE drules SET status='.$status.' WHERE druleid='.zbx_dbstr($drid))) {
 			$rule_data = get_discovery_rule_by_druleid($drid);
 			add_audit(AUDIT_ACTION_UPDATE, AUDIT_RESOURCE_DISCOVERY_RULE, '['.$drid.'] '.$rule_data['name']);
-			$go_result = true;
+			$goResult = true;
 		}
 	}
-	show_messages($go_result, _('Discovery rules updated'));
+
+	show_messages($goResult, _('Discovery rules updated'));
+	clearCookies($goResult);
 }
 elseif ($_REQUEST['go'] == 'delete' && isset($_REQUEST['g_druleid'])) {
-	$go_result = false;
-	foreach ($_REQUEST['g_druleid'] as $drid) {
-		if (delete_discovery_rule($drid)) {
-			add_audit(AUDIT_ACTION_DELETE, AUDIT_RESOURCE_DISCOVERY_RULE, '['.$drid.']');
-			$go_result = true;
-		}
-	}
-	show_messages($go_result, _('Discovery rules deleted'));
-}
+	$result = API::DRule()->delete($_REQUEST['g_druleid']);
 
-if ($_REQUEST['go'] != 'none' && isset($go_result) && $go_result) {
-	$url = new CUrl();
-	$path = $url->getPath();
-	insert_js('cookie.eraseArray("'.$path.'")');
+	show_messages($result, _('Discovery rules deleted'), _('Cannot delete discovery rules'));
+	clearCookies($result);
 }
 
 /*
@@ -241,6 +228,7 @@ if (isset($_REQUEST['form'])) {
 				isset($dcheck['ports']) ? $dcheck['ports'] : ''
 			);
 		}
+
 		order_result($data['drule']['dchecks'], 'name');
 	}
 
@@ -279,14 +267,22 @@ else {
 			$data['drules'][$druleid]['description'] = array();
 			if (!empty($drule['proxy_hostid'])) {
 				$proxy = get_host_by_hostid($drule['proxy_hostid']);
-				array_push($data['drules'][$druleid]['description'], $proxy['host'].':');
+				array_push($data['drules'][$druleid]['description'], $proxy['host'].NAME_DELIMITER);
 			}
 		}
 		order_result($data['drules'], getPageSortOrder());
 	}
 
 	// get paging
-	$data['paging'] = getPagingLine($data['drules']);
+	$data['paging'] = getPagingLine($data['drules'], array('druleid'));
+
+	// nodes
+	if ($data['displayNodes'] = is_array(get_current_nodeid())) {
+		foreach ($data['drules'] as &$drule) {
+			$drule['nodename'] = get_node_name_by_elid($drule['druleid'], true);
+		}
+		unset($drule);
+	}
 
 	// render view
 	$discoveryView = new CView('configuration.discovery.list', $data);
@@ -295,4 +291,3 @@ else {
 }
 
 require_once dirname(__FILE__).'/include/page_footer.php';
-?>

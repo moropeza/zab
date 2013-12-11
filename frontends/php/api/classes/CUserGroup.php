@@ -17,20 +17,18 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
-?>
-<?php
+
+
 /**
- * File containing CUserGroup class for API.
+ * Class containing methods for operations with user groups.
+ *
  * @package API
- */
-/**
- * Class containing methods for operations with UserGroups.
  */
 class CUserGroup extends CZBXAPI {
 
 	protected $tableName = 'usrgrp';
-
 	protected $tableAlias = 'g';
+	protected $sortColumns = array('usrgrpid', 'name');
 
 	/**
 	 * Get UserGroups
@@ -51,13 +49,6 @@ class CUserGroup extends CZBXAPI {
 	public function get($options = array()) {
 		$result = array();
 		$userType = self::$userData['type'];
-		$userid = self::$userData['userid'];
-
-		// allowed columns for sorting
-		$sortColumns = array('usrgrpid', 'name');
-
-		// allowed output options for [ select_* ] params
-		$subselectsAllowedOutputs = array(API_OUTPUT_REFER, API_OUTPUT_EXTEND);
 
 		$sqlParts = array(
 			'select'	=> array('usrgrp' => 'g.usrgrpid'),
@@ -93,19 +84,6 @@ class CUserGroup extends CZBXAPI {
 
 		$options = zbx_array_merge($defOptions, $options);
 
-		if (is_array($options['output'])) {
-			unset($sqlParts['select']['usrgrp']);
-
-			$dbTable = DB::getSchema('usrgrp');
-			$sqlParts['select']['usrgrpid'] = 'g.usrgrpid';
-			foreach ($options['output'] as $field) {
-				if (isset($dbTable['fields'][$field])) {
-					$sqlParts['select'][$field] = 'g.'.$field;
-				}
-			}
-			$options['output'] = API_OUTPUT_CUSTOM;
-		}
-
 		// permission check
 		if (USER_TYPE_SUPER_ADMIN == $userType) {
 		}
@@ -120,9 +98,6 @@ class CUserGroup extends CZBXAPI {
 			return array();
 		}
 
-		// nodeids
-		$nodeids = !is_null($options['nodeids']) ? $options['nodeids'] : get_current_nodeid();
-
 		// usrgrpids
 		if (!is_null($options['usrgrpids'])) {
 			zbx_value2array($options['usrgrpids']);
@@ -134,9 +109,7 @@ class CUserGroup extends CZBXAPI {
 		if (!is_null($options['userids'])) {
 			zbx_value2array($options['userids']);
 
-			if ($options['output'] != API_OUTPUT_SHORTEN) {
-				$sqlParts['select']['userid'] = 'ug.userid';
-			}
+			$sqlParts['select']['userid'] = 'ug.userid';
 			$sqlParts['from']['users_groups'] = 'users_groups ug';
 			$sqlParts['where'][] = dbConditionInt('ug.userid', $options['userids']);
 			$sqlParts['where']['gug'] = 'g.usrgrpid=ug.usrgrpid';
@@ -152,17 +125,6 @@ class CUserGroup extends CZBXAPI {
 			$sqlParts['where'][] = 'g.gui_access='.GROUP_GUI_ACCESS_ENABLED;
 		}
 
-		// output
-		if ($options['output'] == API_OUTPUT_EXTEND) {
-			$sqlParts['select']['usrgrp'] = 'g.*';
-		}
-
-		// countOutput
-		if (!is_null($options['countOutput'])) {
-			$options['sortfield'] = '';
-			$sqlParts['select'] = array('count(g.usrgrpid) as rowscount');
-		}
-
 		// filter
 		if (is_array($options['filter'])) {
 			$this->dbFilter('usrgrp g', $options, $sqlParts);
@@ -173,73 +135,33 @@ class CUserGroup extends CZBXAPI {
 			zbx_db_search('usrgrp g', $options, $sqlParts);
 		}
 
-		// sorting
-		zbx_db_sorting($sqlParts, $options, $sortColumns, 'g');
-
 		// limit
 		if (zbx_ctype_digit($options['limit']) && $options['limit']) {
 			$sqlParts['limit'] = $options['limit'];
 		}
 
-		$usrgrpids = array();
-
-		$sqlParts['select'] = array_unique($sqlParts['select']);
-		$sqlParts['from'] = array_unique($sqlParts['from']);
-		$sqlParts['where'] = array_unique($sqlParts['where']);
-		$sqlParts['order'] = array_unique($sqlParts['order']);
-
-		$sqlSelect = '';
-		$sqlFrom = '';
-		$sqlWhere = '';
-		$sqlOrder = '';
-		if (!empty($sqlParts['select'])) {
-			$sqlSelect .= implode(',', $sqlParts['select']);
-		}
-		if (!empty($sqlParts['from'])) {
-			$sqlFrom .= implode(',', $sqlParts['from']);
-		}
-		if (!empty($sqlParts['where'])) {
-			$sqlWhere .= ' AND '.implode(' AND ', $sqlParts['where']);
-		}
-		if (!empty($sqlParts['order'])) {
-			$sqlOrder .= ' ORDER BY '.implode(',', $sqlParts['order']);
-		}
-		$sqlLimit = $sqlParts['limit'];
-
-		$sql = 'SELECT '.zbx_db_distinct($sqlParts).' '.$sqlSelect.
-				' FROM '.$sqlFrom.
-				' WHERE '.DBin_node('g.usrgrpid', $nodeids).
-			$sqlWhere.
-			$sqlOrder;
-		$res = DBselect($sql, $sqlLimit);
+		$sqlParts = $this->applyQueryOutputOptions($this->tableName(), $this->tableAlias(), $options, $sqlParts);
+		$sqlParts = $this->applyQuerySortOptions($this->tableName(), $this->tableAlias(), $options, $sqlParts);
+		$sqlParts = $this->applyQueryNodeOptions($this->tableName(), $this->tableAlias(), $options, $sqlParts);
+		$res = DBselect($this->createSelectQueryFromParts($sqlParts), $sqlParts['limit']);
 		while ($usrgrp = DBfetch($res)) {
 			if ($options['countOutput']) {
 				$result = $usrgrp['rowscount'];
 			}
 			else {
-				$usrgrpids[$usrgrp['usrgrpid']] = $usrgrp['usrgrpid'];
-
-				if ($options['output'] == API_OUTPUT_SHORTEN) {
-					$result[$usrgrp['usrgrpid']] = array('usrgrpid' => $usrgrp['usrgrpid']);
+				if (!isset($result[$usrgrp['usrgrpid']])) {
+					$result[$usrgrp['usrgrpid']]= array();
 				}
-				else {
-					if (!isset($result[$usrgrp['usrgrpid']])) {
-						$result[$usrgrp['usrgrpid']]= array();
-					}
-					if (!is_null($options['selectUsers']) && !isset($result[$usrgrp['usrgrpid']]['users'])) {
+
+				// groupids
+				if (isset($usrgrp['userid']) && is_null($options['selectUsers'])) {
+					if (!isset($result[$usrgrp['usrgrpid']]['users'])) {
 						$result[$usrgrp['usrgrpid']]['users'] = array();
 					}
-
-					// groupids
-					if (isset($usrgrp['userid']) && is_null($options['selectUsers'])) {
-						if (!isset($result[$usrgrp['usrgrpid']]['users'])) {
-							$result[$usrgrp['usrgrpid']]['users'] = array();
-						}
-						$result[$usrgrp['usrgrpid']]['users'][] = array('userid' => $usrgrp['userid']);
-						unset($usrgrp['userid']);
-					}
-					$result[$usrgrp['usrgrpid']] += $usrgrp;
+					$result[$usrgrp['usrgrpid']]['users'][] = array('userid' => $usrgrp['userid']);
+					unset($usrgrp['userid']);
 				}
+				$result[$usrgrp['usrgrpid']] += $usrgrp;
 			}
 		}
 
@@ -247,25 +169,8 @@ class CUserGroup extends CZBXAPI {
 			return $result;
 		}
 
-		/*
-		 * Adding objects
-		 */
-		// adding users
-		if (!is_null($options['selectUsers']) && str_in_array($options['selectUsers'], $subselectsAllowedOutputs)) {
-			$objParams = array(
-				'output' => $options['selectUsers'],
-				'usrgrpids' => $usrgrpids,
-				'getAccess' => $options['selectUsers'] == API_OUTPUT_EXTEND ? true : null,
-				'preservekeys' => true
-			);
-			$users = API::User()->get($objParams);
-			foreach ($users as $user) {
-				$uusrgrps = $user['usrgrps'];
-				unset($user['usrgrps']);
-				foreach ($uusrgrps as $usrgrp) {
-					$result[$usrgrp['usrgrpid']]['users'][] = $user;
-				}
-			}
+		if ($result) {
+			$result = $this->addRelatedObjects($options, $result);
 		}
 
 		// removing keys (hash -> array)
@@ -285,17 +190,19 @@ class CUserGroup extends CZBXAPI {
 		$result = array();
 		$usrgrpids = array();
 
-		$sql = 'SELECT g.usrgrpid'.
-			' FROM usrgrp g'.
-			' WHERE g.name='.zbx_dbstr($groupData['name']).
-			' AND '.DBin_node('g.usrgrpid', false);
-		$res = DBselect($sql);
+		$res = DBselect(
+				'SELECT g.usrgrpid'.
+				' FROM usrgrp g'.
+				' WHERE g.name='.zbx_dbstr($groupData['name']).
+					andDbNode('g.usrgrpid', false)
+		);
 		while ($group = DBfetch($res)) {
 			$usrgrpids[$group['usrgrpid']] = $group['usrgrpid'];
 		}
 
-		if (!empty($usrgrpids))
+		if (!empty($usrgrpids)) {
 			$result = $this->get(array('usrgrpids' => $usrgrpids, 'output' => API_OUTPUT_EXTEND));
+		}
 
 		return $result;
 	}
@@ -303,7 +210,7 @@ class CUserGroup extends CZBXAPI {
 	public function exists($object) {
 		$options = array(
 			'filter' => array('name' => $object['name']),
-			'output' => API_OUTPUT_SHORTEN,
+			'output' => array('usrgrpid'),
 			'nopermissions' => 1,
 			'limit' => 1,
 		);
@@ -480,7 +387,6 @@ class CUserGroup extends CZBXAPI {
 		return array('usrgrpids' => $usrgrpids);
 	}
 
-
 	/**
 	 * Mass update user group.
 	 * Checks for permissions - only super admins can change user groups.
@@ -520,7 +426,7 @@ class CUserGroup extends CZBXAPI {
 				// check if there already is hostgroup with this name, except current hostgroup
 				$groupExists = $this->get(array(
 					'filter' => array('name' => $data['name']),
-					'output' => API_OUTPUT_SHORTEN,
+					'output' => array('usrgrpid'),
 					'limit' => 1
 				));
 				$groupExists = reset($groupExists);
@@ -675,12 +581,7 @@ class CUserGroup extends CZBXAPI {
 			}
 		}
 
-
 		return array('usrgrpids' => $usrgrpids);
-	}
-
-	public function massRemove($data) {
-
 	}
 
 	/**
@@ -763,7 +664,6 @@ class CUserGroup extends CZBXAPI {
 		$count = $this->get(array(
 			'nodeids' => get_current_nodeid(true),
 			'usrgrpids' => $ids,
-			'output' => API_OUTPUT_SHORTEN,
 			'countOutput' => true
 		));
 
@@ -779,7 +679,6 @@ class CUserGroup extends CZBXAPI {
 		$count = $this->get(array(
 			'nodeids' => get_current_nodeid(true),
 			'usrgrpids' => $ids,
-			'output' => API_OUTPUT_SHORTEN,
 			'editable' => true,
 			'countOutput' => true
 		));
@@ -787,5 +686,21 @@ class CUserGroup extends CZBXAPI {
 		return (count($ids) == $count);
 	}
 
+	protected function addRelatedObjects(array $options, array $result) {
+		$result = parent::addRelatedObjects($options, $result);
+
+		// adding users
+		if ($options['selectUsers'] !== null && $options['selectUsers'] != API_OUTPUT_COUNT) {
+			$relationMap = $this->createRelationMap($result, 'usrgrpid', 'userid', 'users_groups');
+			$users = API::User()->get(array(
+				'output' => $options['selectUsers'],
+				'userids' => $relationMap->getRelatedIds(),
+				'getAccess' => $options['selectUsers'] == API_OUTPUT_EXTEND ? true : null,
+				'preservekeys' => true
+			));
+			$result = $relationMap->mapMany($result, $users, 'users');
+		}
+
+		return $result;
+	}
 }
-?>

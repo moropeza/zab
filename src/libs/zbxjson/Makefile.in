@@ -43,11 +43,10 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/ax_lib_ibm_db2.m4 \
 	$(top_srcdir)/m4/ax_lib_postgresql.m4 \
 	$(top_srcdir)/m4/ax_lib_sqlite3.m4 $(top_srcdir)/m4/iconv.m4 \
 	$(top_srcdir)/m4/jabber.m4 $(top_srcdir)/m4/ldap.m4 \
-	$(top_srcdir)/m4/libcurl.m4 $(top_srcdir)/m4/libiodbc.m4 \
-	$(top_srcdir)/m4/libssh2.m4 $(top_srcdir)/m4/libunixodbc.m4 \
+	$(top_srcdir)/m4/libcurl.m4 $(top_srcdir)/m4/libssh2.m4 \
+	$(top_srcdir)/m4/libunixodbc.m4 $(top_srcdir)/m4/libxml2.m4 \
 	$(top_srcdir)/m4/netsnmp.m4 $(top_srcdir)/m4/openipmi.m4 \
-	$(top_srcdir)/m4/resolv.m4 $(top_srcdir)/m4/ucdsnmp.m4 \
-	$(top_srcdir)/configure.in
+	$(top_srcdir)/m4/resolv.m4 $(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -59,7 +58,7 @@ AR = ar
 ARFLAGS = cru
 libzbxjson_a_AR = $(AR) $(ARFLAGS)
 libzbxjson_a_LIBADD =
-am_libzbxjson_a_OBJECTS = json.$(OBJEXT)
+am_libzbxjson_a_OBJECTS = json.$(OBJEXT) json_parser.$(OBJEXT)
 libzbxjson_a_OBJECTS = $(am_libzbxjson_a_OBJECTS)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -109,9 +108,6 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
-IODBC_CFLAGS = @IODBC_CFLAGS@
-IODBC_LDFLAGS = @IODBC_LDFLAGS@
-IODBC_LIBS = @IODBC_LIBS@
 JABBER_CPPFLAGS = @JABBER_CPPFLAGS@
 JABBER_LDFLAGS = @JABBER_LDFLAGS@
 JABBER_LIBS = @JABBER_LIBS@
@@ -126,6 +122,11 @@ LIBCURL_LDFLAGS = @LIBCURL_LDFLAGS@
 LIBCURL_LIBS = @LIBCURL_LIBS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
+LIBXML2_CFLAGS = @LIBXML2_CFLAGS@
+LIBXML2_CONFIG = @LIBXML2_CONFIG@
+LIBXML2_LDFLAGS = @LIBXML2_LDFLAGS@
+LIBXML2_LIBS = @LIBXML2_LIBS@
+LIBXML2_VERSION = @LIBXML2_VERSION@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
 MKDIR_P = @MKDIR_P@
@@ -135,10 +136,7 @@ MYSQL_LDFLAGS = @MYSQL_LDFLAGS@
 MYSQL_LIBS = @MYSQL_LIBS@
 MYSQL_VERSION = @MYSQL_VERSION@
 OBJEXT = @OBJEXT@
-ODBC_CFLAGS = @ODBC_CFLAGS@
 ODBC_CONFIG = @ODBC_CONFIG@
-ODBC_LDFLAGS = @ODBC_LDFLAGS@
-ODBC_LIBS = @ODBC_LIBS@
 OPENIPMI_CFLAGS = @OPENIPMI_CFLAGS@
 OPENIPMI_LDFLAGS = @OPENIPMI_LDFLAGS@
 OPENIPMI_LIBS = @OPENIPMI_LIBS@
@@ -174,7 +172,6 @@ SERVER_LIBS = @SERVER_LIBS@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 SNMP_CFLAGS = @SNMP_CFLAGS@
-SNMP_CPPFLAGS = @SNMP_CPPFLAGS@
 SNMP_LDFLAGS = @SNMP_LDFLAGS@
 SNMP_LIBS = @SNMP_LIBS@
 SQLITE3_CPPFLAGS = @SQLITE3_CPPFLAGS@
@@ -242,7 +239,11 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 noinst_LIBRARIES = libzbxjson.a
-libzbxjson_a_SOURCES = json.c
+libzbxjson_a_SOURCES = \
+	json.c \
+	json_parser.c \
+	json_parser.h
+
 all: all-am
 
 .SUFFIXES:
@@ -292,6 +293,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/json.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/json_parser.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

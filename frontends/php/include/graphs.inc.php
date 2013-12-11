@@ -297,23 +297,28 @@ function get_graph_by_graphid($graphid) {
 }
 
 /**
- * Replace items for specified host.
+ * Search items by same key in destination host.
  *
- * @param $gitems
- * @param $dest_hostid
- * @param bool $error if false error won't be thrown when item does not exist
+ * @param array  $gitems
+ * @param string $destinationHostId
+ * @param bool   $error					if false error won't be thrown when item does not exist
+ * @param array  $flags
+ *
  * @return array|bool
  */
-function get_same_graphitems_for_host($gitems, $dest_hostid, $error = true) {
+function getSameGraphItemsForHost($gitems, $destinationHostId, $error = true, array $flags = array()) {
 	$result = array();
+
+	$flagsSql = $flags ? ' AND '.dbConditionInt('dest.flags', $flags) : '';
 
 	foreach ($gitems as $gitem) {
 		$dbItem = DBfetch(DBselect(
 			'SELECT dest.itemid,src.key_'.
 			' FROM items dest,items src'.
 			' WHERE dest.key_=src.key_'.
-				' AND dest.hostid='.zbx_dbstr($dest_hostid).
-				' AND src.itemid='.zbx_dbstr($gitem['itemid'])
+				' AND dest.hostid='.zbx_dbstr($destinationHostId).
+				' AND src.itemid='.zbx_dbstr($gitem['itemid']).
+				$flagsSql
 		));
 
 		if ($dbItem) {
@@ -322,13 +327,16 @@ function get_same_graphitems_for_host($gitems, $dest_hostid, $error = true) {
 		}
 		elseif ($error) {
 			$item = get_item_by_itemid($gitem['itemid']);
-			$host = get_host_by_hostid($dest_hostid);
+			$host = get_host_by_hostid($destinationHostId);
+
 			error(_s('Missing key "%1$s" for host "%2$s".', $item['key_'], $host['host']));
+
 			return false;
 		}
 		else {
 			continue;
 		}
+
 		$result[] = $gitem;
 	}
 
@@ -338,44 +346,54 @@ function get_same_graphitems_for_host($gitems, $dest_hostid, $error = true) {
 /**
  * Copy specified graph to specified host.
  *
- * @param $graphid
- * @param $hostid
- * @return array|bool
+ * @param string $graphId
+ * @param string $hostId
+ *
+ * @return array
  */
-function copy_graph_to_host($graphid, $hostid) {
+function copyGraphToHost($graphId, $hostId) {
 	$graphs = API::Graph()->get(array(
-		'graphids' => $graphid,
+		'graphids' => $graphId,
 		'output' => API_OUTPUT_EXTEND,
+		'selectHosts' => array('hostid', 'name'),
 		'selectGraphItems' => API_OUTPUT_EXTEND
 	));
 	$graph = reset($graphs);
+	$graphHost = reset($graph['hosts']);
 
-	$new_gitems = get_same_graphitems_for_host($graph['gitems'], $hostid);
+	if ($graphHost['hostid'] == $hostId) {
+		error(_s('Graph "%1$s" already exists on "%2$s".', $graph['name'], $graphHost['name']));
 
-	if (!$new_gitems) {
-		$host = get_host_by_hostid($hostid);
+		return false;
+	}
+
+	$graph['gitems'] = getSameGraphItemsForHost(
+		$graph['gitems'],
+		$hostId,
+		true,
+		array(ZBX_FLAG_DISCOVERY_NORMAL, ZBX_FLAG_DISCOVERY_CREATED)
+	);
+
+	if (!$graph['gitems']) {
+		$host = get_host_by_hostid($hostId);
+
 		info(_s('Skipped copying of graph "%1$s" to host "%2$s".', $graph['name'], $host['host']));
+
 		return false;
 	}
 
 	// retrieve actual ymax_itemid and ymin_itemid
-	if ($graph['ymax_itemid']) {
-		if ($itemid = get_same_item_for_host($graph['ymax_itemid'], $hostid)) {
-			$graph['ymax_itemid'] = $itemid;
-		};
+	if ($graph['ymax_itemid'] && $itemId = get_same_item_for_host($graph['ymax_itemid'], $hostId)) {
+		$graph['ymax_itemid'] = $itemId;
 	}
 
-	if ($graph['ymin_itemid']) {
-		if ($itemid = get_same_item_for_host($graph['ymin_itemid'], $hostid)) {
-			$graph['ymin_itemid'] = $itemid;
-		}
+	if ($graph['ymin_itemid'] && $itemId = get_same_item_for_host($graph['ymin_itemid'], $hostId)) {
+		$graph['ymin_itemid'] = $itemId;
 	}
 
-	$graph['gitems'] = $new_gitems;
 	unset($graph['templateid']);
-	$result = API::Graph()->create($graph);
 
-	return $result;
+	return API::Graph()->create($graph);
 }
 
 function navigation_bar_calc($idx = null, $idx2 = 0, $update = false) {
@@ -396,15 +414,15 @@ function navigation_bar_calc($idx = null, $idx2 = 0, $update = false) {
 	$_REQUEST['stime'] = get_request('stime', null);
 
 	if ($_REQUEST['period'] < ZBX_MIN_PERIOD) {
-		show_message(_n('Warning. Minimum time period to display is %1$s hour.',
-			'Warning. Minimum time period to display is %1$s hours.',
+		show_message(_n('Minimum time period to display is %1$s hour.',
+			'Minimum time period to display is %1$s hours.',
 			(int) ZBX_MIN_PERIOD / SEC_PER_HOUR
 		));
 		$_REQUEST['period'] = ZBX_MIN_PERIOD;
 	}
 	elseif ($_REQUEST['period'] > ZBX_MAX_PERIOD) {
-		show_message(_n('Warning. Maximum time period to display is %1$s day.',
-			'Warning. Maximum time period to display is %1$s days.',
+		show_message(_n('Maximum time period to display is %1$s day.',
+			'Maximum time period to display is %1$s days.',
 			(int) ZBX_MAX_PERIOD / SEC_PER_DAY
 		));
 		$_REQUEST['period'] = ZBX_MAX_PERIOD;
@@ -413,11 +431,11 @@ function navigation_bar_calc($idx = null, $idx2 = 0, $update = false) {
 	if (!empty($_REQUEST['stime'])) {
 		$time = zbxDateToTime($_REQUEST['stime']);
 		if (($time + $_REQUEST['period']) > time()) {
-			$_REQUEST['stime'] = date('YmdHis', time() - $_REQUEST['period']);
+			$_REQUEST['stime'] = date(TIMESTAMP_FORMAT, time() - $_REQUEST['period']);
 		}
 	}
 	else {
-		$_REQUEST['stime'] = date('YmdHis', time() - $_REQUEST['period']);
+		$_REQUEST['stime'] = date(TIMESTAMP_FORMAT, time() - $_REQUEST['period']);
 	}
 
 	return $_REQUEST['period'];
@@ -597,15 +615,25 @@ function imageDiagonalMarks($im,$x, $y, $offset, $color) {
 	imagepolygon($im, $gims['rb'], 5, $colors['Dark Red']);
 }
 
-function imageVerticalMarks($im, $x, $y, $offset, $color, $marks = 'tlbr') {
+/**
+ * Draw trigger recent change markers.
+ *
+ * @param resource $im
+ * @param int      $x
+ * @param int      $y
+ * @param int      $offset
+ * @param string   $color
+ * @param string   $marks	"t" - top, "r" - right, "b" - bottom, "l" - left
+ */
+function imageVerticalMarks($im, $x, $y, $offset, $color, $marks) {
 	global $colors;
 
 	$polygons = 5;
 	$gims = array(
 		't' => array(0, 0, -6, -6, -3, -9, 3, -9, 6, -6),
-		'l' => array(0, 0, -6, 6, -9, 3, -9, -3, -6, -6),
+		'r' => array(0, 0, 6, -6, 9, -3, 9, 3, 6, 6),
 		'b' => array(0, 0, 6, 6, 3, 9, -3, 9, -6, 6),
-		'r' => array(0, 0, 6, -6, 9, -3, 9, 3, 6, 6)
+		'l' => array(0, 0, -6, 6, -9, 3, -9, -3, -6, -6)
 	);
 
 	foreach ($gims['t'] as $num => $px) {
@@ -614,24 +642,6 @@ function imageVerticalMarks($im, $x, $y, $offset, $color, $marks = 'tlbr') {
 		}
 		else {
 			$gims['t'][$num] = $px + $y - $offset;
-		}
-	}
-
-	foreach ($gims['l'] as $num => $px) {
-		if (($num % 2) == 0) {
-			$gims['l'][$num] = $px + $x - $offset;
-		}
-		else {
-			$gims['l'][$num] = $px + $y;
-		}
-	}
-
-	foreach ($gims['b'] as $num => $px) {
-		if (($num % 2) == 0) {
-			$gims['b'][$num] = $px + $x;
-		}
-		else {
-			$gims['b'][$num] = $px + $y + $offset;
 		}
 	}
 
@@ -644,21 +654,39 @@ function imageVerticalMarks($im, $x, $y, $offset, $color, $marks = 'tlbr') {
 		}
 	}
 
+	foreach ($gims['b'] as $num => $px) {
+		if (($num % 2) == 0) {
+			$gims['b'][$num] = $px + $x;
+		}
+		else {
+			$gims['b'][$num] = $px + $y + $offset;
+		}
+	}
+
+	foreach ($gims['l'] as $num => $px) {
+		if (($num % 2) == 0) {
+			$gims['l'][$num] = $px + $x - $offset;
+		}
+		else {
+			$gims['l'][$num] = $px + $y;
+		}
+	}
+
 	if (strpos($marks, 't') !== false) {
 		imagefilledpolygon($im, $gims['t'], $polygons, $color);
 		imagepolygon($im, $gims['t'], $polygons, $colors['Dark Red']);
 	}
-	if (strpos($marks, 'l') !== false) {
-		imagefilledpolygon($im, $gims['l'], $polygons, $color);
-		imagepolygon($im, $gims['l'], $polygons, $colors['Dark Red']);
+	if (strpos($marks, 'r') !== false) {
+		imagefilledpolygon($im, $gims['r'], $polygons, $color);
+		imagepolygon($im, $gims['r'], $polygons, $colors['Dark Red']);
 	}
 	if (strpos($marks, 'b') !== false) {
 		imagefilledpolygon($im, $gims['b'], $polygons, $color);
 		imagepolygon($im, $gims['b'], $polygons, $colors['Dark Red']);
 	}
-	if (strpos($marks, 'r') !== false) {
-		imagefilledpolygon($im, $gims['r'], $polygons, $color);
-		imagepolygon($im, $gims['r'], $polygons, $colors['Dark Red']);
+	if (strpos($marks, 'l') !== false) {
+		imagefilledpolygon($im, $gims['l'], $polygons, $color);
+		imagepolygon($im, $gims['l'], $polygons, $colors['Dark Red']);
 	}
 }
 
@@ -691,59 +719,8 @@ function imageText($image, $fontsize, $angle, $x, $y, $color, $string) {
 		}
 	}
 	else {
-		$dims = imageTextSize($fontsize, $angle, $string);
-
-		switch($fontsize) {
-			case 5:
-				$fontsize = 1;
-				break;
-			case 6:
-				$fontsize = 1;
-				break;
-			case 7:
-				$fontsize = 2;
-				break;
-			case 8:
-				$fontsize = 2;
-				break;
-			case 9:
-				$fontsize = 3;
-				break;
-			case 10:
-				$fontsize = 3;
-				break;
-			case 11:
-				$fontsize = 4;
-				break;
-			case 12:
-				$fontsize = 4;
-				break;
-			case 13:
-				$fontsize = 5;
-				break;
-			case 14:
-				$fontsize = 5;
-				break;
-			default:
-				$fontsize = 2;
-				break;
-		}
-
-		if ($angle) {
-			$x -= $dims['width'];
-			$y -= 2;
-		}
-		else {
-			$y -= $dims['height'] - 2;
-		}
-
-		if ($angle > 0) {
-			return imagestringup($image, $fontsize, $x, $y, $string, $color);
-		}
-		return imagestring($image, $fontsize, $x, $y, $string, $color);
+		show_error_message(_('PHP gd FreeType support missing'));
 	}
-
-	return true;
 }
 
 function imageTextSize($fontsize, $angle, $string) {
@@ -766,51 +743,8 @@ function imageTextSize($fontsize, $angle, $string) {
 		$result['baseline'] = $ar[1];
 	}
 	else {
-		switch($fontsize) {
-			case 5:
-				$fontsize = 1;
-				break;
-			case 6:
-				$fontsize = 1;
-				break;
-			case 7:
-				$fontsize = 2;
-				break;
-			case 8:
-				$fontsize = 2;
-				break;
-			case 9:
-				$fontsize = 3;
-				break;
-			case 10:
-				$fontsize = 3;
-				break;
-			case 11:
-				$fontsize = 4;
-				break;
-			case 12:
-				$fontsize = 4;
-				break;
-			case 13:
-				$fontsize = 5;
-				break;
-			case 14:
-				$fontsize = 5;
-				break;
-			default:
-				$fontsize = 2;
-				break;
-		}
-
-		if ($angle) {
-			$result['width'] = imagefontheight($fontsize);
-			$result['height'] = imagefontwidth($fontsize) * zbx_strlen($string);
-		}
-		else {
-			$result['height'] = imagefontheight($fontsize);
-			$result['width'] = imagefontwidth($fontsize) * zbx_strlen($string);
-		}
-		$result['baseline'] = 0;
+		show_error_message(_('PHP gd FreeType support missing'));
+		return false;
 	}
 
 	return $result;
@@ -826,7 +760,7 @@ function dashedLine($image, $x1, $y1, $x2, $y2, $color) {
 	}
 
 	imagesetstyle($image, $style);
-	imageline($image, $x1, $y1, $x2, $y2, IMG_COLOR_STYLED);
+	zbx_imageline($image, $x1, $y1, $x2, $y2, IMG_COLOR_STYLED);
 }
 
 function dashedRectangle($image, $x1, $y1, $x2, $y2, $color) {
@@ -935,4 +869,136 @@ function find_period_end($periods, $time, $max_time) {
 	}
 
 	return -1;
+}
+
+/**
+ * Converts Base1000 values to Base1024 and calculate pow
+ * Example:
+ * 	204800 (200 KBytes) with '1024' step convert to 209715,2 (0.2MB (204.8 KBytes))
+ *
+ * @param string $value
+ * @param string $step
+ *
+ * @return array
+ */
+function convertToBase1024 ($value, $step = false) {
+	if (empty($step)) {
+		$step = 1000;
+	}
+
+	if ($value < 0) {
+		$abs = bcmul($value, '-1');
+	}
+	else {
+		$abs = $value;
+	}
+
+	// set default values
+	$valData['pow'] = 0;
+	$valData['value'] = 0;
+
+	// supported pows ('-2' - '8')
+	for ($i = -2; $i < 9; $i++) {
+		$val = bcpow($step, $i);
+		if (bccomp($abs, $val) > -1) {
+			$valData['pow'] = $i;
+			$valData['value'] = $val;
+		}
+		else {
+			break;
+		}
+	}
+
+	if ($valData['pow'] >= 0) {
+		if ($valData['value'] != 0) {
+			$valData['value'] = bcdiv(sprintf('%.10f',$value), sprintf('%.10f', $valData['value']),
+				ZBX_PRECISION_10);
+
+			$valData['value'] = sprintf('%.10f', round(bcmul($valData['value'], bcpow(1024, $valData['pow'])),
+				ZBX_PRECISION_10));
+		}
+	}
+	else {
+		$valData['pow'] = 0;
+		if (round($valData['value'], ZBX_UNITS_ROUNDOFF_LOWER_LIMIT) > 0) {
+			$valData['value'] = $value;
+		}
+		else {
+			$valData['value'] = 0;
+		}
+	}
+
+	return $valData;
+}
+
+/**
+ * Calculate interval for base 1024 values.
+ * Example:
+ * 	Convert 1000 to 1024
+ *
+ * @param $interval
+ * @param $minY
+ * @param $maxY
+ *
+ * @return float|int
+ */
+function getBase1024Interval($interval, $minY, $maxY) {
+	$intervalData = convertToBase1024($interval);
+	$interval = $intervalData['value'];
+
+	if ($maxY > 0) {
+		$absMaxY = $maxY;
+	}
+	else {
+		$absMaxY = bcmul($maxY, '-1');
+	}
+
+	if ($minY > 0) {
+		$absMinY = $minY;
+	}
+	else {
+		$absMinY = bcmul($minY, '-1');
+	}
+
+	if ($absMaxY > $absMinY) {
+		$sideMaxData = convertToBase1024($maxY);
+	}
+	else {
+		$sideMaxData = convertToBase1024($minY);
+	}
+
+	if ($sideMaxData['pow'] != $intervalData['pow']) {
+		// interval correction, if Max Y have other unit, then interval unit = Max Y unit
+		if ($intervalData['pow'] < 0) {
+			$interval = sprintf('%.10f', bcmul($interval, 1.024, 10));
+		}
+		else {
+			$interval = sprintf('%.6f', round(bcmul($interval, 1.024), ZBX_UNITS_ROUNDOFF_UPPER_LIMIT));
+		}
+	}
+
+	return $interval;
+}
+
+/**
+ * Returns digit count for the item with most digit after point in given array.
+ * Example:
+ *	Input: array(0, 0.1, 0.25, 0.005)
+ *	Return 3
+ *
+ * @param array $calcValues
+ *
+ * @return int
+ */
+function calcMaxLengthAfterDot($calcValues) {
+	$maxLength = 0;
+
+	foreach ($calcValues as $calcValue) {
+		preg_match('/^-?[0-9].?([0-9]*)\s?/', $calcValue, $matches);
+		if ($matches['1'] != 0 && strlen($matches['1']) > $maxLength) {
+			$maxLength = strlen($matches['1']);
+		}
+	}
+
+	return $maxLength;
 }

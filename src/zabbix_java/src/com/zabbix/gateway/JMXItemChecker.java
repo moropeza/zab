@@ -190,7 +190,7 @@ class JMXItemChecker extends ItemChecker
 
 			JSONObject mapping = new JSONObject();
 			mapping.put(ItemChecker.JSON_TAG_DATA, counters);
-			return mapping.toString(2);
+			return mapping.toString();
 		}
 		else
 			throw new ZabbixException("key ID '%s' is not supported", item.getKeyId());
@@ -276,7 +276,9 @@ class JMXItemChecker extends ItemChecker
 
 	private boolean isPrimitiveAttributeType(Class<?> clazz)
 	{
-		Class<?>[] clazzez = {Boolean.class, Byte.class, Short.class, Integer.class, Long.class, Float.class, Double.class, String.class};
+		Class<?>[] clazzez = {Boolean.class, Character.class, Byte.class, Short.class, Integer.class, Long.class,
+			Float.class, Double.class, String.class, java.math.BigDecimal.class, java.math.BigInteger.class,
+			java.util.Date.class, javax.management.ObjectName.class};
 
 		return HelperFunctionChest.arrayContains(clazzez, clazz);
 	}

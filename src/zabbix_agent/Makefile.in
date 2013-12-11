@@ -44,11 +44,10 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/ax_lib_ibm_db2.m4 \
 	$(top_srcdir)/m4/ax_lib_postgresql.m4 \
 	$(top_srcdir)/m4/ax_lib_sqlite3.m4 $(top_srcdir)/m4/iconv.m4 \
 	$(top_srcdir)/m4/jabber.m4 $(top_srcdir)/m4/ldap.m4 \
-	$(top_srcdir)/m4/libcurl.m4 $(top_srcdir)/m4/libiodbc.m4 \
-	$(top_srcdir)/m4/libssh2.m4 $(top_srcdir)/m4/libunixodbc.m4 \
+	$(top_srcdir)/m4/libcurl.m4 $(top_srcdir)/m4/libssh2.m4 \
+	$(top_srcdir)/m4/libunixodbc.m4 $(top_srcdir)/m4/libxml2.m4 \
 	$(top_srcdir)/m4/netsnmp.m4 $(top_srcdir)/m4/openipmi.m4 \
-	$(top_srcdir)/m4/resolv.m4 $(top_srcdir)/m4/ucdsnmp.m4 \
-	$(top_srcdir)/configure.in
+	$(top_srcdir)/m4/resolv.m4 $(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -69,6 +68,7 @@ am__DEPENDENCIES_1 =  \
 	$(top_srcdir)/src/libs/zbxsysinfo/common/libcommonsysinfo.a \
 	$(top_srcdir)/src/libs/zbxsysinfo/simple/libsimplesysinfo.a \
 	$(top_srcdir)/src/libs/zbxlog/libzbxlog.a \
+	$(top_srcdir)/src/libs/zbxregexp/libzbxregexp.a \
 	$(top_srcdir)/src/libs/zbxalgo/libzbxalgo.a \
 	$(top_srcdir)/src/libs/zbxsys/libzbxsys.a \
 	$(top_srcdir)/src/libs/zbxnix/libzbxnix.a \
@@ -77,7 +77,8 @@ am__DEPENDENCIES_1 =  \
 	$(top_srcdir)/src/libs/zbxcommon/libzbxcommon.a \
 	$(top_srcdir)/src/libs/zbxcrypto/libzbxcrypto.a \
 	$(top_srcdir)/src/libs/zbxjson/libzbxjson.a \
-	$(top_srcdir)/src/libs/zbxexec/libzbxexec.a
+	$(top_srcdir)/src/libs/zbxexec/libzbxexec.a \
+	$(top_srcdir)/src/libs/zbxmodules/libzbxmodules.a
 zabbix_agent_DEPENDENCIES = $(am__DEPENDENCIES_1)
 zabbix_agent_LINK = $(CCLD) $(zabbix_agent_CFLAGS) $(CFLAGS) \
 	$(zabbix_agent_LDFLAGS) $(LDFLAGS) -o $@
@@ -141,9 +142,6 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
-IODBC_CFLAGS = @IODBC_CFLAGS@
-IODBC_LDFLAGS = @IODBC_LDFLAGS@
-IODBC_LIBS = @IODBC_LIBS@
 JABBER_CPPFLAGS = @JABBER_CPPFLAGS@
 JABBER_LDFLAGS = @JABBER_LDFLAGS@
 JABBER_LIBS = @JABBER_LIBS@
@@ -158,6 +156,11 @@ LIBCURL_LDFLAGS = @LIBCURL_LDFLAGS@
 LIBCURL_LIBS = @LIBCURL_LIBS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
+LIBXML2_CFLAGS = @LIBXML2_CFLAGS@
+LIBXML2_CONFIG = @LIBXML2_CONFIG@
+LIBXML2_LDFLAGS = @LIBXML2_LDFLAGS@
+LIBXML2_LIBS = @LIBXML2_LIBS@
+LIBXML2_VERSION = @LIBXML2_VERSION@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
 MKDIR_P = @MKDIR_P@
@@ -167,10 +170,7 @@ MYSQL_LDFLAGS = @MYSQL_LDFLAGS@
 MYSQL_LIBS = @MYSQL_LIBS@
 MYSQL_VERSION = @MYSQL_VERSION@
 OBJEXT = @OBJEXT@
-ODBC_CFLAGS = @ODBC_CFLAGS@
 ODBC_CONFIG = @ODBC_CONFIG@
-ODBC_LDFLAGS = @ODBC_LDFLAGS@
-ODBC_LIBS = @ODBC_LIBS@
 OPENIPMI_CFLAGS = @OPENIPMI_CFLAGS@
 OPENIPMI_LDFLAGS = @OPENIPMI_LDFLAGS@
 OPENIPMI_LIBS = @OPENIPMI_LIBS@
@@ -206,7 +206,6 @@ SERVER_LIBS = @SERVER_LIBS@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 SNMP_CFLAGS = @SNMP_CFLAGS@
-SNMP_CPPFLAGS = @SNMP_CPPFLAGS@
 SNMP_LDFLAGS = @SNMP_LDFLAGS@
 SNMP_LIBS = @SNMP_LIBS@
 SQLITE3_CPPFLAGS = @SQLITE3_CPPFLAGS@
@@ -283,6 +282,7 @@ agents_ldadd = $(top_srcdir)/src/libs/zbxsysinfo/libzbxagentsysinfo.a \
 	$(top_srcdir)/src/libs/zbxsysinfo/common/libcommonsysinfo.a \
 	$(top_srcdir)/src/libs/zbxsysinfo/simple/libsimplesysinfo.a \
 	$(top_srcdir)/src/libs/zbxlog/libzbxlog.a \
+	$(top_srcdir)/src/libs/zbxregexp/libzbxregexp.a \
 	$(top_srcdir)/src/libs/zbxalgo/libzbxalgo.a \
 	$(top_srcdir)/src/libs/zbxsys/libzbxsys.a \
 	$(top_srcdir)/src/libs/zbxnix/libzbxnix.a \
@@ -291,7 +291,8 @@ agents_ldadd = $(top_srcdir)/src/libs/zbxsysinfo/libzbxagentsysinfo.a \
 	$(top_srcdir)/src/libs/zbxcommon/libzbxcommon.a \
 	$(top_srcdir)/src/libs/zbxcrypto/libzbxcrypto.a \
 	$(top_srcdir)/src/libs/zbxjson/libzbxjson.a \
-	$(top_srcdir)/src/libs/zbxexec/libzbxexec.a @AGENT_LIBS@
+	$(top_srcdir)/src/libs/zbxexec/libzbxexec.a \
+	$(top_srcdir)/src/libs/zbxmodules/libzbxmodules.a @AGENT_LIBS@
 zabbix_agent_SOURCES = \
 	zabbix_agent.c \
 	stats.c stats.h \
@@ -317,15 +318,18 @@ zabbix_agentd_LDADD = $(agents_ldadd)
 zabbix_agentd_LDFLAGS = @AGENT_LDFLAGS@
 zabbix_agentd_CFLAGS = \
 	-DZABBIX_DAEMON \
-	-DSYSCONFDIR="\"@sysconfdir@\""
+	-DSYSCONFDIR="\"@sysconfdir@\"" \
+	-DLIBDIR="\"@libdir@\""
 
 zabbix_agent_CFLAGS = \
-	-DSYSCONFDIR="\"@sysconfdir@\""
+	-DSYSCONFDIR="\"@sysconfdir@\"" \
+	-DLIBDIR="\"@libdir@\""
 
 AGENT_CONFIG = zabbix_agent.conf
 AGENTD_CONFIG = zabbix_agentd.conf
 AGENT_INCLUDE_DIR = $(DESTDIR)@sysconfdir@/$(AGENT_CONFIG).d
 AGENTD_INCLUDE_DIR = $(DESTDIR)@sysconfdir@/$(AGENTD_CONFIG).d
+MODULES_DIR = $(DESTDIR)@libdir@
 all: all-am
 
 .SUFFIXES:
@@ -858,6 +862,7 @@ uninstall-am: uninstall-sbinPROGRAMS
 install-data-hook:
 	$(MKDIR_P) "$(AGENT_INCLUDE_DIR)"
 	$(MKDIR_P) "$(AGENTD_INCLUDE_DIR)"
+	$(MKDIR_P) "$(MODULES_DIR)"
 	test -f "$(DESTDIR)@sysconfdir@/$(AGENT_CONFIG)" || cp "../../conf/$(AGENT_CONFIG)" "$(DESTDIR)@sysconfdir@"
 	test -f "$(DESTDIR)@sysconfdir@/$(AGENTD_CONFIG)" || cp "../../conf/$(AGENTD_CONFIG)" "$(DESTDIR)@sysconfdir@"
 

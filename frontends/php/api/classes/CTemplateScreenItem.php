@@ -20,11 +20,9 @@
 
 
 /**
- * File containing CScreenItem class for API.
+ * Class containing methods for operations with template screen items.
+ *
  * @package API
- */
-/**
- * Class containing methods for operations with ScreenItems
  */
 class CTemplateScreenItem extends CZBXAPI {
 
@@ -106,10 +104,10 @@ class CTemplateScreenItem extends CZBXAPI {
 			// normal select query
 			else {
 				if ($options['preservekeys'] !== null) {
-					$result[$row['screenitemid']] = $this->unsetExtraFields($this->tableName(), $row, $options['output']);
+					$result[$row['screenitemid']] = $row;
 				}
 				else {
-					$result[] = $this->unsetExtraFields($this->tableName(), $row, $options['output']);
+					$result[] = $row;
 				}
 			}
 		}

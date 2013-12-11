@@ -167,7 +167,9 @@ class CXmlImport18 {
 				'snmp_port' => '',
 				'snmpv3_securityname' => '',
 				'snmpv3_securitylevel' => '',
+				'snmpv3_authprotocol' => '',
 				'snmpv3_authpassphrase' => '',
+				'snmpv3_privprotocol' => '',
 				'snmpv3_privpassphrase' => ''
 			)
 		),
@@ -504,7 +506,7 @@ class CXmlImport18 {
 							$db_graphs = API::Graph()->getObjects($screenitem['resourceid']);
 							if (empty($db_graphs)) {
 								$error = _s('Cannot find graph "%1$s" used in screen "%2$s".',
-										$nodeCaption.$screenitem['resourceid']['host'].':'.$screenitem['resourceid']['name'], $screen['name']);
+										$nodeCaption.$screenitem['resourceid']['host'].NAME_DELIMITER.$screenitem['resourceid']['name'], $screen['name']);
 								throw new Exception($error);
 							}
 
@@ -579,14 +581,13 @@ class CXmlImport18 {
 	}
 
 	public static function parseMap($rules) {
-		global $USER_DETAILS;
 		$importMaps = self::XMLtoArray(self::$xml);
 
 		if (!isset($importMaps['zabbix_export'])) {
 			$importMaps['zabbix_export'] = $importMaps;
 		}
 
-		if ($USER_DETAILS['type'] == USER_TYPE_SUPER_ADMIN && isset($importMaps['zabbix_export']['images'])) {
+		if (CWebUser::$data['type'] == USER_TYPE_SUPER_ADMIN && isset($importMaps['zabbix_export']['images'])) {
 			$images = $importMaps['zabbix_export']['images'];
 			$images_to_add = array();
 			$images_to_update = array();
@@ -598,7 +599,7 @@ class CXmlImport18 {
 
 						$options = array(
 							'filter' => array('name' => $image['name']),
-							'output' => API_OUTPUT_SHORTEN
+							'output' => array('imageid')
 						);
 						$imgs = API::Image()->get($options);
 						$img = reset($imgs);
@@ -1055,11 +1056,12 @@ class CXmlImport18 {
 
 				// host inventory
 				if ($old_version_input) {
+					if (!isset($host_db['inventory'])) {
+						$host_db['inventory'] = array();
+					}
+
 					$inventoryNode = $xpath->query('host_profile/*', $host);
 					if ($inventoryNode->length > 0) {
-						if (!isset($host_db['inventory'])) {
-							$host_db['inventory'] = array();
-						}
 						foreach ($inventoryNode as $field) {
 							$newInventoryName = self::mapInventoryName($field->nodeName);
 							$host_db['inventory'][$newInventoryName] = $field->nodeValue;
@@ -1068,9 +1070,6 @@ class CXmlImport18 {
 
 					$inventoryNodeExt = $xpath->query('host_profiles_ext/*', $host);
 					if ($inventoryNodeExt->length > 0) {
-						if (!isset($host_db['inventory'])) {
-							$host_db['inventory'] = array();
-						}
 						foreach ($inventoryNodeExt as $field) {
 							$newInventoryName = self::mapInventoryName($field->nodeName);
 							if (isset($host_db['inventory'][$newInventoryName]) && $field->nodeValue !== '') {
@@ -1136,7 +1135,7 @@ class CXmlImport18 {
 					foreach ($templates as $template) {
 						$options = array(
 							'filter' => array('host' => $template->nodeValue),
-							'output' => API_OUTPUT_SHORTEN,
+							'output' => array('templateid'),
 							'editable' => true
 						);
 						$current_template = API::Template()->get($options);
@@ -1149,12 +1148,14 @@ class CXmlImport18 {
 						$templateLinkage[] = $current_template;
 					}
 
-					$result = API::Template()->massAdd(array(
-						'hosts' => array('hostid' => $current_hostid),
-						'templates' => $templateLinkage
-					));
-					if (!$result) {
-						throw new Exception();
+					if ($templateLinkage) {
+						$result = API::Template()->massAdd(array(
+							'hosts' => array('hostid' => $current_hostid),
+							'templates' => $templateLinkage
+						));
+						if (!$result) {
+							throw new Exception();
+						}
 					}
 				}
 // }}} TEMPLATES

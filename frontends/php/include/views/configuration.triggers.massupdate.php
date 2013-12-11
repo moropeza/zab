@@ -26,7 +26,9 @@ $triggersWidget = new CWidget();
 // append host summary to widget header
 if (!empty($this->data['hostid'])) {
 	if (!empty($this->data['parent_discoveryid'])) {
-		$triggersWidget->addItem(get_header_host_table('triggers', $this->data['hostid'], $this->data['parent_discoveryid']));
+		$triggersWidget->addItem(
+			get_header_host_table('triggers', $this->data['hostid'], $this->data['parent_discoveryid'])
+		);
 	}
 	else {
 		$triggersWidget->addItem(get_header_host_table('triggers', $this->data['hostid']));
@@ -57,14 +59,22 @@ foreach ($this->data['g_triggerid'] as $triggerid) {
 $triggersFormList = new CFormList('triggersFormList');
 
 // append severity to form list
-$severityDiv = getSeverityControl();
-$severityDiv->setAttribute('id', 'priority_div');
+$severityDiv = new CSeverity(array(
+	'id' => 'priority_div',
+	'name' => 'priority',
+	'value' => $this->data['priority']
+));
 
 $triggersFormList->addRow(
 	array(
 		_('Severity'),
 		SPACE,
-		new CVisibilityBox('visible[priority]', !empty($this->data['visible']['priority']) ? 'yes' : 'no', 'priority_div', _('Original')),
+		new CVisibilityBox(
+			'visible[priority]',
+			isset($this->data['visible']['priority']),
+			'priority_div',
+			_('Original')
+		),
 	),
 	$severityDiv
 );
@@ -83,8 +93,13 @@ if (empty($this->data['parent_discoveryid'])) {
 		$triggersForm->addVar('dependencies[]', $dependency['triggerid'], 'dependencies_'.$dependency['triggerid']);
 
 		$row = new CRow(array(
-			$dependency['host'].': '.$dependency['description'],
-			new CButton('remove', _('Remove'), 'javascript: removeDependency(\''.$dependency['triggerid'].'\');', 'link_menu')
+			$dependency['host'].NAME_DELIMITER.$dependency['description'],
+			new CButton(
+				'remove',
+				_('Remove'),
+				'javascript: removeDependency(\''.$dependency['triggerid'].'\');',
+				'link_menu'
+			)
 		));
 		$row->setAttribute('id', 'dependency_'.$dependency['triggerid']);
 		$dependenciesTable->addRow($row);
@@ -94,9 +109,17 @@ if (empty($this->data['parent_discoveryid'])) {
 		array(
 			$dependenciesTable,
 			new CButton('btn1', _('Add'),
-				'return PopUp(\'popup.php?dstfrm=massupdate&dstact=add_dependency&reference=deptrigger'.
-				'&dstfld1=new_dependency[]&srctbl=triggers&objname=triggers&srcfld1=triggerid&multiselect=1'.
-				'\', 1000, 700);',
+				'return PopUp("popup.php?'.
+					'dstfrm=massupdate'.
+					'&dstact=add_dependency'.
+					'&reference=deptrigger'.
+					'&dstfld1=new_dependency[]'.
+					'&srctbl=triggers'.
+					'&objname=triggers'.
+					'&srcfld1=triggerid'.
+					'&multiselect=1'.
+					'&monitored_hosts=1'.
+					'&with_triggers=1", 1000, 700);',
 				'link_menu'
 			)
 		),
@@ -108,7 +131,12 @@ if (empty($this->data['parent_discoveryid'])) {
 		array(
 			_('Replace depenencies'),
 			SPACE,
-			new CVisibilityBox('visible[dependencies]', !empty($this->data['visible']['dependencies']) ? 'yes' : 'no', 'dependencies_div', _('Original'))
+			new CVisibilityBox(
+				'visible[dependencies]',
+				isset($this->data['visible']['dependencies']),
+				'dependencies_div',
+				_('Original')
+			)
 		),
 		$dependenciesDiv
 	);
@@ -121,8 +149,8 @@ $triggersForm->addItem($triggersTab);
 
 // append buttons to form
 $triggersForm->addItem(makeFormFooter(
-	array(new CSubmit('mass_save', _('Save'))),
-	array(new CButtonCancel(url_param('groupid').url_param('parent_discoveryid')))
+	new CSubmit('mass_save', _('Save')),
+	new CButtonCancel(url_params(array('groupid', 'hostid', 'parent_discoveryid')))
 ));
 
 $triggersWidget->addItem($triggersForm);
