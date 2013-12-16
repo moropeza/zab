@@ -70,6 +70,8 @@ void	DBlld_process_discovery_rule(zbx_uint64_t lld_ruleid, char *value, zbx_time
 		discovery_key = zbx_strdup(discovery_key, row[1]);
 		state = (unsigned char)atoi(row[2]);
 		filter = zbx_strdup(filter, row[3]);
+		substitute_simple_macros(NULL, NULL, NULL, NULL, &hostid, NULL, NULL,
+				&filter, MACRO_TYPE_COMMON, NULL, 0);  /* Support macros in filter regexp */
 		db_error = zbx_strdup(db_error, row[4]);
 
 		lifetime_str = zbx_strdup(NULL, row[5]);
