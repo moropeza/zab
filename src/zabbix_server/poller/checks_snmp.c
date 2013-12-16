@@ -1019,11 +1019,9 @@ int	get_value_snmp(DC_ITEM *item, AGENT_RESULT *value)
 	const char		*__function_name = "get_value_snmp";
 
 	struct snmp_session	*ss;
-	char			method[8], oid_translated[MAX_STRING_LEN], oid_index[MAX_STRING_LEN],
-				oid_full[MAX_STRING_LEN], index_value[MAX_STRING_LEN], err[MAX_STRING_LEN], *pl;
+	char			oid_translated[MAX_STRING_LEN], oid_index[MAX_STRING_LEN],
+				oid_full[MAX_STRING_LEN], err[MAX_STRING_LEN];
 	int			num, ret;
-	char			*idx = NULL;
-	size_t			idx_alloc = 32;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() key:'%s' oid:'%s'", __function_name, item->key_orig, item->snmp_oid);
 
@@ -1046,6 +1044,11 @@ int	get_value_snmp(DC_ITEM *item, AGENT_RESULT *value)
 				zbx_snmp_translate(oid_translated, item->snmp_oid, sizeof(oid_translated));
 				ret = zbx_snmp_walk(ss, item, oid_translated, NULL, value);
 				break;
+			case 3:
+				zabbix_log(LOG_LEVEL_DEBUG, "%s() special processing", __function_name);
+				process_dynamic_index(ss, item, oid_full, value);
+				ret = zbx_snmp_walk(ss, item, oid_full, NULL, value);
+				break;
 			default:
 				SET_MSG_RESULT(value, zbx_dsprintf(NULL, "OID \"%s\" contains unsupported parameters.",
 						item->snmp_oid));
@@ -1063,86 +1066,8 @@ int	get_value_snmp(DC_ITEM *item, AGENT_RESULT *value)
 				break;
 			case 3:
 				zabbix_log(LOG_LEVEL_DEBUG, "%s() special processing", __function_name);
-
-				get_key_param(item->snmp_oid, 1, method, sizeof(method));
-				get_key_param(item->snmp_oid, 2, oid_index, sizeof(oid_index));
-				get_key_param(item->snmp_oid, 3, index_value, sizeof(index_value));
-
-				zabbix_log(LOG_LEVEL_DEBUG, "%s() method:'%s' oid_index:'%s' index_value:'%s'",
-						__function_name, method, oid_index, index_value);
-
-				if (0 != strcmp("index", method))
-				{
-					SET_MSG_RESULT(value, zbx_dsprintf(NULL,
-							"Unsupported method \"%s\" in the OID \"%s\".",
-							method, item->snmp_oid));
-					ret = NOTSUPPORTED;
-					break;
-				}
-
-				idx = zbx_malloc(idx, idx_alloc);
-
-				zbx_snmp_translate(oid_translated, oid_index, sizeof(oid_translated));
-
-				if (SUCCEED == (ret = cache_get_snmp_index(item, oid_translated, index_value,
-						&idx, &idx_alloc)))
-				{
-					AGENT_RESULT	current_index_value;
-
-					init_result(&current_index_value);
-
-					zbx_snprintf(oid_full, sizeof(oid_full), "%s.%s", oid_translated, idx);
-
-					ret = zbx_snmp_get_value(ss, item, oid_full, &current_index_value);
-
-					if (SUCCEED == ret && (NULL == GET_STR_RESULT(&current_index_value) ||
-							0 != strcmp(current_index_value.str, index_value)))
-					{
-						ret = NOTSUPPORTED;
-					}
-
-					free_result(&current_index_value);
-				}
-
-				if (SUCCEED != ret)
-				{
-					AGENT_RESULT	index;
-
-					init_result(&index);
-
-					if (SUCCEED == (ret = zbx_snmp_walk(ss, item, oid_translated, index_value,
-							&index)))
-					{
-						size_t	idx_offset = 0;
-
-						zbx_strcpy_alloc(&idx, &idx_alloc, &idx_offset, index.str);
-					}
-					else
-					{
-						SET_MSG_RESULT(value, zbx_dsprintf(NULL,
-								"Cannot find index \"%s\" of the OID \"%s\": %s",
-								oid_index, item->snmp_oid, index.msg));
-					}
-
-					free_result(&index);
-				}
-
-				if (SUCCEED == ret)
-				{
-					zabbix_log(LOG_LEVEL_DEBUG, "%s() idx:'%s'", __function_name, idx);
-
-					pl = strchr(item->snmp_oid, '[');
-
-					*pl = '\0';
-					zbx_snmp_translate(oid_translated, item->snmp_oid, sizeof(oid_translated));
-					*pl = '[';
-
-					zbx_snprintf(oid_full, sizeof(oid_full), "%s.%s", oid_translated, idx);
-					ret = zbx_snmp_get_value(ss, item, oid_full, value);
-				}
-
-				zbx_free(idx);
-
+				process_dynamic_index(ss, item, oid_full, value);
+				ret = zbx_snmp_get_value(ss, item, oid_full, value);
 				break;
 			default:
 				SET_MSG_RESULT(value, zbx_dsprintf(NULL, "OID \"%s\" contains unsupported parameters.",
@@ -1154,6 +1079,104 @@ int	get_value_snmp(DC_ITEM *item, AGENT_RESULT *value)
 	zbx_snmp_close_session(ss);
 out:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
+
+	return ret;
+}
+
+int  process_dynamic_index(struct snmp_session *ss, DC_ITEM *item, char *oid_full, AGENT_RESULT *value)
+{
+ 	const char		*__function_name = "process_dynamic_index";
+	char			method[8], oid_translated[MAX_STRING_LEN], oid_index[MAX_STRING_LEN],
+				index_value[MAX_STRING_LEN], *pl;
+
+	int			ret;
+	char			*idx = NULL;
+	size_t			idx_alloc = 32;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() oid in:'%s'", __function_name, item->snmp_oid);
+
+	get_key_param(item->snmp_oid, 1, method, sizeof(method));
+	get_key_param(item->snmp_oid, 2, oid_index, sizeof(oid_index));
+	get_key_param(item->snmp_oid, 3, index_value, sizeof(index_value));
+
+	zabbix_log(LOG_LEVEL_DEBUG, "%s() method:'%s' oid_index:'%s' index_value:'%s'",
+		__function_name, method, oid_index, index_value);
+
+	if (0 != strcmp("index", method))
+	{
+		SET_MSG_RESULT(value, zbx_dsprintf(NULL,
+				"Unsupported method \"%s\" in the OID \"%s\".",
+				method, item->snmp_oid));
+		ret = NOTSUPPORTED;
+		return ret;
+	}
+
+	idx = zbx_malloc(idx, idx_alloc);
+
+	zbx_snmp_translate(oid_translated, oid_index, sizeof(oid_translated));
+
+	if (SUCCEED == (ret = cache_get_snmp_index(item, oid_translated, index_value,
+		&idx, &idx_alloc)))
+	{
+		AGENT_RESULT	current_index_value;
+
+		init_result(&current_index_value);
+
+		zbx_snprintf(oid_full, sizeof(oid_translated), "%s.%s", oid_translated, idx);
+
+		ret = zbx_snmp_get_value(ss, item, oid_full, &current_index_value);
+
+		if (SUCCEED == ret && (NULL == GET_STR_RESULT(&current_index_value) ||
+				0 != strcmp(current_index_value.str, index_value)))
+		{
+			ret = NOTSUPPORTED;
+		}
+
+		free_result(&current_index_value);
+	}
+
+	if (SUCCEED != ret)
+	{
+		AGENT_RESULT	index;
+
+		init_result(&index);
+
+		if (SUCCEED == (ret = zbx_snmp_walk(ss, item, oid_translated, index_value,
+				&index)))
+		{
+			size_t	idx_offset = 0;
+
+			zbx_strcpy_alloc(&idx, &idx_alloc, &idx_offset, index.str);
+		}
+		else
+		{
+			SET_MSG_RESULT(value, zbx_dsprintf(NULL,
+				"Cannot find index \"%s\" of the OID \"%s\": %s",
+					oid_index, item->snmp_oid, index.msg));
+		}
+
+		free_result(&index);
+	}
+
+	if (SUCCEED == ret)
+	{
+		zabbix_log(LOG_LEVEL_DEBUG, "%s() idx:'%s'", __function_name, idx);
+
+		pl = strchr(item->snmp_oid, '[');
+
+		*pl = '\0';
+		zbx_snmp_translate(oid_translated, item->snmp_oid, sizeof(oid_translated));
+		*pl = '[';
+
+				/* Finds the tailing snmp index (if exists) of the dynamic snmp OID */
+		pl = strchr(item->snmp_oid, ']');
+		pl++;
+
+		zbx_snprintf(oid_full, sizeof(oid_translated), "%s.%s%s", oid_translated, idx, pl);
+	}
+
+	zbx_free(idx);
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s, in OID: %s, full OID:%s",  __function_name, zbx_result_string(ret), item->snmp_oid, oid_full);
 
 	return ret;
 }
