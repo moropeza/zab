@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -99,7 +99,7 @@ if ($isExportData) {
 	$export->setBuilder(new CConfigurationExportBuilder());
 	$export->setWriter(CExportWriterFactory::getWriter(CExportWriterFactory::XML));
 	$exportData = $export->export();
-	if (!no_errors()) {
+	if (hasErrorMesssages()) {
 		show_messages();
 	}
 	else {
@@ -189,6 +189,8 @@ elseif (isset($_REQUEST['delete']) && isset($_REQUEST['screenid']) || $_REQUEST[
 		'editable' => true
 	));
 
+	DBstart();
+
 	if (!empty($screens)) {
 		$goResult = API::Screen()->delete($screenids);
 
@@ -213,6 +215,8 @@ elseif (isset($_REQUEST['delete']) && isset($_REQUEST['screenid']) || $_REQUEST[
 			}
 		}
 	}
+
+	$goResult = DBend($goResult);
 
 	if ($goResult) {
 		unset($_REQUEST['screenid'], $_REQUEST['form']);

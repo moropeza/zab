@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -72,7 +72,7 @@ abstract class DbBackend {
 			$sql .= '('.implode(',', array_values($row)).'),';
 		}
 
-		$sql[strlen($sql) - 1] = ' ';
+		$sql = substr($sql, 0, -1);
 
 		return $sql;
 	}
@@ -87,7 +87,7 @@ abstract class DbBackend {
 	}
 
 	/**
-	 * Return error or null if no error occured.
+	 * Return error or null if no error occurred.
 	 *
 	 * @return mixed
 	 */

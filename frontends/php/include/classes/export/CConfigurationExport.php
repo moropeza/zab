@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -81,7 +81,7 @@ class CConfigurationExport {
 				'snmpv3_securityname', 'snmpv3_securitylevel', 'snmpv3_authprotocol', 'snmpv3_authpassphrase',
 				'snmpv3_privprotocol', 'snmpv3_privpassphrase', 'formula', 'valuemapid', 'delay_flex', 'params',
 				'ipmi_sensor', 'data_type', 'authtype', 'username', 'password', 'publickey', 'privatekey',
-				'interfaceid', 'port', 'description', 'inventory_link', 'flags'
+				'interfaceid', 'port', 'description', 'inventory_link', 'flags', 'logtimefmt'
 			),
 			'drule' => array('itemid', 'hostid', 'type', 'snmp_community', 'snmp_oid', 'name', 'key_', 'delay', 'history',
 				'trends', 'status', 'value_type', 'trapper_hosts', 'units', 'delta', 'snmpv3_contextname',
@@ -95,7 +95,7 @@ class CConfigurationExport {
 				'snmpv3_contextname', 'snmpv3_securityname', 'snmpv3_securitylevel', 'snmpv3_authprotocol',
 				'snmpv3_authpassphrase', 'snmpv3_privprotocol', 'snmpv3_privpassphrase', 'formula', 'valuemapid',
 				'delay_flex', 'params', 'ipmi_sensor', 'data_type', 'authtype', 'username', 'password', 'publickey',
-				'privatekey', 'interfaceid', 'port', 'description', 'inventory_link', 'flags'
+				'privatekey', 'interfaceid', 'port', 'description', 'inventory_link', 'flags', 'logtimefmt'
 			)
 		);
 	}
@@ -746,11 +746,12 @@ class CConfigurationExport {
 		$this->data['maps'] = $sysmaps;
 
 		$images = API::Image()->get(array(
+			'output' => array('imageid', 'name', 'imagetype'),
 			'sysmapids' => zbx_objectValues($sysmaps, 'sysmapid'),
-			'output' => API_OUTPUT_EXTEND,
 			'select_image' => true,
 			'preservekeys' => true
 		));
+
 		foreach ($images as &$image) {
 			$image = array(
 				'name' => $image['name'],
@@ -1177,8 +1178,8 @@ class CConfigurationExport {
 	protected function getImagesReferences(array $imageIds) {
 		$idents = array();
 		$images = API::Image()->get(array(
+			'output' => array('imageid', 'name'),
 			'imageids' => $imageIds,
-			'output' => API_OUTPUT_EXTEND,
 			'nodeids' => get_current_nodeid(true),
 			'preservekeys' => true
 		));

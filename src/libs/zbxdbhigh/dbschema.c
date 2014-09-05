@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,6 +26,12 @@ const ZBX_TABLE	tables[] = {
 #	define ZBX_TYPE_SHORTTEXT_LEN	2048
 #else
 #	define ZBX_TYPE_SHORTTEXT_LEN	65535
+#endif
+
+#if defined(HAVE_IBM_DB2)
+#	define ZBX_TYPE_LONGTEXT_LEN	2048
+#else
+#	define ZBX_TYPE_LONGTEXT_LEN	0
 #endif
 
 	{"maintenances",	"maintenanceid",	ZBX_SYNC,
@@ -1173,7 +1179,7 @@ const ZBX_TABLE	tables[] = {
 		{"timestamp",	"0",	NULL,	NULL,	0,	ZBX_TYPE_INT,	ZBX_NOTNULL,	0},
 		{"source",	"",	NULL,	NULL,	64,	ZBX_TYPE_CHAR,	ZBX_NOTNULL,	0},
 		{"severity",	"0",	NULL,	NULL,	0,	ZBX_TYPE_INT,	ZBX_NOTNULL,	0},
-		{"value",	"",	NULL,	NULL,	0,	ZBX_TYPE_LONGTEXT,	ZBX_NOTNULL,	0},
+		{"value",	"",	NULL,	NULL,	ZBX_TYPE_LONGTEXT_LEN,	ZBX_TYPE_LONGTEXT,	ZBX_NOTNULL,	0},
 		{"logeventid",	"0",	NULL,	NULL,	0,	ZBX_TYPE_INT,	ZBX_NOTNULL,	0},
 		{"ns",	"0",	NULL,	NULL,	0,	ZBX_TYPE_INT,	ZBX_NOTNULL,	0},
 		{"state",	"0",	NULL,	NULL,	0,	ZBX_TYPE_INT,	ZBX_NOTNULL,	0},
@@ -1574,6 +1580,7 @@ const ZBX_TABLE	tables[] = {
 	},
 	{0}
 
+#undef ZBX_TYPE_LONGTEXT_LEN
 #undef ZBX_TYPE_SHORTTEXT_LEN
 
 };
@@ -2961,7 +2968,7 @@ CREATE TABLE dbversion (\n\
 mandatory integer WITH DEFAULT '0' NOT NULL,\n\
 optional integer WITH DEFAULT '0' NOT NULL\n\
 );\n\
-INSERT INTO dbversion VALUES ('2020000','2020000');\n\
+INSERT INTO dbversion VALUES ('2020000','2020001');\n\
 ";
 const char	*const db_schema_fkeys[] = {
 	"ALTER TABLE hosts ADD CONSTRAINT c_hosts_1 FOREIGN KEY (proxy_hostid) REFERENCES hosts (hostid)",
@@ -4622,7 +4629,7 @@ CREATE TABLE `dbversion` (\n\
 `mandatory` integer DEFAULT '0' NOT NULL,\n\
 `optional` integer DEFAULT '0' NOT NULL\n\
 ) ENGINE=InnoDB;\n\
-INSERT INTO dbversion VALUES ('2020000','2020000');\n\
+INSERT INTO dbversion VALUES ('2020000','2020001');\n\
 ";
 const char	*const db_schema_fkeys[] = {
 	"ALTER TABLE `hosts` ADD CONSTRAINT `c_hosts_1` FOREIGN KEY (`proxy_hostid`) REFERENCES `hosts` (`hostid`)",
@@ -6283,7 +6290,7 @@ CREATE TABLE dbversion (\n\
 mandatory number(10) DEFAULT '0' NOT NULL,\n\
 optional number(10) DEFAULT '0' NOT NULL\n\
 );\n\
-INSERT INTO dbversion VALUES ('2020000','2020000');\n\
+INSERT INTO dbversion VALUES ('2020000','2020001');\n\
 CREATE SEQUENCE history_sync_seq\n\
 START WITH 1\n\
 INCREMENT BY 1\n\
@@ -8016,7 +8023,7 @@ CREATE TABLE dbversion (\n\
 mandatory integer DEFAULT '0' NOT NULL,\n\
 optional integer DEFAULT '0' NOT NULL\n\
 );\n\
-INSERT INTO dbversion VALUES ('2020000','2020000');\n\
+INSERT INTO dbversion VALUES ('2020000','2020001');\n\
 ";
 const char	*const db_schema_fkeys[] = {
 	"ALTER TABLE ONLY hosts ADD CONSTRAINT c_hosts_1 FOREIGN KEY (proxy_hostid) REFERENCES hosts (hostid)",
@@ -9671,7 +9678,7 @@ CREATE TABLE dbversion (\n\
 mandatory integer DEFAULT '0' NOT NULL,\n\
 optional integer DEFAULT '0' NOT NULL\n\
 );\n\
-INSERT INTO dbversion VALUES ('2020000','2020000');\n\
+INSERT INTO dbversion VALUES ('2020000','2020001');\n\
 ";
 const char	*const db_schema_fkeys[] = {
 	NULL

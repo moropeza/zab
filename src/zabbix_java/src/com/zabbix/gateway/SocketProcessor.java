@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -76,8 +76,8 @@ class SocketProcessor implements Runnable
 			{
 				JSONObject response = new JSONObject();
 				response.put(ItemChecker.JSON_TAG_RESPONSE, ItemChecker.JSON_RESPONSE_FAILED);
-				response.put(ItemChecker.JSON_TAG_ERROR, JSONObject.quote(e1.getMessage()).toString());
-				
+				response.put(ItemChecker.JSON_TAG_ERROR, e1.getMessage());
+
 				speaker.sendResponse(response.toString());
 			}
 			catch (Exception e2)

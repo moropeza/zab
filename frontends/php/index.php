@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -56,7 +56,7 @@ if ($config['authentication_type'] == ZBX_AUTH_HTTP) {
 		$_REQUEST['name'] = $_SERVER['PHP_AUTH_USER'];
 	}
 	else {
-		access_deny();
+		access_deny(ACCESS_DENY_PAGE);
 	}
 }
 

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -231,15 +231,12 @@ abstract class CGraphDraw {
 			$str = $this->items[0]['hostname'].NAME_DELIMITER.$this->items[0]['name'];
 		}
 		else {
-			foreach ($this->items as &$item) {
-				$item['host'] = $item['hostname'];
-			}
-			unset($item);
-
 			$str = CMacrosResolverHelper::resolveGraphName($this->header, $this->items);
 		}
 
-		$str .= $this->period2str($this->period);
+		if ($this->period) {
+			$str .= $this->period2str($this->period);
+		}
 
 		// calculate largest font size that can fit graph header
 		// TODO: font size must be dynamic in other parts of the graph as well, like legend, timeline, etc

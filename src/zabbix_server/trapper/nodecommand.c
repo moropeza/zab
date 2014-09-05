@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -41,8 +41,6 @@ static int	execute_script(zbx_uint64_t scriptid, zbx_uint64_t hostid, char **res
 	char		error[MAX_STRING_LEN];
 	int		ret = FAIL, rc;
 	DC_HOST		host;
-	DB_RESULT	db_result;
-	DB_ROW		db_row;
 	zbx_script_t	script;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() scriptid:" ZBX_FS_UI64 " hostid:" ZBX_FS_UI64,
@@ -51,23 +49,6 @@ static int	execute_script(zbx_uint64_t scriptid, zbx_uint64_t hostid, char **res
 	*error = '\0';
 
 	if (SUCCEED != (rc = DCget_host_by_hostid(&host, hostid)))
-	{
-		/* let's try to get a host from a database (the host can be disabled) */
-		db_result = DBselect("select host,name from hosts where hostid=" ZBX_FS_UI64, hostid);
-
-		if (NULL != (db_row = DBfetch(db_result)))
-		{
-			memset(&host, 0, sizeof(host));
-			host.hostid = hostid;
-			strscpy(host.host, db_row[0]);
-			strscpy(host.name, db_row[1]);
-
-			rc = SUCCEED;
-		}
-		DBfree_result(db_result);
-	}
-
-	if (SUCCEED != rc)
 	{
 		zbx_snprintf(error, sizeof(error), "Unknown Host ID [" ZBX_FS_UI64 "].", hostid);
 		goto fail;
@@ -251,7 +232,7 @@ int	node_process_command(zbx_sock_t *sock, const char *data, struct zbx_json_par
 	else
 		result = zbx_dsprintf(result, "NODE %d: Unknown Node ID [%d].", CONFIG_NODEID, nodeid);
 finish:
-	if (FAIL == ret)
+	if (SUCCEED != ret)
 	{
 		zbx_json_addstring(&j, ZBX_PROTO_TAG_RESPONSE, ZBX_PROTO_VALUE_FAILED, ZBX_JSON_TYPE_STRING);
 		zbx_json_addstring(&j, ZBX_PROTO_TAG_INFO, (NULL != result ? result : "Unknown error."),

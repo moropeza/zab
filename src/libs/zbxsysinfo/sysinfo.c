@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -194,7 +194,6 @@ static void	zbx_log_init(zbx_log_t *log)
 	log->severity = 0;
 	log->logeventid = 0;
 	log->mtime = 0;
-
 }
 
 void	init_result(AGENT_RESULT *result)
@@ -220,7 +219,10 @@ void	zbx_logs_free(zbx_log_t **logs)
 	size_t	i;
 
 	for (i = 0; NULL != logs[i]; i++)
+	{
 		zbx_log_clean(logs[i]);
+		zbx_free(logs[i]);
+	}
 	zbx_free(logs);
 }
 
@@ -614,7 +616,10 @@ notsupported:
 	free_request(&request);
 
 	if (NOTSUPPORTED == ret)
+	{
+		UNSET_MSG_RESULT(result);
 		SET_MSG_RESULT(result, zbx_strdup(NULL, ZBX_NOTSUPPORTED));
+	}
 
 	return ret;
 }

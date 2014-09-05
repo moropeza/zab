@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,11 +23,13 @@
 
 int	SYSTEM_CPU_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
-	char			tmp[16];
+	char			*tmp;
 	struct pst_dynamic	dyn;
 
 	if (1 < request->nparam)
 		return SYSINFO_RET_FAIL;
+
+	tmp = get_rparam(request, 0);
 
 	/* only "online" (default) for parameter "type" is supported */
 	if (NULL != tmp && '\0' != *tmp && 0 != strcmp(tmp, "online"))

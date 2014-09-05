@@ -1,6 +1,6 @@
 dnl
 dnl Zabbix
-dnl Copyright (C) 2001-2013 Zabbix SIA
+dnl Copyright (C) 2001-2014 Zabbix SIA
 dnl
 dnl This program is free software; you can redistribute it and/or modify
 dnl it under the terms of the GNU General Public License as published by
@@ -19,8 +19,9 @@ dnl
 
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT(src/zabbix_server/server.c)
-AM_INIT_AUTOMAKE([zabbix],[2.2.1])
+AC_INIT([Zabbix],[2.2.6])
+AC_CONFIG_SRCDIR(src/zabbix_server/server.c)
+AM_INIT_AUTOMAKE([subdir-objects])
 
 AC_MSG_NOTICE([Configuring $PACKAGE_NAME $PACKAGE_VERSION])
 
@@ -50,7 +51,7 @@ AC_CHECK_HEADERS(stdio.h stdlib.h string.h unistd.h netdb.h signal.h \
   syslog.h time.h errno.h sys/types.h sys/stat.h netinet/in.h \
   math.h sys/socket.h dirent.h ctype.h \
   mtent.h fcntl.h sys/param.h arpa/inet.h \
-  sys/vfs.h sys/pstat.h sys/sysinfo.h sys/statvfs.h \
+  sys/vfs.h sys/pstat.h sys/sysinfo.h sys/statvfs.h sys/statfs.h \
   sys/socket.h sys/loadavg.h arpa/inet.h \
   sys/vmmeter.h strings.h vm/vm_param.h \
   sys/time.h kstat.h sys/syscall.h sys/sysmacros.h sys/procfs.h \
@@ -343,6 +344,25 @@ AC_TRY_COMPILE(
 	statvfs64("/", &s);
 ],
 AC_DEFINE(HAVE_SYS_STATVFS64, 1, [Define to 1 if struct 'statvfs64' exists.])
+AC_MSG_RESULT(yes),
+AC_MSG_RESULT(no))
+
+AC_MSG_CHECKING(for struct statfs64 in sys/statfs.h)
+AC_TRY_COMPILE(
+[
+#ifdef HAVE_SYS_TYPES_H
+#	include <sys/types.h>
+#endif
+#ifdef HAVE_SYS_STATFS_H
+#	include <sys/statfs.h>
+#endif
+],
+[
+	struct statfs64	s;
+	s.f_bsize = s.f_blocks = s.f_bfree = s.f_bavail = 0;
+	statfs64("/", &s);
+],
+AC_DEFINE(HAVE_SYS_STATFS64, 1, [Define to 1 if struct 'statfs64' exists.])
 AC_MSG_RESULT(yes),
 AC_MSG_RESULT(no))
 
@@ -876,18 +896,6 @@ darwin*|rhapsody*)
 	;;
 *solaris*)
 	ARCH="solaris"
-	dnl Forcing a 64-bit application for a 64-bit Solaris
-	dnl A 32-bit program that uses /proc is able to look at 32-bit processes,
-	dnl but is not able to understand all attributes of a 64-bit process.
-	AC_MSG_CHECKING(for -m64 compilation flag)
-	saved_CFLAGS="$CFLAGS"
-	CFLAGS="-m64"
-	AC_TRY_RUN(
-	[int main(void) {return 0;}],
-	CFLAGS="-m64 $saved_CFLAGS"
-	AC_MSG_RESULT(yes),
-	CFLAGS="$saved_CFLAGS"
-	AC_MSG_RESULT(no))
 	;;
 hpux*)
 	ARCH="hpux"
@@ -932,19 +940,47 @@ if test "x$ARCH" = "xlinux"; then
 	esac
 fi
 
-dnl Low Level Discovery needs a way to get the list of network
-dnl interfaces available on the monitored system. On HP-UX systems
-dnl that way depends on the OS version.
+if test "x$ARCH" = "xsolaris"; then
+	dnl Forcing a 64-bit application for a 64-bit Solaris
+	dnl A 32-bit program that uses /proc is able to look at 32-bit processes,
+	dnl but is not able to understand all attributes of a 64-bit process.
+	AC_MSG_CHECKING(for -m64 compilation flag)
+	saved_CFLAGS="$CFLAGS"
+	CFLAGS="-m64"
+	AC_TRY_RUN(
+	[int main(void) {return 0;}],
+	CFLAGS="-m64 $saved_CFLAGS"
+	AC_MSG_RESULT(yes),
+	CFLAGS="$saved_CFLAGS"
+	AC_MSG_RESULT(no))
+fi
+
 if test "x$ARCH" = "xhpux"; then
+	dnl Low Level Discovery needs a way to get the list of network
+	dnl interfaces available on the monitored system. On HP-UX systems
+	dnl that way depends on the OS version.
 	hpux_version=${host_os#hpux}
 	hpux_major=${hpux_version%.*}
 	hpux_minor=${hpux_version#*.}
 
 	AC_DEFINE_UNQUOTED([HPUX_VERSION], $hpux_major$hpux_minor, [Define to HP-UX version])
+
+	dnl This API level is needed so that "utsname.nodename" is not truncated.
+	AC_MSG_CHECKING(for -D_HPUX_API_LEVEL=20040821 compilation flag)
+	saved_CFLAGS="$CFLAGS"
+	CFLAGS="-D_HPUX_API_LEVEL=20040821"
+	AC_TRY_RUN(
+	[int main(void) {return 0;}],
+	CFLAGS="-D_HPUX_API_LEVEL=20040821 $saved_CFLAGS"
+	AC_MSG_RESULT(yes),
+	CFLAGS="$saved_CFLAGS"
+	AC_MSG_RESULT(no))
 fi
 
 AC_DEFINE_UNQUOTED([ARCH], "${ARCH}", [Define to OS name for code managing])
 AC_SUBST(ARCH)
+
+AC_CHECK_SIZEOF([void *])
 
 dnl *****************************************************************
 dnl *                                                               *
@@ -1197,27 +1233,6 @@ if test "x$server" = "xyes" || test "x$proxy" = "xyes"; then
 	PROXY_LDFLAGS="$PROXY_LDFLAGS $LIBXML2_LDFLAGS"
 	PROXY_LIBS="$PROXY_LIBS $LIBXML2_LIBS"
 
-	dnl Checking for libCurl [default - yes]
-	LIBCURL_CHECK_CONFIG(, [7.13.1], [],[])
-	if test "x$want_curl" = "xyes"; then
-		if test "x$found_curl" != "xyes"; then
-			AC_MSG_ERROR([Curl library not found])
-		fi
-	fi
-	if test "x$found_curl" = "xyes"; then
-		have_web_monitoring="yes"
-	fi
-	CFLAGS="$CFLAGS $LIBCURL_CPPFLAGS"
-	SERVER_LDFLAGS="$SERVER_LDFLAGS $LIBCURL_LDFLAGS"
-	SERVER_LIBS="$SERVER_LIBS $LIBCURL_LIBS"
-
-	PROXY_LDFLAGS="$PROXY_LDFLAGS $LIBCURL_LDFLAGS"
-	PROXY_LIBS="$PROXY_LIBS $LIBCURL_LIBS"
-
-	dnl Starting from 2.0 agent can do web monitoring
-	AGENT_LDFLAGS="${AGENT_LDFLAGS} ${LIBCURL_LDFLAGS}"
-	AGENT_LIBS="${AGENT_LIBS} ${LIBCURL_LIBS}"
-
 	dnl Checking for unixODBC support
 	LIBUNIXODBC_CHECK_CONFIG([no])
 	if test "x$want_unixodbc" = "xyes"; then
@@ -1317,6 +1332,29 @@ PROXY_LIBS="$PROXY_LIBS $LDAP_LIBS"
 
 AGENT_LDFLAGS="$AGENT_LDFLAGS $LDAP_LDFLAGS"
 AGENT_LIBS="$AGENT_LIBS $LDAP_LIBS"
+
+found_curl="no"
+dnl Checking for libCurl [by default - skip]
+LIBCURL_CHECK_CONFIG(, [7.13.1], [],[])
+if test "x$want_curl" = "xyes"; then
+	if test "x$found_curl" != "xyes"; then
+		AC_MSG_ERROR([Curl library not found])
+	fi
+fi
+if test "x$found_curl" = "xyes"; then
+	have_web_monitoring="cURL"
+fi
+CFLAGS="$CFLAGS $LIBCURL_CPPFLAGS"
+
+SERVER_LDFLAGS="$SERVER_LDFLAGS $LIBCURL_LDFLAGS"
+SERVER_LIBS="$SERVER_LIBS $LIBCURL_LIBS"
+
+PROXY_LDFLAGS="$PROXY_LDFLAGS $LIBCURL_LDFLAGS"
+PROXY_LIBS="$PROXY_LIBS $LIBCURL_LIBS"
+
+dnl Starting from 2.0 agent can do web monitoring
+AGENT_LDFLAGS="$AGENT_LDFLAGS $LIBCURL_LDFLAGS"
+AGENT_LIBS="$AGENT_LIBS $LIBCURL_LIBS"
 
 found_iconv="no"
 dnl Check for libiconv [by default - skip]

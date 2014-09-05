@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -37,6 +37,10 @@ static int		log_level = LOG_LEVEL_WARNING;
 #endif
 
 #define ZBX_MESSAGE_BUF_SIZE	1024
+
+#define ZBX_CHECK_LOG_LEVEL(level)	\
+		((LOG_LEVEL_INFORMATION != level && (level > log_level || LOG_LEVEL_EMPTY == level)) ? FAIL : SUCCEED)
+
 
 #if !defined(_WINDOWS)
 void	redirect_std(const char *filename)
@@ -97,7 +101,7 @@ int zabbix_open_log(int type, int level, const char *filename)
 		system_log_handle = RegisterEventSource(NULL, wevent_source);
 		zbx_free(wevent_source);
 #else
-		openlog(title_message, LOG_PID, LOG_DAEMON);
+		openlog(syslog_app_name, LOG_PID, LOG_DAEMON);
 #endif
 	}
 	else if (LOG_TYPE_FILE == type)
@@ -192,6 +196,21 @@ void zabbix_errlog(zbx_err_codes_t err, ...)
 	zbx_free(s);
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: zabbix_check_log_level                                           *
+ *                                                                            *
+ * Purpose: checks if the specified log level must be logged                  *
+ *                                                                            *
+ * Return value: SUCCEED - the log level must be logged                       *
+ *               FAIL    - otherwise                                          *
+ *                                                                            *
+ ******************************************************************************/
+int zabbix_check_log_level(int level)
+{
+	return ZBX_CHECK_LOG_LEVEL(level);
+}
+
 void __zbx_zabbix_log(int level, const char *fmt, ...)
 {
 	FILE			*log_file = NULL;
@@ -200,7 +219,7 @@ void __zbx_zabbix_log(int level, const char *fmt, ...)
 	static zbx_uint64_t	old_size = 0;
 	va_list			args;
 	struct tm		*tm;
-	struct stat		buf;
+	zbx_stat_t		buf;
 #ifdef _WINDOWS
 	struct _timeb		current_time;
 	WORD			wType;
@@ -209,14 +228,14 @@ void __zbx_zabbix_log(int level, const char *fmt, ...)
 	struct timeval		current_time;
 #endif
 
-	if (LOG_LEVEL_INFORMATION != level && (level > log_level || LOG_LEVEL_EMPTY == level))
+	if (SUCCEED != ZBX_CHECK_LOG_LEVEL(level))
 		return;
 
 	if (LOG_TYPE_FILE == log_type)
 	{
 		zbx_mutex_lock(&log_file_access);
 
-		if (0 != CONFIG_LOG_FILE_SIZE && 0 == stat(log_filename, &buf))
+		if (0 != CONFIG_LOG_FILE_SIZE && 0 == zbx_stat(log_filename, &buf))
 		{
 			if (CONFIG_LOG_FILE_SIZE * ZBX_MEBIBYTE < buf.st_size)
 			{

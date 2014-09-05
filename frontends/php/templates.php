@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -98,11 +98,11 @@ if ($exportData) {
 	$export->setWriter(CExportWriterFactory::getWriter(CExportWriterFactory::XML));
 	$exportData = $export->export();
 
-	if (no_errors()) {
-		print($exportData);
+	if (hasErrorMesssages()) {
+		show_messages();
 	}
 	else {
-		show_messages();
+		print($exportData);
 	}
 	exit();
 }
@@ -113,15 +113,17 @@ if ($exportData) {
 if (isset($_REQUEST['add_template']) && isset($_REQUEST['add_templates'])) {
 	$_REQUEST['templates'] = array_merge($templateIds, $_REQUEST['add_templates']);
 }
-if (isset($_REQUEST['unlink']) || isset($_REQUEST['unlink_and_clear'])) {
-	$_REQUEST['clear_templates'] = get_request('clear_templates', array());
+if (hasRequest('unlink') || hasRequest('unlink_and_clear')) {
+	$_REQUEST['clear_templates'] = getRequest('clear_templates', array());
 
-	if (isset($_REQUEST['unlink'])) {
-		$unlinkTemplates = array_keys($_REQUEST['unlink']);
+	$unlinkTemplates = array();
+
+	if (hasRequest('unlink') && is_array(getRequest('unlink'))) {
+		$unlinkTemplates = array_keys(getRequest('unlink'));
 	}
-	else {
-		$unlinkTemplates = array_keys($_REQUEST['unlink_and_clear']);
-		$_REQUEST['clear_templates'] = zbx_array_merge($_REQUEST['clear_templates'], $unlinkTemplates);
+	elseif (hasRequest('unlink_and_clear') && is_array(getRequest('unlink_and_clear'))) {
+		$unlinkTemplates = array_keys(getRequest('unlink_and_clear'));
+		$_REQUEST['clear_templates'] = array_merge(getRequest('unlink_and_clear'), $unlinkTemplates);
 	}
 
 	foreach ($unlinkTemplates as $id) {
@@ -252,6 +254,11 @@ elseif (isset($_REQUEST['save'])) {
 			}
 
 			if (!copyItems($cloneTemplateId, $templateId)) {
+				throw new Exception();
+			}
+
+			// copy web scenarios
+			if (!copyHttpTests($cloneTemplateId, $templateId)) {
 				throw new Exception();
 			}
 

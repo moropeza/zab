@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,6 +20,12 @@
 #ifndef ZABBIX_TYPES_H
 #define ZABBIX_TYPES_H
 
+#if defined(_WINDOWS)
+#	define ZBX_THREAD_LOCAL __declspec(thread)
+#else
+#	define ZBX_THREAD_LOCAL
+#endif
+
 #define	ZBX_FS_DBL		"%lf"
 #define	ZBX_FS_DBL_EXT(p)	"%." #p "lf"
 
@@ -27,52 +33,41 @@
 
 #if defined(_WINDOWS)
 
-#ifdef _UNICODE
 #	define zbx_stat(path, buf)		__zbx_stat(path, buf)
 #	define zbx_open(pathname, flags)	__zbx_open(pathname, flags | O_BINARY)
-#else
-#	define zbx_stat(path, buf)		_stat64(path, buf)
-#	define zbx_open(pathname, flags)	open(pathname, flags | O_BINARY)
-#endif
 
-#ifdef UNICODE
 #	include <strsafe.h>
-#	define zbx_wsnprintf StringCchPrintf
-#	define zbx_strlen wcslen
-#	define zbx_strchr wcschr
-#	define zbx_strstr wcsstr
-#	define zbx_fullpath _wfullpath
-#else
-#	define zbx_wsnprintf zbx_snprintf
-#	define zbx_strlen strlen
-#	define zbx_strchr strchr
-#	define zbx_strstr strstr
-#	define zbx_fullpath _fullpath
-#endif
+#	define zbx_wsnprintf	StringCchPrintf
+#	define zbx_strlen	wcslen
+#	define zbx_strchr	wcschr
+#	define zbx_strstr	wcsstr
+#	define zbx_fullpath	_wfullpath
 
-#ifndef __UINT64_C
-#	define __UINT64_C(x)	x
-#endif
+#	ifndef __UINT64_C
+#		define __UINT64_C(x)	x
+#	endif
 
-#	define zbx_uint64_t unsigned __int64
-#	define ZBX_FS_UI64 "%I64u"
-#	define ZBX_FS_UO64 "%I64o"
-#	define ZBX_FS_UX64 "%I64x"
+#	define zbx_uint64_t	unsigned __int64
+#	define ZBX_FS_UI64	"%I64u"
+#	define ZBX_FS_UO64	"%I64o"
+#	define ZBX_FS_UX64	"%I64x"
 
-#	define stat		_stat64
 #	define snprintf		_snprintf
 
 #	define alloca		_alloca
 
-#ifndef uint32_t
-#	define uint32_t	__int32
-#endif
+#	ifndef uint32_t
+#		define uint32_t	__int32
+#	endif
 
-#ifndef PATH_SEPARATOR
-#	define PATH_SEPARATOR	'\\'
-#endif
+#	ifndef PATH_SEPARATOR
+#		define PATH_SEPARATOR	'\\'
+#	endif
 
 #	define strcasecmp	lstrcmpiA
+
+typedef __int64	zbx_offset_t;
+#	define zbx_lseek(fd, offset, whence)	_lseeki64(fd, (zbx_offset_t)(offset), whence)
 
 #else	/* _WINDOWS */
 
@@ -81,34 +76,35 @@
 
 #	ifndef __UINT64_C
 #		ifdef UINT64_C
-#			define __UINT64_C(c) (UINT64_C(c))
+#			define __UINT64_C(c)	(UINT64_C(c))
 #		else
-#			define __UINT64_C(c) (c ## ULL)
+#			define __UINT64_C(c)	(c ## ULL)
 #		endif
 #	endif
 
-#	define zbx_uint64_t uint64_t
+#	define zbx_uint64_t	uint64_t
 #	if __WORDSIZE == 64
-#		define ZBX_FS_UI64 "%lu"
-#		define ZBX_FS_UO64 "%lo"
-#		define ZBX_FS_UX64 "%lx"
-#		define ZBX_OFFSET 10000000000000000UL
+#		define ZBX_FS_UI64	"%lu"
+#		define ZBX_FS_UO64	"%lo"
+#		define ZBX_FS_UX64	"%lx"
 #	else
 #		ifdef HAVE_LONG_LONG_QU
-#			define ZBX_FS_UI64 "%qu"
-#			define ZBX_FS_UO64 "%qo"
-#			define ZBX_FS_UX64 "%qx"
+#			define ZBX_FS_UI64	"%qu"
+#			define ZBX_FS_UO64	"%qo"
+#			define ZBX_FS_UX64	"%qx"
 #		else
-#			define ZBX_FS_UI64 "%llu"
-#			define ZBX_FS_UO64 "%llo"
-#			define ZBX_FS_UX64 "%llx"
+#			define ZBX_FS_UI64	"%llu"
+#			define ZBX_FS_UO64	"%llo"
+#			define ZBX_FS_UX64	"%llx"
 #		endif
-#		define ZBX_OFFSET 10000000000000000ULL
 #	endif
 
-#ifndef PATH_SEPARATOR
-#	define PATH_SEPARATOR	'/'
-#endif
+#	ifndef PATH_SEPARATOR
+#		define PATH_SEPARATOR	'/'
+#	endif
+
+typedef off_t	zbx_offset_t;
+#	define zbx_lseek(fd, offset, whence)	lseek(fd, (zbx_offset_t)(offset), whence)
 
 #endif	/* _WINDOWS */
 
@@ -127,11 +123,15 @@
 #define ZBX_OCT2UINT64(uint, string) sscanf(string, ZBX_FS_UO64, &uint)
 #define ZBX_HEX2UINT64(uint, string) sscanf(string, ZBX_FS_UX64, &uint)
 
+#define ZBX_STR2UCHAR(var, string) var = (unsigned char)atoi(string)
+
 #define ZBX_CONST_STRING(str) ""str
 
-typedef struct {
+typedef struct
+{
 	zbx_uint64_t	lo;
 	zbx_uint64_t	hi;
-} zbx_uint128_t;
+}
+zbx_uint128_t;
 
 #endif

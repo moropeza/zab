@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -127,7 +127,8 @@ static void	process_test_data(zbx_uint64_t httptestid, int lastfailedstep, doubl
 			break;
 		}
 
-		switch (types[num] = (unsigned char)atoi(row[0])) {
+		switch (types[num] = (unsigned char)atoi(row[0]))
+		{
 			case ZBX_HTTPITEM_TYPE_SPEED:
 			case ZBX_HTTPITEM_TYPE_LASTSTEP:
 				break;
@@ -150,6 +151,12 @@ static void	process_test_data(zbx_uint64_t httptestid, int lastfailedstep, doubl
 	for (i = 0; i < num; i++)
 	{
 		if (SUCCEED != errcodes[i])
+			continue;
+
+		if (ITEM_STATUS_ACTIVE != items[i].status)
+			continue;
+
+		if (HOST_STATUS_MONITORED != items[i].host.status)
 			continue;
 
 		if (HOST_MAINTENANCE_STATUS_ON == items[i].host.maintenance_status &&
@@ -232,6 +239,12 @@ static void	process_step_data(zbx_uint64_t httpstepid, zbx_httpstat_t *stat, zbx
 	for (i = 0; i < num; i++)
 	{
 		if (SUCCEED != errcodes[i])
+			continue;
+
+		if (ITEM_STATUS_ACTIVE != items[i].status)
+			continue;
+
+		if (HOST_STATUS_MONITORED != items[i].host.status)
 			continue;
 
 		if (HOST_MAINTENANCE_STATUS_ON == items[i].host.maintenance_status &&

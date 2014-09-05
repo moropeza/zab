@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -48,4 +48,9 @@ void	zbx_vector_ptr_clean(zbx_vector_ptr_t *vector, zbx_mem_free_func_t free_fun
 
 	memset(vector->values, 0, sizeof(*vector->values) * vector->values_num);
 	vector->values_num = 0;
+}
+
+void	zbx_ptr_free(void *ptr)
+{
+	zbx_free(ptr);
 }

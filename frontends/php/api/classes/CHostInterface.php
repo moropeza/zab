@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -748,7 +748,7 @@ class CHostInterface extends CZBXAPI {
 			}
 		}
 
-		// gathrer missing host ids
+		// gather missing host ids
 		$hostIds = array();
 		if ($interfaceidsWithoutHostIds) {
 			$dbResult = DBselect('SELECT DISTINCT i.hostid FROM interface i WHERE '.dbConditionInt('i.interfaceid', $interfaceidsWithoutHostIds));

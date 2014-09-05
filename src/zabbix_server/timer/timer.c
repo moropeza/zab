@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -33,6 +33,8 @@
 
 #define TIMER_DELAY	30
 
+#define ZBX_TRIGGERS_MAX	1000
+
 extern unsigned char	process_type;
 extern int		process_num;
 
@@ -55,23 +57,26 @@ static void	process_time_functions(int *triggers_count, int *events_count)
 
 	zbx_vector_ptr_create(&trigger_order);
 
-	DCconfig_get_time_based_triggers(&trigger_info, &trigger_order, process_num, triggers_count);
+	while (1)
+	{
+		DCconfig_get_time_based_triggers(&trigger_info, &trigger_order, ZBX_TRIGGERS_MAX, process_num);
 
-	if (0 == trigger_order.values_num)
-		goto clean;
+		if (0 == trigger_order.values_num)
+			break;
 
-	evaluate_expressions(&trigger_order);
+		*triggers_count += trigger_order.values_num;
 
-	DBbegin();
+		evaluate_expressions(&trigger_order);
 
-	process_triggers(&trigger_order);
+		DBbegin();
 
-	DCfree_triggers(&trigger_order);
+		process_triggers(&trigger_order);
 
-	*events_count = process_events();
+		*events_count += process_events();
 
-	DBcommit();
-clean:
+		DBcommit();
+	}
+
 	zbx_free(trigger_info);
 	zbx_vector_ptr_destroy(&trigger_order);
 
@@ -377,7 +382,7 @@ out:
  * Parameters: hostid - host identifier from database                         *
  *             maintenance_from, maintenance_to - maintenance period bounds   *
  *                                                                            *
- * Return value:                                                              *
+ * Return value: ret - number of hosts that went in and out of maintenance    *
  *                                                                            *
  * Author: Alexander Vladishev                                                *
  *                                                                            *
@@ -433,7 +438,7 @@ static void	generate_events(zbx_uint64_t hostid, int maintenance_from, int maint
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
 
-static void	update_maintenance_hosts(zbx_host_maintenance_t *hm, int hm_count, int now)
+static int	update_maintenance_hosts(zbx_host_maintenance_t *hm, int hm_count, int now)
 {
 	typedef struct
 	{
@@ -452,6 +457,7 @@ static void	update_maintenance_hosts(zbx_host_maintenance_t *hm, int hm_count, i
 	char		*sql = NULL;
 	size_t		sql_alloc = ZBX_KIBIBYTE, sql_offset;
 	maintenance_t	*maintenances = NULL, *m;
+	int		ret = 0;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -469,8 +475,9 @@ static void	update_maintenance_hosts(zbx_host_maintenance_t *hm, int hm_count, i
 				hm[i].host_maintenance_type != hm[i].maintenance_type ||
 				0 == hm[i].host_maintenance_from)
 		{
-			zabbix_log(LOG_LEVEL_WARNING, "putting host [%s] into maintenance (with%s data collection)",
-					hm[i].host, MAINTENANCE_TYPE_NORMAL == hm[i].maintenance_type ? "" : "out");
+			zabbix_log(LOG_LEVEL_DEBUG, "putting host '%s' into maintenance (%s)",
+					hm[i].host, MAINTENANCE_TYPE_NORMAL == hm[i].maintenance_type ?
+					"with data collection" : "without data collection");
 
 			sql_offset = 0;
 			zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
@@ -495,6 +502,8 @@ static void	update_maintenance_hosts(zbx_host_maintenance_t *hm, int hm_count, i
 
 			DCconfig_set_maintenance(&hm[i].hostid, 1, HOST_MAINTENANCE_STATUS_ON,
 					hm[i].maintenance_type, hm[i].maintenance_from);
+
+			ret++;
 		}
 
 		uint64_array_add(&ids, &ids_alloc, &ids_num, hm[i].hostid, 4);
@@ -521,7 +530,7 @@ static void	update_maintenance_hosts(zbx_host_maintenance_t *hm, int hm_count, i
 
 	while (NULL != (row = DBfetch(result)))
 	{
-		zabbix_log(LOG_LEVEL_WARNING, "taking host [%s] out of maintenance", row[1]);
+		zabbix_log(LOG_LEVEL_DEBUG, "taking host '%s' out of maintenance", row[1]);
 
 		ZBX_STR2UINT64(hostid, row[0]);
 
@@ -543,10 +552,11 @@ static void	update_maintenance_hosts(zbx_host_maintenance_t *hm, int hm_count, i
 			"update hosts"
 			" set maintenanceid=null,"
 				"maintenance_status=%d,"
-				"maintenance_type=0,"
+				"maintenance_type=%d,"
 				"maintenance_from=0"
 			" where",
-			HOST_MAINTENANCE_STATUS_OFF);
+			HOST_MAINTENANCE_STATUS_OFF,
+			MAINTENANCE_TYPE_NORMAL);
 
 	if (NULL != ids && 0 != ids_num)
 	{
@@ -554,6 +564,8 @@ static void	update_maintenance_hosts(zbx_host_maintenance_t *hm, int hm_count, i
 		DBexecute("%s", sql);
 
 		DCconfig_set_maintenance(ids, ids_num, HOST_MAINTENANCE_STATUS_OFF, 0, 0);
+
+		ret += ids_num;
 	}
 
 	DBcommit();
@@ -571,6 +583,8 @@ static void	update_maintenance_hosts(zbx_host_maintenance_t *hm, int hm_count, i
 	}
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
+
+	return ret;
 }
 
 /******************************************************************************
@@ -614,7 +628,7 @@ static int	process_maintenance(void)
 					db_period, db_maintenance_type;
 	static zbx_host_maintenance_t	*hm = NULL;
 	static int			hm_alloc = 4;
-	int				hm_count = 0, res;
+	int				hm_count = 0, ret;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -755,19 +769,19 @@ static int	process_maintenance(void)
 		if (maintenance_from < db_active_since)
 			maintenance_from = db_active_since;
 
-		process_maintenance_hosts(&hm, &hm_alloc, &hm_count, maintenance_from, db_maintenanceid, db_maintenance_type);
+		process_maintenance_hosts(&hm, &hm_alloc, &hm_count, maintenance_from, db_maintenanceid,
+				db_maintenance_type);
 	}
 	DBfree_result(result);
 
-	update_maintenance_hosts(hm, hm_count, (int)now);
-
-	res = hm_count;
+	ret = update_maintenance_hosts(hm, hm_count, (int)now);
 
 	while (0 != hm_count--)
 		zbx_free(hm[hm_count].host);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
-	return res;
+
+	return ret;
 }
 
 /******************************************************************************
@@ -826,7 +840,7 @@ void	main_timer_loop(void)
 				else
 				{
 					zbx_setproctitle("%s #1 [processed %d triggers, %d events in " ZBX_FS_DBL
-							" sec, %d maint.periods in " ZBX_FS_DBL " sec, processing time "
+							" sec, %d maintenances in " ZBX_FS_DBL " sec, processing time "
 							"functions]",
 							get_process_type_string(process_type),
 							triggers_count, events_count, total_sec, hm_count,
@@ -845,7 +859,7 @@ void	main_timer_loop(void)
 				else
 				{
 					zbx_setproctitle("%s #1 [processed %d triggers, %d events in " ZBX_FS_DBL
-							" sec, %d maint.periods in " ZBX_FS_DBL " sec, idle %d sec]",
+							" sec, %d maintenances in " ZBX_FS_DBL " sec, idle %d sec]",
 							get_process_type_string(process_type),
 							triggers_count, events_count, total_sec, hm_count,
 							total_sec_maint, sleeptime);
@@ -879,7 +893,7 @@ void	main_timer_loop(void)
 			else
 			{
 				zbx_setproctitle("%s #1 [processed %d triggers, %d events in " ZBX_FS_DBL
-						" sec, %d maint.periods in " ZBX_FS_DBL " sec, processing time "
+						" sec, %d maintenances in " ZBX_FS_DBL " sec, processing time "
 						"functions]",
 						get_process_type_string(process_type),
 						old_triggers_count, old_events_count, old_total_sec, old_hm_count,
@@ -904,7 +918,7 @@ void	main_timer_loop(void)
 		if (0 == nextcheck % SEC_PER_MIN || nextcheck + SEC_PER_MIN - (nextcheck % SEC_PER_MIN) <= time(NULL))
 		{
 			zbx_setproctitle("%s #1 [processed %d triggers, %d events in " ZBX_FS_DBL
-					" sec, %d maint.periods in " ZBX_FS_DBL " sec, processing maintenance periods]",
+					" sec, %d maintenances in " ZBX_FS_DBL " sec, processing maintenance periods]",
 					get_process_type_string(process_type),
 					triggers_count, events_count, total_sec, old_hm_count,
 					old_total_sec_maint);

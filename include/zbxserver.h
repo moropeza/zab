@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -45,7 +45,7 @@
 
 #define STR_CONTAINS_MACROS(str)	(NULL != strchr(str, '{'))
 
-int	evaluate_function(char *value, DB_ITEM *item, const char *function, const char *parameters, time_t now);
+int	evaluate_function(char *value, DC_ITEM *item, const char *function, const char *parameters, time_t now);
 
 int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, DB_EVENT *r_event, zbx_uint64_t *userid,
 		zbx_uint64_t *hostid, DC_HOST *dc_host, DC_ITEM *dc_item, char **data, int macro_type, char *error,

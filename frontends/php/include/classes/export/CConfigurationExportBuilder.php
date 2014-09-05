@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -554,7 +554,8 @@ class CConfigurationExportBuilder {
 				'description' => $item['description'],
 				'inventory_link' => $item['inventory_link'],
 				'applications' => $this->formatApplications($item['applications']),
-				'valuemap' => $item['valuemap']
+				'valuemap' => $item['valuemap'],
+				'logtimefmt' => $item['logtimefmt']
 			);
 			if (isset($item['interface_ref'])) {
 				$data['interface_ref'] = $item['interface_ref'];

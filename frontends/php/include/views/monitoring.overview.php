@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -91,7 +91,9 @@ $hostLocationForm->additem(array(_('Hosts location'), SPACE, $styleComboBox));
 
 $overviewWidget->addHeader($hostLocationForm);
 
-if ($config['dropdown_first_entry'] || $this->data['pageFilter']->applicationsSelected) {
+if ($config['dropdown_first_entry']
+		|| $this->data['pageFilter']->applicationsSelected
+		|| $this->data['pageFilter']->groupsSelected) {
 	if ($this->data['type'] == SHOW_DATA) {
 		$dataTable = getItemsDataOverview(
 			array_keys($this->data['pageFilter']->hosts),

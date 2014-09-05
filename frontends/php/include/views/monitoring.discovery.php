@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ $discoveryRulesComboBox = $this->data['pageFilter']->getDiscoveryCB();
 $discoveryHeaderForm->addItem(array(_('Discovery rule').SPACE, $discoveryRulesComboBox));
 $discoveryWidget->addHeader(_('Discovery rules'), $discoveryHeaderForm);
 
-// craete table
+// create table
 $discoveryTable = new CTableInfo(_('No discovered devices found.'));
 $discoveryTable->makeVerticalRotation();
 

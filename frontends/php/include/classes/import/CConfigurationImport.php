@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -316,15 +316,19 @@ class CConfigurationImport {
 				$hostsRefs[$yMinItem['host']] = $yMinItem['host'];
 				$itemsRefs[$yMinItem['host']][$yMinItem['key']] = $yMinItem['key'];
 			}
+
 			if ($graph['ymax_item_1']) {
 				$yMaxItem = $graph['ymax_item_1'];
 				$hostsRefs[$yMaxItem['host']] = $yMaxItem['host'];
 				$itemsRefs[$yMaxItem['host']][$yMaxItem['key']] = $yMaxItem['key'];
 			}
-			foreach ($graph['gitems'] as $gitem) {
-				$gitemItem = $gitem['item'];
-				$hostsRefs[$gitemItem['host']] = $gitemItem['host'];
-				$itemsRefs[$gitemItem['host']][$gitemItem['key']] = $gitemItem['key'];
+
+			if (isset($graph['gitems']) && $graph['gitems']) {
+				foreach ($graph['gitems'] as $gitem) {
+					$gitemItem = $gitem['item'];
+					$hostsRefs[$gitemItem['host']] = $gitemItem['host'];
+					$itemsRefs[$gitemItem['host']][$gitemItem['key']] = $gitemItem['key'];
+				}
 			}
 		}
 
@@ -544,7 +548,7 @@ class CConfigurationImport {
 			}
 		}
 
-		// refresh applications beacuse templated ones can be inherited to host and used in items
+		// refresh applications because templated ones can be inherited to host and used in items
 		$this->referencer->refreshApplications();
 	}
 
@@ -568,7 +572,7 @@ class CConfigurationImport {
 			foreach ($items as $item) {
 				$item['hostid'] = $hostid;
 
-				if (!empty($item['applications'])) {
+				if (isset($item['applications']) && $item['applications']) {
 					$applicationsIds = array();
 					foreach ($item['applications'] as $application) {
 						if ($applicationId = $this->referencer->resolveApplication($hostid, $application['name'])) {
@@ -582,11 +586,11 @@ class CConfigurationImport {
 					$item['applications'] = $applicationsIds;
 				}
 
-				if (isset($item['interface_ref'])) {
+				if (isset($item['interface_ref']) && $item['interface_ref']) {
 					$item['interfaceid'] = $this->referencer->interfacesCache[$hostid][$item['interface_ref']];
 				}
 
-				if ($item['valuemap']) {
+				if (isset($item['valuemap']) && $item['valuemap']) {
 					$valueMapId = $this->referencer->resolveValueMap($item['valuemap']['name']);
 					if (!$valueMapId) {
 						throw new Exception(_s(
@@ -600,6 +604,7 @@ class CConfigurationImport {
 				}
 
 				$itemsId = $this->referencer->resolveItem($hostid, $item['key_']);
+
 				if ($itemsId) {
 					$item['itemid'] = $itemsId;
 					$itemsToUpdate[] = $item;
@@ -701,7 +706,7 @@ class CConfigurationImport {
 		foreach ($allDiscoveryRules as $host => $discoveryRules) {
 			$hostid = $this->referencer->resolveHostOrTemplate($host);
 			foreach ($discoveryRules as $item) {
-				// if rule was not processed we should not create/upadate any of it's prototypes
+				// if rule was not processed we should not create/update any of its prototypes
 				if (!isset($processedRules[$hostid][$item['key_']])) {
 					continue;
 				}
@@ -854,7 +859,7 @@ class CConfigurationImport {
 		foreach ($allDiscoveryRules as $host => $discoveryRules) {
 			$hostid = $this->referencer->resolveHostOrTemplate($host);
 			foreach ($discoveryRules as $item) {
-				// if rule was not processed we should not create/upadate any of it's prototypes
+				// if rule was not processed we should not create/update any of its prototypes
 				if (!isset($processedRules[$hostid][$item['key_']])) {
 					continue;
 				}
@@ -1025,17 +1030,24 @@ class CConfigurationImport {
 				$graph['ymax_itemid'] = $itemId;
 			}
 
-			foreach ($graph['gitems'] as &$gitem) {
-				if (!$gitemHostId = $this->referencer->resolveHostOrTemplate($gitem['item']['host'])) {
-					throw new Exception(_s('Cannot find host or template "%1$s" used in graph "%2$s".',
-						$gitem['item']['host'], $graph['name']));
+			if (isset($graph['gitems']) && $graph['gitems']) {
+				foreach ($graph['gitems'] as &$gitem) {
+					$gitemHostId = $this->referencer->resolveHostOrTemplate($gitem['item']['host']);
+
+					if (!$gitemHostId) {
+						throw new Exception(_s(
+							'Cannot find host or template "%1$s" used in graph "%2$s".',
+							$gitem['item']['host'],
+							$graph['name']
+						));
+					}
+
+					$gitem['itemid'] = $this->referencer->resolveItem($gitemHostId, $gitem['item']['key']);
+
+					$graphHostIds[$gitemHostId] = $gitemHostId;
 				}
-
-				$gitem['itemid'] = $this->referencer->resolveItem($gitemHostId, $gitem['item']['key']);
-
-				$graphHostIds[$gitemHostId] = $gitemHostId;
+				unset($gitem);
 			}
-			unset($gitem);
 
 			// TODO: do this for all graphs at once
 			$sql = 'SELECT g.graphid'.

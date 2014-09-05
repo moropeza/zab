@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -152,7 +152,7 @@ int	load_modules(const char *path, char **file_names, int timeout, int verbose)
 			goto fail;
 		}
 
-		/* the function is optional, zabbix will load the module ieven if it is missing */
+		/* the function is optional, zabbix will load the module even if it is missing */
 		*(void **)(&func_timeout) = dlsym(lib, ZBX_MODULE_FUNC_ITEM_TIMEOUT);
 		if (NULL == func_timeout)
 		{

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -36,10 +36,21 @@ class CScreenClock extends CScreenBase {
 				$items = API::Item()->get(array(
 					'itemids' => $this->screenitem['resourceid'],
 					'selectHosts' => array('host'),
-					'output' => array('lastvalue', 'lastclock')
+					'output' => array('itemid', 'value_type')
 				));
 				$item = reset($items);
 				$host = reset($item['hosts']);
+
+				$lastValue = Manager::History()->getLast(array($item));
+				if ($lastValue) {
+					$lastValue = reset($lastValue[$item['itemid']]);
+					$item['lastvalue'] = $lastValue['value'];
+					$item['lastclock'] = $lastValue['clock'];
+				}
+				else {
+					$item['lastvalue'] = '0';
+					$item['lastclock'] = '0';
+				}
 
 				$timeType = $host['host'];
 				preg_match('/([+-]{1})([\d]{1,2}):([\d]{1,2})/', $item['lastvalue'], $arr);

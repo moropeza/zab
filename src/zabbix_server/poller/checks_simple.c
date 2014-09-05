@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -108,7 +108,7 @@ static zbx_vmcheck_t	vmchecks[] =
  *                                                                            *
  * Purpose: Retrieves a handler of the item key                               *
  *                                                                            *
- * Paramaters: key    - [IN] an item key (without parameters)                 *
+ * Parameters: key    - [IN] an item key (without parameters)                 *
  *             vmfunc - [OUT] a handler of the item key; can be NULL if       *
  *                            libxml2 or libcurl is not compiled in           *
  *                                                                            *
@@ -147,11 +147,7 @@ int	get_value_simple(DC_ITEM *item, AGENT_RESULT *result)
 
 	init_request(&request);
 
-	if (SUCCEED != parse_item_key(item->key, &request))
-	{
-		SET_MSG_RESULT(result, zbx_strdup(NULL, "Key is badly formatted"));
-		goto notsupported;
-	}
+	parse_item_key(item->key, &request);
 
 	request.lastlogsize = item->lastlogsize;
 
@@ -184,7 +180,7 @@ int	get_value_simple(DC_ITEM *item, AGENT_RESULT *result)
 
 	if (NOTSUPPORTED == ret && !ISSET_MSG(result))
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Simple check is not supported"));
-notsupported:
+
 	free_request(&request);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));

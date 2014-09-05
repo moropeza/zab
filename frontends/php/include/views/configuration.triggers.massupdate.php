@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -118,7 +118,6 @@ if (empty($this->data['parent_discoveryid'])) {
 					'&objname=triggers'.
 					'&srcfld1=triggerid'.
 					'&multiselect=1'.
-					'&monitored_hosts=1'.
 					'&with_triggers=1", 1000, 700);',
 				'link_menu'
 			)

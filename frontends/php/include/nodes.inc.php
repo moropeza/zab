@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -205,6 +205,35 @@ function get_viewed_nodes() {
 	}
 	elseif ($nodeIds) {
 		$result['selected'] = ($switchNode > 0) ? $switchNode : array_shift($nodeIds);
+	}
+
+	return $result;
+}
+
+/**
+ * Get node name by given array of object IDs.
+ *
+ * @global array $ZBX_NODES				array of node names
+ * @global array $ZBX_VIEWED_NODES		array of node view parameters
+ * @param array  $objectIds				array of object IDs
+ * @param bool   $forceWithAllNodes		force display nodes
+ * @param string $delimiter				node name delimiter
+ *
+ * @return array						return node names of given objects if they have any
+ */
+function getNodeNamesByElids($objectIds, $forceWithAllNodes = null, $delimiter = '') {
+	global $ZBX_NODES, $ZBX_VIEWED_NODES;
+
+	$result = array();
+	foreach ($objectIds as $objectId) {
+		if ($forceWithAllNodes === false || ($forceWithAllNodes === null && $ZBX_VIEWED_NODES['selected'] != 0)) {
+			$result[$objectId] = null;
+		}
+		else {
+			$nodeId = id2nodeid($objectId);
+
+			$result[$objectId] = isset($ZBX_NODES[$nodeId]) ? $ZBX_NODES[$nodeId]['name'].$delimiter : null;
+		}
 	}
 
 	return $result;

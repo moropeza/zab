@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -135,7 +135,6 @@ class CImage extends CZBXAPI {
 			}
 			else {
 				$imageids[$image['imageid']] = $image['imageid'];
-				unset($image['image']);
 
 				if (!isset($result[$image['imageid']])) {
 					$result[$image['imageid']] = array();
@@ -549,5 +548,34 @@ class CImage extends CZBXAPI {
 		if (@imageCreateFromString($image) === false) {
 			self::exception(ZBX_API_ERROR_PARAMETERS, _('File format is unsupported.'));
 		}
+	}
+
+	/**
+	 * Unset "image" field from output.
+	 *
+	 * @param string $tableName
+	 * @param string $tableAlias
+	 * @param array  $options
+	 * @param array  $sqlParts
+	 *
+	 * @return array				The resulting SQL parts array
+	 */
+	protected function applyQueryOutputOptions($tableName, $tableAlias, array $options, array $sqlParts) {
+		if ($options['countOutput'] === null) {
+			if ($options['output'] == API_OUTPUT_EXTEND) {
+				$options['output'] = array('imageid', 'imagetype', 'name');
+			}
+			elseif (is_array($options['output']) && in_array('image', $options['output'])) {
+				foreach ($options['output'] as $idx => $field) {
+					if ($field === 'image') {
+						unset($options['output'][$idx]);
+					}
+				}
+			}
+
+			$sqlParts = parent::applyQueryOutputOptions($tableName, $tableAlias, $options, $sqlParts);
+		}
+
+		return $sqlParts;
 	}
 }

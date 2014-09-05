@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -65,8 +65,12 @@ $_REQUEST['dchecks'] = get_request('dchecks', array());
 if (isset($_REQUEST['druleid'])) {
 	$dbDRule = API::DRule()->get(array(
 		'druleids' => get_request('druleid'),
-		'output' => API_OUTPUT_EXTEND,
-		'selectDChecks' => API_OUTPUT_EXTEND,
+		'output' => array('name', 'proxy_hostid', 'iprange', 'delay', 'status'),
+		'selectDChecks' => array(
+			'type', 'key_', 'snmp_community', 'ports', 'snmpv3_securityname', 'snmpv3_securitylevel',
+			'snmpv3_authpassphrase', 'snmpv3_privpassphrase', 'uniq', 'snmpv3_authprotocol', 'snmpv3_privprotocol',
+			'snmpv3_contextname'
+		),
 		'editable' => true
 	));
 	if (empty($dbDRule)) {
@@ -94,7 +98,7 @@ if (isset($_REQUEST['output']) && $_REQUEST['output'] == 'ajax') {
 					$itemKey = new CItemKey($check['value']);
 
 					if (!$itemKey->isValid()) {
-						$ajaxResponse->error(_s('Incorrect key: "%1$s".', $itemKey->getError()));
+						$ajaxResponse->error(_s('Invalid key "%1$s": %2$s.', $check['value'], $itemKey->getError()));
 					}
 					break;
 			}
@@ -163,20 +167,36 @@ elseif (isset($_REQUEST['delete']) && isset($_REQUEST['druleid'])) {
 		clearCookies($result);
 	}
 }
-elseif (str_in_array($_REQUEST['go'], array('activate', 'disable')) && isset($_REQUEST['g_druleid'])) {
-	$status = ($_REQUEST['go'] == 'activate') ? DRULE_STATUS_ACTIVE : DRULE_STATUS_DISABLED;
+elseif (str_in_array(getRequest('go'), array('activate', 'disable')) && hasRequest('g_druleid')) {
+	$result = true;
+	$enable = (getRequest('go') == 'activate');
+	$status = $enable ? DRULE_STATUS_ACTIVE : DRULE_STATUS_DISABLED;
+	$auditAction = $enable ? AUDIT_ACTION_ENABLE : AUDIT_ACTION_DISABLE;
+	$updated = 0;
 
-	$goResult = false;
-	foreach ($_REQUEST['g_druleid'] as $drid) {
-		if (DBexecute('UPDATE drules SET status='.$status.' WHERE druleid='.zbx_dbstr($drid))) {
-			$rule_data = get_discovery_rule_by_druleid($drid);
-			add_audit(AUDIT_ACTION_UPDATE, AUDIT_RESOURCE_DISCOVERY_RULE, '['.$drid.'] '.$rule_data['name']);
-			$goResult = true;
+	DBstart();
+
+	foreach (getRequest('g_druleid') as $druleId) {
+		$result &= DBexecute('UPDATE drules SET status='.$status.' WHERE druleid='.zbx_dbstr($druleId));
+
+		if ($result) {
+			$druleData = get_discovery_rule_by_druleid($druleId);
+			add_audit($auditAction, AUDIT_RESOURCE_DISCOVERY_RULE, '['.$druleId.'] '.$druleData['name']);
 		}
+		$updated++;
 	}
 
-	show_messages($goResult, _('Discovery rules updated'));
-	clearCookies($goResult);
+	$messageSuccess = $enable
+		? _n('Discovery rule enabled', 'Discovery rules enabled', $updated)
+		: _n('Discovery rule disabled', 'Discovery rules disabled', $updated);
+	$messageFailed = $enable
+		? _n('Cannot enable discovery rule', 'Cannot enable discovery rules', $updated)
+		: _n('Cannot disable discovery rule', 'Cannot disable discovery rules', $updated);
+
+	$result = DBend($result);
+
+	show_messages($result, $messageSuccess, $messageFailed);
+	clearCookies($result);
 }
 elseif ($_REQUEST['go'] == 'delete' && isset($_REQUEST['g_druleid'])) {
 	$result = API::DRule()->delete($_REQUEST['g_druleid']);
@@ -212,7 +232,7 @@ if (isset($_REQUEST['form'])) {
 	else {
 		$data['drule']['proxy_hostid'] = get_request('proxy_hostid', 0);
 		$data['drule']['name'] = get_request('name', '');
-		$data['drule']['iprange'] = get_request('iprange', '192.168.0.1-255');
+		$data['drule']['iprange'] = get_request('iprange', '192.168.0.1-254');
 		$data['drule']['delay'] = get_request('delay', SEC_PER_HOUR);
 		$data['drule']['status'] = get_request('status', DRULE_STATUS_ACTIVE);
 		$data['drule']['dchecks'] = get_request('dchecks', array());
@@ -248,29 +268,35 @@ else {
 
 	// get drules
 	$data['drules'] = API::DRule()->get(array(
-		'output' => API_OUTPUT_EXTEND,
-		'sortfield' => getPageSortField('name'),
-		'selectDChecks' => API_OUTPUT_EXTEND,
+		'output' => array('proxy_hostid', 'name', 'status', 'iprange', 'delay'),
+		'selectDChecks' => array('type'),
 		'editable' => true
 	));
-	if (!empty($data['drules'])) {
-		foreach ($data['drules'] as $druleid => $drule) {
+
+	if ($data['drules']) {
+		foreach ($data['drules'] as $key => $drule) {
 			// checks
 			$checks = array();
+
 			foreach ($drule['dchecks'] as $check) {
 				$checks[$check['type']] = discovery_check_type2str($check['type']);
 			}
+
 			order_result($checks);
-			$data['drules'][$druleid]['checks'] = $checks;
+
+			$data['drules'][$key]['checks'] = $checks;
 
 			// description
-			$data['drules'][$druleid]['description'] = array();
-			if (!empty($drule['proxy_hostid'])) {
+			$data['drules'][$key]['description'] = array();
+
+			if ($drule['proxy_hostid']) {
 				$proxy = get_host_by_hostid($drule['proxy_hostid']);
-				array_push($data['drules'][$druleid]['description'], $proxy['host'].NAME_DELIMITER);
+
+				array_push($data['drules'][$key]['description'], $proxy['host'].NAME_DELIMITER);
 			}
 		}
-		order_result($data['drules'], getPageSortOrder());
+
+		order_result($data['drules'], getPageSortField('name'), getPageSortOrder());
 	}
 
 	// get paging

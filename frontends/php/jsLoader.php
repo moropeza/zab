@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -192,7 +192,8 @@ $tranStrings = array(
 		'No matches found' => _('No matches found'),
 		'More matches found...' => _('More matches found...'),
 		'type here to search' => _('type here to search'),
-		'new' => _('new')
+		'new' => _('new'),
+		'Select' => _('Select')
 	),
 	'menupopup.js' => array(
 		'Acknowledge' => _('Acknowledge'),

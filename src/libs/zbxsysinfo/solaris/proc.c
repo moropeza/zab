@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -49,7 +49,7 @@ int	PROC_MEM(AGENT_REQUEST *request, AGENT_RESULT *result)
 	char		tmp[MAX_STRING_LEN], *procname, *proccomm, *param;
 	DIR		*dir;
 	struct dirent	*entries;
-	struct stat	buf;
+	zbx_stat_t	buf;
 	struct passwd	*usrinfo;
 	psinfo_t	psinfo;	/* In the correct procfs.h, the structure name is psinfo_t */
 	int		fd = -1;
@@ -100,7 +100,7 @@ int	PROC_MEM(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 		zbx_snprintf(tmp, sizeof(tmp), "/proc/%s/psinfo", entries->d_name);
 
-		if (0 != stat(tmp, &buf))
+		if (0 != zbx_stat(tmp, &buf))
 			continue;
 
 		if (-1 == (fd = open(tmp, O_RDONLY)))
@@ -155,7 +155,7 @@ int	PROC_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 	char		tmp[MAX_STRING_LEN], *procname, *proccomm, *param;
 	DIR		*dir;
 	struct dirent	*entries;
-	struct stat	buf;
+	zbx_stat_t	buf;
 	struct passwd	*usrinfo;
 	psinfo_t	psinfo;	/* In the correct procfs.h, the structure name is psinfo_t */
 	int		fd = -1;
@@ -204,7 +204,7 @@ int	PROC_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 		zbx_snprintf(tmp, sizeof(tmp), "/proc/%s/psinfo", entries->d_name);
 
-		if (0 != stat(tmp, &buf))
+		if (0 != zbx_stat(tmp, &buf))
 			continue;
 
 		if (-1 == (fd = open(tmp, O_RDONLY)))

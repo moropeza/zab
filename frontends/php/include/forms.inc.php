@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -34,11 +34,6 @@
 
 			$users = API::User()->get($options);
 			$user = reset($users);
-
-			$data['auth_type'] = get_user_system_auth($userid);
-		}
-		else {
-			$data['auth_type'] = $config['authentication_type'];
 		}
 
 		if (isset($userid) && (!isset($_REQUEST['form_refresh']) || isset($_REQUEST['register']))) {
@@ -107,6 +102,16 @@
 				$data['messages']['triggers.severities'] = array();
 			}
 			$data['messages'] = array_merge(getMessageSettings(), $data['messages']);
+		}
+
+		// authentication type
+		if ($data['user_groups']) {
+			$data['auth_type'] = getGroupAuthenticationType($data['user_groups'], GROUP_GUI_ACCESS_INTERNAL);
+		}
+		else {
+			$data['auth_type'] = ($userid === null)
+				? $config['authentication_type']
+				: getUserAuthenticationType($userid, GROUP_GUI_ACCESS_INTERNAL);
 		}
 
 		// set autologout
@@ -523,7 +528,14 @@
 					'objectOptions' => array(
 						'editable' => true
 					),
-					'data' => $groupFilter
+					'data' => $groupFilter,
+					'popup' => array(
+						'parameters' => 'srctbl=host_groups&dstfrm='.$form->getName().'&dstfld1=filter_groupid'.
+							'&srcfld1=groupid&writeonly=1',
+						'width' => 450,
+						'height' => 450,
+						'buttonClass' => 'input filter-multiselect-select-button'
+					)
 				))
 			), 'col1'),
 			new CCol(bold(_('Type').NAME_DELIMITER), 'label col2'),
@@ -562,7 +574,14 @@
 						'editable' => true,
 						'templated_hosts' => true
 					),
-					'data' => $hostFilterData
+					'data' => $hostFilterData,
+					'popup' => array(
+						'parameters' => 'srctbl=host_templates&dstfrm='.$form->getName().'&dstfld1=filter_hostid'.
+							'&srcfld1=hostid&writeonly=1',
+						'width' => 450,
+						'height' => 450,
+						'buttonClass' => 'input filter-multiselect-select-button'
+					)
 				))
 			), 'col1'),
 			new CCol($updateIntervalLabel, 'label'),
@@ -578,7 +597,7 @@
 			new CCol(array(
 				new CTextBox('filter_application', $filter_application, ZBX_TEXTBOX_FILTER_SIZE),
 				new CButton('btn_app', _('Select'),
-					'return PopUp("popup.php?srctbl=applications&srcfld1=name'.
+					'return PopUp("popup.php?srctbl=applications&srcfld1=applicationid'.
 						'&dstfrm='.$form->getName().'&dstfld1=filter_application'.
 						'&with_applications=1'.
 						'" + (jQuery("input[name=\'filter_hostid\']").length > 0 ? "&hostid="+jQuery("input[name=\'filter_hostid\']").val() : "")'
@@ -1048,18 +1067,28 @@
 
 		// item
 		if (!empty($data['itemid'])) {
-			$params = array(
-				'itemids' => $data['itemid'],
-				'output' => API_OUTPUT_EXTEND
-			);
 			if ($data['is_discovery_rule']) {
-				$params['hostids'] = $data['hostid'];
-				$params['editable'] = true;
-				$data['item'] = API::DiscoveryRule()->get($params);
+				$data['item'] = API::DiscoveryRule()->get(array(
+					'itemids' => $data['itemid'],
+					'output' => API_OUTPUT_EXTEND,
+					'hostids' => $data['hostid'],
+					'editable' => true
+				));
 			}
 			else {
-				$params['filter'] = array('flags' => null);
-				$data['item'] = API::Item()->get($params);
+				$data['item'] = API::Item()->get(array(
+					'itemids' => $data['itemid'],
+					'filter' => array('flags' => null),
+					'output' => array(
+						'itemid', 'type', 'snmp_community', 'snmp_oid', 'hostid', 'name', 'key_', 'delay', 'history',
+						'trends', 'status', 'value_type', 'trapper_hosts', 'units', 'multiplier', 'delta',
+						'snmpv3_securityname', 'snmpv3_securitylevel', 'snmpv3_authpassphrase', 'snmpv3_privpassphrase',
+						'formula', 'logtimefmt', 'templateid', 'valuemapid', 'delay_flex', 'params', 'ipmi_sensor',
+						'data_type', 'authtype', 'username', 'password', 'publickey', 'privatekey', 'filter',
+						'interfaceid', 'port', 'description', 'inventory_link', 'lifetime', 'snmpv3_authprotocol',
+						'snmpv3_privprotocol', 'snmpv3_contextname'
+					)
+				));
 			}
 			$data['item'] = reset($data['item']);
 			$data['hostid'] = !empty($data['hostid']) ? $data['hostid'] : $data['item']['hostid'];
@@ -1203,7 +1232,7 @@
 			}
 		}
 
-		// aplications
+		// applications
 		if (count($data['applications']) == 0) {
 			array_push($data['applications'], 0);
 		}
@@ -1382,9 +1411,6 @@
 			);
 			$trigger = ($data['parent_discoveryid']) ? API::TriggerPrototype()->get($options) : API::Trigger()->get($options);
 			$data['trigger'] = reset($trigger);
-			if (!empty($data['trigger']['description'])) {
-				$data['description'] = $data['trigger']['description'];
-			}
 
 			// get templates
 			$tmp_triggerid = $data['triggerid'];
@@ -1434,6 +1460,7 @@
 			$data['expression'] = explode_exp($data['trigger']['expression']);
 
 			if (empty($data['limited']) || !isset($_REQUEST['form_refresh'])) {
+				$data['description'] = $data['trigger']['description'];
 				$data['type'] = $data['trigger']['type'];
 				$data['priority'] = $data['trigger']['priority'];
 				$data['status'] = $data['trigger']['status'];
@@ -1506,9 +1533,7 @@
 				'selectHosts' => array('name')
 			));
 			foreach ($data['db_dependencies'] as &$dependency) {
-				if (!empty($dependency['hosts'][0]['name'])) {
-					$dependency['host'] = $dependency['hosts'][0]['name'];
-				}
+				$dependency['host'] = $dependency['hosts'][0]['name'];
 				unset($dependency['hosts']);
 			}
 			order_result($data['db_dependencies'], 'description');

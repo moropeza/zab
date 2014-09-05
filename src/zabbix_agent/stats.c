@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -415,7 +415,7 @@ ZBX_THREAD_ENTRY(collector_thread, args)
 {
 	assert(args);
 
-	zabbix_log(LOG_LEVEL_WARNING, "agent #%d started [collector]", ((zbx_thread_args_t *)args)->thread_num);
+	zabbix_log(LOG_LEVEL_INFORMATION, "agent #%d started [collector]", ((zbx_thread_args_t *)args)->thread_num);
 
 	zbx_free(args);
 

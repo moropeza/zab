@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,10 +28,12 @@ $actionWidget->addPageHeader(_('CONFIGURATION OF ACTIONS'));
 $actionForm = new CForm();
 $actionForm->setName('action.edit');
 $actionForm->addVar('form', $this->data['form']);
-$actionForm->addVar('form_refresh', $this->data['form_refresh']);
-$actionForm->addVar('eventsource', $this->data['eventsource']);
-if (!empty($this->data['actionid'])) {
+
+if ($this->data['actionid']) {
 	$actionForm->addVar('actionid', $this->data['actionid']);
+}
+else {
+	$actionForm->addVar('eventsource', $this->data['eventsource']);
 }
 
 /*
@@ -137,7 +139,13 @@ switch ($this->data['new_condition']['conditiontype']) {
 			'objectOptions' => array(
 				'editable' => true
 			),
-			'defaultValue' => 0
+			'defaultValue' => 0,
+			'popup' => array(
+				'parameters' => 'srctbl=host_groups&dstfrm='.$actionForm->getName().'&dstfld1=new_condition_value_'.
+					'&srcfld1=groupid&writeonly=1&multiselect=1',
+				'width' => 450,
+				'height' => 450
+			)
 		));
 		break;
 
@@ -148,7 +156,13 @@ switch ($this->data['new_condition']['conditiontype']) {
 			'objectOptions' => array(
 				'editable' => true
 			),
-			'defaultValue' => 0
+			'defaultValue' => 0,
+			'popup' => array(
+				'parameters' => 'srctbl=templates&srcfld1=hostid&srcfld2=host&dstfrm='.$actionForm->getName().
+					'&dstfld1=new_condition_value_&templated_hosts=1&multiselect=1&writeonly=1',
+				'width' => 450,
+				'height' => 450
+			)
 		));
 		break;
 
@@ -159,7 +173,13 @@ switch ($this->data['new_condition']['conditiontype']) {
 			'objectOptions' => array(
 				'editable' => true
 			),
-			'defaultValue' => 0
+			'defaultValue' => 0,
+			'popup' => array(
+				'parameters' => 'srctbl=hosts&dstfrm='.$actionForm->getName().'&dstfld1=new_condition_value_'.
+					'&srcfld1=hostid&writeonly=1&multiselect=1',
+				'width' => 450,
+				'height' => 450
+			)
 		));
 		break;
 
@@ -170,7 +190,13 @@ switch ($this->data['new_condition']['conditiontype']) {
 			'objectOptions' => array(
 				'editable' => true
 			),
-			'defaultValue' => 0
+			'defaultValue' => 0,
+			'popup' => array(
+				'parameters' => 'srctbl=triggers&dstfrm='.$actionForm->getName().'&dstfld1=new_condition_value_'.
+					'&srcfld1=triggerid&writeonly=1&multiselect=1&noempty=1',
+				'width' => 600,
+				'height' => 450
+			)
 		));
 		break;
 
@@ -331,7 +357,7 @@ if ($this->data['eventsource'] == EVENT_SOURCE_TRIGGERS || $this->data['eventsou
 // create operation table
 $operationsTable = new CTable(_('No operations defined.'), 'formElementTable');
 $operationsTable->attr('style', 'min-width: 600px;');
-if ($this->data['action']['eventsource'] == EVENT_SOURCE_TRIGGERS || $this->data['eventsource'] == EVENT_SOURCE_INTERNAL) {
+if ($this->data['eventsource'] == EVENT_SOURCE_TRIGGERS || $this->data['eventsource'] == EVENT_SOURCE_INTERNAL) {
 	$operationsTable->setHeader(array(_('Steps'), _('Details'), _('Start in'), _('Duration (sec)'), _('Action')));
 	$delay = count_operations_delay($this->data['action']['operations'], $this->data['action']['esc_period']);
 }
@@ -797,16 +823,25 @@ if (!empty($this->data['new_operation'])) {
 			$groupList = new CTable();
 			$groupList->setAttribute('id', 'opGroupList');
 			$groupList->addRow(new CRow(
-				new CCol(array(
+				new CCol(
 					new CMultiSelect(array(
 						'name' => 'discoveryHostGroup',
 						'objectName' => 'hostGroup',
-						'objectOptions' => array('editable' => true)
+						'objectOptions' => array('editable' => true),
+						'popup' => array(
+							'parameters' => 'srctbl=host_groups&dstfrm='.$actionForm->getName().
+								'&dstfld1=discoveryHostGroup&srcfld1=groupid&writeonly=1&multiselect=1',
+							'width' => 450,
+							'height' => 450
+						)
 					)),
-					new CButton('add', _('Add'), 'return addDiscoveryHostGroup();', 'link_menu')
-				), null, 2),
+					null, 2
+				),
 				null,
 				'opGroupListFooter'
+			));
+			$groupList->addRow(new CCol(
+				new CButton('add', _('Add'), 'return addDiscoveryHostGroup();', 'link_menu'), null, 2
 			));
 
 			// load host groups
@@ -842,16 +877,25 @@ if (!empty($this->data['new_operation'])) {
 			$templateList = new CTable();
 			$templateList->setAttribute('id', 'opTemplateList');
 			$templateList->addRow(new CRow(
-				new CCol(array(
+				new CCol(
 					new CMultiSelect(array(
 						'name' => 'discoveryTemplates',
 						'objectName' => 'templates',
-						'objectOptions' => array('editable' => true)
+						'objectOptions' => array('editable' => true),
+						'popup' => array(
+							'parameters' => 'srctbl=templates&srcfld1=hostid&srcfld2=host&dstfrm='.$actionForm->getName().
+								'&dstfld1=discoveryTemplates&templated_hosts=1&multiselect=1&writeonly=1',
+							'width' => 450,
+							'height' => 450
+						)
 					)),
-					new CButton('add', _('Add'), 'return addDiscoveryTemplates();', 'link_menu')
-				), null, 2),
+					null, 2
+				),
 				null,
 				'opTemplateListFooter'
+			));
+			$templateList->addRow(new CCol(
+				new CButton('add', _('Add'), 'return addDiscoveryTemplates();', 'link_menu'), null, 2
 			));
 
 			// load templates
@@ -1032,7 +1076,7 @@ if (!empty($this->data['new_operation'])) {
 
 // append tabs to form
 $actionTabs = new CTabView();
-if (!isset($_REQUEST['form_refresh'])) {
+if (!hasRequest('form_refresh')) {
 	$actionTabs->setSelected(0);
 }
 $actionTabs->addTab('actionTab', _('Action'), $actionFormList);

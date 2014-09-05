@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -153,14 +153,17 @@ elseif ($resourceType == SCREEN_RESOURCE_SIMPLE_GRAPH) {
 	$items = API::Item()->get(array(
 		'itemids' => $resourceId,
 		'selectHosts' => array('name'),
-		'output' => array('itemid', 'key_', 'name')
+		'output' => array('itemid', 'hostid', 'key_', 'name')
 	));
-	if (!empty($items)) {
+
+	if ($items) {
+		$items = CMacrosResolverHelper::resolveItemNames($items);
+
 		$id = $resourceId;
 		$item = reset($items);
 		$item['host'] = reset($item['hosts']);
 
-		$caption = $item['host']['name'].NAME_DELIMITER.itemName($item);
+		$caption = $item['host']['name'].NAME_DELIMITER.$item['name_expanded'];
 
 		$nodeName = get_node_name_by_elid($item['itemid']);
 		if (!zbx_empty($nodeName)) {
@@ -235,13 +238,16 @@ elseif ($resourceType == SCREEN_RESOURCE_PLAIN_TEXT) {
 	$items = API::Item()->get(array(
 		'itemids' => $resourceId,
 		'selectHosts' => array('name'),
-		'output' => array('itemid', 'key_', 'name')
+		'output' => array('itemid', 'hostid', 'key_', 'name')
 	));
-	if (!empty($items)) {
+
+	if ($items) {
+		$items = CMacrosResolverHelper::resolveItemNames($items);
+
 		$id = $resourceId;
 		$item = reset($items);
 		$item['host'] = reset($item['hosts']);
-		$caption = $item['host']['name'].NAME_DELIMITER.itemName($item);
+		$caption = $item['host']['name'].NAME_DELIMITER.$item['name_expanded'];
 
 		$nodeName = get_node_name_by_elid($item['itemid']);
 		if (!zbx_empty($nodeName)) {
@@ -303,7 +309,13 @@ elseif (in_array($resourceType, array(SCREEN_RESOURCE_HOSTGROUP_TRIGGERS, SCREEN
 			'objectOptions' => array('editable' => true),
 			'data' => $data ? array(array('id' => $data['groupid'], 'name' => $data['name'], 'prefix' => $data['prefix'])) : null,
 			'defaultValue' => 0,
-			'selectedLimit' => 1
+			'selectedLimit' => 1,
+			'popup' => array(
+				'parameters' => 'srctbl=host_groups&dstfrm='.$screenForm->getName().'&dstfld1=resourceid'.
+					'&srcfld1=groupid&writeonly=1',
+				'width' => 450,
+				'height' => 450
+			)
 		)));
 	}
 	else {
@@ -327,7 +339,13 @@ elseif (in_array($resourceType, array(SCREEN_RESOURCE_HOSTGROUP_TRIGGERS, SCREEN
 			'objectOptions' => array('editable' => true),
 			'data' => $data ? array(array('id' => $data['hostid'], 'name' => $data['name'], 'prefix' => $data['prefix'])) : null,
 			'defaultValue' => 0,
-			'selectedLimit' => 1
+			'selectedLimit' => 1,
+			'popup' => array(
+				'parameters' => 'srctbl=hosts&dstfrm='.$screenForm->getName().'&dstfld1=resourceid'.
+					'&srcfld1=hostid&writeonly=1',
+				'width' => 450,
+				'height' => 450
+			)
 		)));
 	}
 
@@ -398,7 +416,13 @@ elseif (in_array($resourceType, array(SCREEN_RESOURCE_TRIGGERS_OVERVIEW, SCREEN_
 		'objectName' => 'hostGroup',
 		'objectOptions' => array('editable' => true),
 		'data' => $data ? array(array('id' => $data['groupid'], 'name' => $data['name'], 'prefix' => $data['prefix'])) : null,
-		'selectedLimit' => 1
+		'selectedLimit' => 1,
+		'popup' => array(
+			'parameters' => 'srctbl=host_groups&dstfrm='.$screenForm->getName().'&dstfld1=resourceid'.
+				'&srcfld1=groupid&writeonly=1',
+			'width' => 450,
+			'height' => 450
+		)
 	)));
 	$screenFormList->addRow(_('Application'), new CTextBox('application', $application, ZBX_TEXTBOX_STANDARD_SIZE, false, 255));
 }
@@ -474,7 +498,13 @@ elseif ($resourceType == SCREEN_RESOURCE_HOSTS_INFO || $resourceType == SCREEN_R
 		'objectOptions' => array('editable' => true),
 		'data' => $data ? array(array('id' => $data['groupid'], 'name' => $data['name'], 'prefix' => $data['prefix'])) : null,
 		'defaultValue' => 0,
-		'selectedLimit' => 1
+		'selectedLimit' => 1,
+		'popup' => array(
+			'parameters' => 'srctbl=host_groups&dstfrm='.$screenForm->getName().'&dstfld1=resourceid'.
+				'&srcfld1=groupid&writeonly=1',
+			'width' => 450,
+			'height' => 450
+		)
 	)));
 }
 
@@ -488,12 +518,15 @@ elseif ($resourceType == SCREEN_RESOURCE_CLOCK) {
 		$items = API::Item()->get(array(
 			'itemids' => $resourceId,
 			'selectHosts' => array('name'),
-			'output' => array('itemid', 'key_', 'name')
+			'output' => array('itemid', 'hostid', 'key_', 'name')
 		));
+
 		if ($items) {
+			$items = CMacrosResolverHelper::resolveItemNames($items);
+
 			$item = reset($items);
 			$host = reset($item['hosts']);
-			$caption = $host['name'].NAME_DELIMITER.itemName($item);
+			$caption = $host['name'].NAME_DELIMITER.$item['name_expanded'];
 		}
 	}
 
@@ -537,8 +570,8 @@ else {
  */
 if (in_array($resourceType, array(SCREEN_RESOURCE_HOSTS_INFO, SCREEN_RESOURCE_TRIGGERS_INFO))) {
 	$styleRadioButton = array(
-		new CRadioButton('style', STYLE_HORISONTAL, null, 'style_'.STYLE_HORISONTAL, $style == STYLE_HORISONTAL),
-		new CLabel(_('Horizontal'), 'style_'.STYLE_HORISONTAL),
+		new CRadioButton('style', STYLE_HORIZONTAL, null, 'style_'.STYLE_HORIZONTAL, $style == STYLE_HORIZONTAL),
+		new CLabel(_('Horizontal'), 'style_'.STYLE_HORIZONTAL),
 		new CRadioButton('style', STYLE_VERTICAL, null, 'style_'.STYLE_VERTICAL, $style == STYLE_VERTICAL),
 		new CLabel(_('Vertical'), 'style_'.STYLE_VERTICAL)
 	);

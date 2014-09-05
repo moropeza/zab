@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -57,13 +57,25 @@ if ($this->data['grpswitch']) {
 		'name' => 'groupids[]',
 		'objectName' => 'hostGroup',
 		'data' => $this->data['groups'],
-		'disabled' => !$this->data['isFilterEnable']
+		'disabled' => !$this->data['isFilterEnable'],
+		'popup' => array(
+			'parameters' => 'srctbl=host_groups&dstfrm='.$dashconfForm->getName().'&dstfld1=groupids_'.
+				'&srcfld1=groupid&multiselect=1',
+			'width' => 450,
+			'height' => 450
+		)
 	)));
 	$dashconfFormList->addRow(_('Hide selected groups'), new CMultiSelect(array(
 		'name' => 'hidegroupids[]',
 		'objectName' => 'hostGroup',
 		'data' => $this->data['hideGroups'],
-		'disabled' => !$this->data['isFilterEnable']
+		'disabled' => !$this->data['isFilterEnable'],
+		'popup' => array(
+			'parameters' => 'srctbl=host_groups&dstfrm='.$dashconfForm->getName().'&dstfld1=hidegroupids_'.
+				'&srcfld1=groupid&multiselect=1',
+			'width' => 450,
+			'height' => 450
+		)
 	)));
 }
 

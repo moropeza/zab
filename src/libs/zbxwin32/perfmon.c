@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
 #include "perfmon.h"
 #include "log.h"
 
-static PERF_COUNTER_ID	*PerfCounterList = NULL;
+ZBX_THREAD_LOCAL static PERF_COUNTER_ID	*PerfCounterList = NULL;
 
 PDH_STATUS	zbx_PdhMakeCounterPath(const char *function, PDH_COUNTER_PATH_ELEMENTS *cpe, char *counterpath)
 {

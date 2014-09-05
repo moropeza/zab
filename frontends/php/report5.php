@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -79,7 +79,7 @@ switch ($_REQUEST['period']) {
 }
 
 $triggersEventCount = array();
-// get 100 triggerids with max even count
+// get 100 triggerids with max event count
 $sql = 'SELECT e.objectid,count(distinct e.eventid) AS cnt_event'.
 		' FROM triggers t,events e'.
 		' WHERE t.triggerid=e.objectid'.
@@ -129,9 +129,11 @@ foreach ($triggers as $triggerId => $trigger) {
 
 	$triggerItems = array();
 
+	$trigger['items'] = CMacrosResolverHelper::resolveItemNames($trigger['items']);
+
 	foreach ($trigger['items'] as $item) {
 		$triggerItems[] = array(
-			'name' => itemName($item),
+			'name' => $item['name_expanded'],
 			'params' => array(
 				'itemid' => $item['itemid'],
 				'action' => in_array($item['value_type'], array(ITEM_VALUE_TYPE_FLOAT, ITEM_VALUE_TYPE_UINT64))

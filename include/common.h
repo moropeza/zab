@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -80,6 +80,7 @@ extern char ZABBIX_EVENT_SOURCE[ZBX_SERVICE_NAME_LEN];
 #define	TIMEOUT_ERROR	-4
 #define	AGENT_ERROR	-5
 #define	GATEWAY_ERROR	-6
+#define	CONFIG_ERROR	-7
 
 #define SUCCEED_OR_FAIL(result) (FAIL != (result) ? SUCCEED : FAIL)
 const char	*zbx_result_string(int result);
@@ -143,10 +144,10 @@ const char	*zbx_interface_type_string(zbx_interface_type_t type);
 #define INTERFACE_TYPE_COUNT	4	/* number of interface types */
 extern const int	INTERFACE_TYPE_PRIORITY[INTERFACE_TYPE_COUNT];
 
-#define ZBX_FLAG_DISCOVERY_NORMAL	0x00	/* normal item */
-#define ZBX_FLAG_DISCOVERY_RULE		0x01	/* low-level discovery rule */
-#define ZBX_FLAG_DISCOVERY_PROTOTYPE	0x02	/* low-level discovery host, item, trigger or graph prototypes */
-#define ZBX_FLAG_DISCOVERY_CREATED	0x04	/* auto-created item, trigger or graph */
+#define ZBX_FLAG_DISCOVERY_NORMAL	0x00
+#define ZBX_FLAG_DISCOVERY_RULE		0x01
+#define ZBX_FLAG_DISCOVERY_PROTOTYPE	0x02
+#define ZBX_FLAG_DISCOVERY_CREATED	0x04
 
 typedef enum
 {
@@ -271,10 +272,6 @@ const char	*zbx_dservice_type_string(zbx_dservice_type_t service);
 #define ITEM_STORE_AS_IS			0
 #define ITEM_STORE_SPEED_PER_SECOND		1
 #define ITEM_STORE_SIMPLE_CHANGE		2
-
-/* object types for operations */
-#define OPERATION_OBJECT_USER			0
-#define OPERATION_OBJECT_GROUP			1
 
 /* condition evaluation types */
 #define ACTION_EVAL_TYPE_AND_OR			0
@@ -729,6 +726,7 @@ while (0)
 
 extern const char	*progname;
 extern const char	title_message[];
+extern const char	syslog_app_name[];
 extern const char	usage_message[];
 extern const char	*help_message[];
 
@@ -830,7 +828,7 @@ char	*get_param_dyn(const char *param, int num);
  *                       for their parameters - 1 or higher (for arrays)      *
  *      num       - [IN] parameter number; for item keys and OIDs the level   *
  *                       will be 0; for their parameters - 1 or higher        *
- *      quoted    - [IN] 1 if parameter is quoted; 0 - othetwise              *
+ *      quoted    - [IN] 1 if parameter is quoted; 0 - otherwise              *
  *      cb_data   - [IN] callback function custom data                        *
  *                                                                            *
  * Return value: NULL if parameter doesn't change; a new string - otherwise   *
@@ -846,13 +844,11 @@ int	replace_key_params_dyn(char **data, int key_type, replace_key_param_f cb, vo
 		size_t maxerrlen);
 
 void	remove_param(char *param, int num);
-const char	*get_string(const char *p, char *buf, size_t bufsize);
 int	get_key_param(char *param, int num, char *buf, size_t max_len);
 int	num_key_param(char *param);
 size_t	zbx_get_escape_string_len(const char *src, const char *charlist);
 char	*zbx_dyn_escape_string(const char *src, const char *charlist);
-int	calculate_item_nextcheck(zbx_uint64_t interfaceid, zbx_uint64_t itemid, int item_type,
-		int delay, const char *flex_intervals, time_t now, int *effective_delay);
+int	calculate_item_nextcheck(zbx_uint64_t seed, int item_type, int delay, const char *flex_intervals, time_t now);
 time_t	calculate_proxy_nextcheck(zbx_uint64_t hostid, unsigned int delay, time_t now);
 int	check_time_period(const char *period, time_t now);
 char	zbx_num2hex(u_char c);
@@ -860,10 +856,6 @@ u_char	zbx_hex2num(char c);
 size_t	zbx_binary2hex(const u_char *input, size_t ilen, char **output, size_t *olen);
 size_t	zbx_hex2binary(char *io);
 void	zbx_hex2octal(const char *input, char **output, int *olen);
-#ifdef HAVE_POSTGRESQL
-size_t	zbx_pg_escape_bytea(const u_char *input, size_t ilen, char **output, size_t *olen);
-size_t	zbx_pg_unescape_bytea(u_char *io);
-#endif
 size_t	zbx_get_next_field(const char **line, char **output, size_t *olen, char separator);
 int	str_in_list(const char *list, const char *value, char delimiter);
 char	*str_linefeed(const char *src, size_t maxline, const char *delim);
@@ -889,9 +881,10 @@ void	__zbx_zbx_setproctitle(const char *fmt, ...);
 #define SEC_PER_WEEK		(7 * SEC_PER_DAY)
 #define SEC_PER_MONTH		(30 * SEC_PER_DAY)
 #define SEC_PER_YEAR		(365 * SEC_PER_DAY)
+#define ZBX_JAN_2038		2145916800
 #define ZBX_JAN_1970_IN_SEC	2208988800.0	/* 1970 - 1900 in seconds */
 
-#define ZBX_MAX_RECV_DATA_SIZE	(64 * ZBX_MEBIBYTE)
+#define ZBX_MAX_RECV_DATA_SIZE	(128 * ZBX_MEBIBYTE)
 
 /* max length of base64 data */
 #define ZBX_MAX_B64_LEN	(16 * ZBX_KIBIBYTE)
@@ -957,16 +950,18 @@ int 	parse_command(const char *command, char *cmd, size_t cmd_max_len, char *par
 int	is_ip6(const char *ip);
 #endif
 int	is_ip4(const char *ip);
+int	is_ip(const char *ip);
 
 void	zbx_on_exit(); /* calls exit() at the end! */
 
 int	int_in_list(char *list, int value);
 int	uint64_in_list(char *list, zbx_uint64_t value);
-int	ip_in_list(char *list, char *ip);
+int	ip_in_list(char *list, const char *ip);
 
-int	expand_ipv6(const char *ip, char *str, size_t str_len);
+int	ip4_str2dig(const char *ip, unsigned int *ip_dig);
+int	ip6_str2dig(const char *ip, unsigned short *groups);
 #ifdef HAVE_IPV6
-char	*collapse_ipv6(char *str, size_t str_len);
+void	ip6_dig2str(unsigned short *groups, char *ip, size_t ip_len);
 #endif
 
 /* time related functions */
@@ -976,6 +971,7 @@ char	*zbx_date2str(time_t date);
 char	*zbx_time2str(time_t time);
 
 #define ZBX_NULL2STR(str)	(NULL != str ? str : "(null)")
+#define ZBX_NULL2EMPTY_STR(str)	(NULL != (str) ? (str) : "")
 
 char	*zbx_strcasestr(const char *haystack, const char *needle);
 int	zbx_mismatch(const char *s1, const char *s2);
@@ -992,6 +988,7 @@ void	uint64_array_remove_both(zbx_uint64_t *values, int *num, zbx_uint64_t *rm_v
 const char	*zbx_event_value_string(unsigned char source, unsigned char object, unsigned char value);
 
 #ifdef _WINDOWS
+const OSVERSIONINFOEX	*zbx_win_getversion();
 LPTSTR	zbx_acp_to_unicode(LPCSTR acp_string);
 LPTSTR	zbx_oemcp_to_unicode(LPCSTR oemcp_string);
 int	zbx_acp_to_unicode_static(LPCSTR acp_string, LPTSTR wide_string, int wide_size);
@@ -1019,10 +1016,18 @@ void	dos2unix(char *str);
 int	str2uint64(const char *str, const char *suffixes, zbx_uint64_t *value);
 double	str2double(const char *str);
 
-#if defined(_WINDOWS) && defined(_UNICODE)
-int	__zbx_stat(const char *path, struct stat *buf);
+#if defined(_WINDOWS)
+typedef struct __stat64	zbx_stat_t;
+int	__zbx_stat(const char *path, zbx_stat_t *buf);
 int	__zbx_open(const char *pathname, int flags);
-#endif	/* _WINDOWS && _UNICODE */
+#else
+typedef struct stat	zbx_stat_t;
+#endif	/* _WINDOWS */
+
+typedef int (*zbx_process_value_func_t)(const char *, unsigned short, const char *, const char *, const char *,
+		zbx_uint64_t *, int *, unsigned long *, const char *, unsigned short *, unsigned long *, unsigned char);
+
+void	find_cr_lf_szbyte(const char *encoding, const char **cr, const char **lf, size_t *szbyte);
 int	zbx_read(int fd, char *buf, size_t count, const char *encoding);
 int	zbx_is_regular_file(const char *path);
 
@@ -1039,6 +1044,7 @@ int	is_function_char(char c);
 int	is_macro_char(char c);
 
 int	is_time_function(const char *func);
+int	is_snmp_type(unsigned char type);
 
 int	parse_host(char **exp, char **host);
 int	parse_key(char **exp, char **key);
@@ -1057,14 +1063,6 @@ void	zbx_replace_string(char **data, size_t l, size_t *r, const char *value);
 void	zbx_trim_str_list(char *list, char delimiter);
 
 int	parse_serveractive_element(char *str, char **host, unsigned short *port, unsigned short port_default);
-
-/* 128 bit unsigned integer handling */
-#define uset128(base, hi64, lo64)	(base)->hi = hi64; (base)->lo = lo64
-
-void uinc128_64(zbx_uint128_t *base, zbx_uint64_t value);
-void uinc128_128(zbx_uint128_t *base, const zbx_uint128_t *value);
-void udiv128_64(zbx_uint128_t *result, const zbx_uint128_t *base, zbx_uint64_t value);
-void umul64_64(zbx_uint128_t *result, zbx_uint64_t value, zbx_uint64_t factor);
 
 #define ZBX_SESSION_ACTIVE	0
 #define ZBX_SESSION_PASSIVE	1

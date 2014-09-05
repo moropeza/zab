@@ -1,6 +1,6 @@
 /*
  ** Zabbix
- ** Copyright (C) 2001-2013 Zabbix SIA
+ ** Copyright (C) 2001-2014 Zabbix SIA
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -83,5 +83,30 @@ jQuery(function($) {
 		printLess(true);
 
 		return false;
+	});
+
+	/*
+	 * add.popup event
+	 */
+	$(document).on('add.popup', function(e, data) {
+		// multiselect check
+		if ($('#' + data.parentId).hasClass('multiselect')) {
+			for (var i = 0; i < data.values.length; i++) {
+				if (typeof data.values[i].id !== 'undefined') {
+					var item = {
+						'id': data.values[i].id,
+						'name': data.values[i].name,
+						'prefix': data.values[i].prefix
+					};
+					jQuery('#' + data.parentId).multiSelect.addData(item, data.parentId);
+				}
+			}
+		}
+		else {
+			// execute function if they exist
+			if (typeof addPopupValues !== 'undefined') {
+				addPopupValues(data);
+			}
+		}
 	});
 });

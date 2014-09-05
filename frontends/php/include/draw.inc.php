@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ function zbx_colormix($image, $bgColor, $fgColor, $alpha) {
 
 /**
  * Draw normal line.
- * PHP imageline() function is broken because it drops fraction instead of correct rounding of X/Y coordnates.
+ * PHP imageline() function is broken because it drops fraction instead of correct rounding of X/Y coordinates.
  * All calls to imageline() must be replaced by the wrapper function everywhere in the code.
  *
  * @param resource  $image  image reference

@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -781,7 +781,6 @@ char	*__zbx_zbx_dsprintf(char *dest, const char *f, ...)
 char	*zbx_strdcat(char *dest, const char *src)
 {
 	size_t	len_dest, len_src;
-	char	*new_dest = NULL;
 
 	if (NULL == src)
 		return dest;
@@ -792,14 +791,11 @@ char	*zbx_strdcat(char *dest, const char *src)
 	len_dest = strlen(dest);
 	len_src = strlen(src);
 
-	new_dest = zbx_malloc(new_dest, len_dest + len_src + 1);
+	dest = zbx_realloc(dest, len_dest + len_src + 1);
 
-	zbx_strlcpy(new_dest, dest, len_dest + 1);
-	zbx_strlcpy(new_dest + len_dest, src, len_src + 1);
+	zbx_strlcpy(dest + len_dest, src, len_src + 1);
 
-	zbx_free(dest);
-
-	return new_dest;
+	return dest;
 }
 
 /******************************************************************************
@@ -1879,101 +1875,6 @@ void	remove_param(char *p, int num)
 
 /******************************************************************************
  *                                                                            *
- * Function: get_string                                                       *
- *                                                                            *
- * Purpose: get current string from the quoted or unquoted string list,       *
- *          delimited by blanks                                               *
- *                                                                            *
- * Parameters:                                                                *
- *      p       - [IN] parameter list, delimited by blanks (' ' or '\t')      *
- *      buf     - [OUT] output buffer                                         *
- *      bufsize - [IN] output buffer size                                     *
- *                                                                            *
- * Return value: pointer to the next string                                   *
- *                                                                            *
- * Author: Alexander Vladishev                                                *
- *                                                                            *
- * Comments: delimeter for parameters is ','                                  *
- *                                                                            *
- ******************************************************************************/
-const char	*get_string(const char *p, char *buf, size_t bufsize)
-{
-/* 0 - init, 1 - inside quoted param, 2 - inside unquoted param */
-	int	state;
-	size_t	buf_i = 0;
-
-	bufsize--;	/* '\0' */
-
-	for (state = 0; '\0' != *p; p++)
-	{
-		switch (state) {
-		/* Init state */
-		case 0:
-			if (' ' == *p || '\t' == *p)
-				/* Skip of leading spaces */;
-			else if ('"' == *p)
-				state = 1;
-			else
-			{
-				state = 2;
-				p--;
-			}
-			break;
-		/* Quoted */
-		case 1:
-			if ('"' == *p)
-			{
-				if (' ' != p[1] && '\t' != p[1] && '\0' != p[1])
-					return NULL;	/* incorrect syntax */
-
-				while (' ' == p[1] || '\t' == p[1])
-					p++;
-
-				buf[buf_i] = '\0';
-				return ++p;
-			}
-			else if ('\\' == *p && ('"' == p[1] || '\\' == p[1]))
-			{
-				p++;
-				if (buf_i < bufsize)
-					buf[buf_i++] = *p;
-			}
-			else if ('\\' == *p && 'n' == p[1])
-			{
-				p++;
-				if (buf_i < bufsize)
-					buf[buf_i++] = '\n';
-			}
-			else if (buf_i < bufsize)
-				buf[buf_i++] = *p;
-			break;
-		/* Unquoted */
-		case 2:
-			if (' ' == *p || '\t' == *p)
-			{
-				while (' ' == *p || '\t' == *p)
-					p++;
-
-				buf[buf_i] = '\0';
-				return p;
-			}
-			else if (buf_i < bufsize)
-				buf[buf_i++] = *p;
-			break;
-		}
-	}
-
-	/* missing terminating '"' character */
-	if (state == 1)
-		return NULL;
-
-	buf[buf_i] = '\0';
-
-	return p;
-}
-
-/******************************************************************************
- *                                                                            *
  * Function: zbx_num2hex                                                      *
  *                                                                            *
  * Purpose: convert parameter c (0-15) to hexadecimal value ('0'-'f')         *
@@ -2098,149 +1999,6 @@ size_t	zbx_hex2binary(char *io)
 
 	return (int)(o - io);
 }
-
-#ifdef HAVE_POSTGRESQL
-/******************************************************************************
- *                                                                            *
- * Function: zbx_pg_escape_bytea                                              *
- *                                                                            *
- * Purpose: converts from binary string to the null terminated escaped string *
- *                                                                            *
- * Transformations:                                                           *
- *      '\0' [0x00] -> \\ooo (ooo is an octal number)                         *
- *      '\'' [0x37] -> \'                                                     *
- *      '\\' [0x5c] -> \\\\                                                   *
- *      <= 0x1f || >= 0x7f -> \\ooo                                           *
- *                                                                            *
- * Parameters:                                                                *
- *      input - null terminated hexadecimal string                            *
- *      output - pointer to buffer                                            *
- *      olen - size of returned buffer                                        *
- *                                                                            *
- * Return value:                                                              *
- *                                                                            *
- * Author: Alexander Vladishev                                                *
- *                                                                            *
- ******************************************************************************/
-size_t	zbx_pg_escape_bytea(const u_char *input, size_t ilen, char **output, size_t *olen)
-{
-	const u_char	*i;
-	char		*o;
-	size_t		len;
-
-	assert(input);
-	assert(output);
-	assert(*output);
-	assert(olen);
-
-	len = 1; /* '\0' */
-	i = input;
-	while(i - input < ilen)
-	{
-		if(*i == '\0' || *i <= 0x1f || *i >= 0x7f)
-			len += 5;
-		else if(*i == '\'')
-			len += 2;
-		else if(*i == '\\')
-			len += 4;
-		else
-			len++;
-		i++;
-	}
-
-	if(*olen < len)
-	{
-		*olen = len;
-		*output = zbx_realloc(*output, *olen);
-	}
-	o = *output;
-	i = input;
-
-	while(i - input < ilen)
-	{
-		if(*i == '\0' || *i <= 0x1f || *i >= 0x7f)
-		{
-			*o++ = '\\';
-			*o++ = '\\';
-			*o++ = ((*i >> 6) & 0x7) + 0x30;
-			*o++ = ((*i >> 3) & 0x7) + 0x30;
-			*o++ = (*i & 0x7) + 0x30;
-		}
-		else if (*i == '\'')
-		{
-			*o++ = '\\';
-			*o++ = '\'';
-		}
-		else if (*i == '\\')
-		{
-			*o++ = '\\';
-			*o++ = '\\';
-			*o++ = '\\';
-			*o++ = '\\';
-		}
-		else
-			*o++ = *i;
-		i++;
-	}
-	*o = '\0';
-
-	return len - 1;
-}
-
-/******************************************************************************
- *                                                                            *
- * Function: zbx_pg_unescape_bytea                                            *
- *                                                                            *
- * Purpose: converts the null terminated string into binary buffer            *
- *                                                                            *
- * Transformations:                                                           *
- *      \ooo == a byte whose value = ooo (ooo is an octal number)             *
- *      \x   == x (x is any character)                                        *
- *                                                                            *
- * Parameters:                                                                *
- *      io - null terminated string                                           *
- *                                                                            *
- * Return value: length of the binary buffer                                  *
- *                                                                            *
- * Author: Alexander Vladishev                                                *
- *                                                                            *
- ******************************************************************************/
-size_t	zbx_pg_unescape_bytea(u_char *io)
-{
-	const u_char	*i = io;
-	u_char		*o = io;
-
-	assert(io);
-
-	while(*i != '\0')
-	{
-		switch(*i)
-		{
-			case '\\':
-				i++;
-				if(*i == '\\')
-				{
-					*o++ = *i++;
-				}
-				else
-				{
-					if(*i >= 0x30 && *i <= 0x39 && *(i + 1) >= 0x30 && *(i + 1) <= 0x39 && *(i + 2) >= 0x30 && *(i + 2) <= 0x39)
-					{
-						*o = (*i++ - 0x30) << 6;
-						*o += (*i++ - 0x30) << 3;
-						*o++ += *i++ - 0x30;
-					}
-				}
-				break;
-
-			default:
-				*o++ = *i++;
-		}
-	}
-
-	return o - io;
-}
-#endif
 
 /******************************************************************************
  *                                                                            *
@@ -2593,9 +2351,10 @@ int	cmp_key_id(const char *key_1, const char *key_2)
 {
 	const char	*p, *q;
 
-	for (p = key_1, q = key_2; *p == *q && *q != '\0' && *q != '[' && *q != ','; p++, q++);
+	for (p = key_1, q = key_2; *p == *q && '\0' != *q && '[' != *q; p++, q++)
+		;
 
-	return ((*p == '\0' || *p == '[' || *p == ',') && (*q == '\0' || *q == '[' || *q == ',') ? SUCCEED : FAIL);
+	return ('\0' == *p || '[' == *p) && ('\0' == *q || '[' == *q) ? SUCCEED : FAIL;
 }
 
 const char	*zbx_permission_string(int perm)
@@ -2704,6 +2463,8 @@ const char	*zbx_result_string(int result)
 			return "SUCCEED";
 		case FAIL:
 			return "FAIL";
+		case CONFIG_ERROR:
+			return "CONFIG_ERROR";
 		case NOTSUPPORTED:
 			return "NOTSUPPORTED";
 		case NETWORK_ERROR:
@@ -3492,7 +3253,7 @@ int	is_ascii_string(const char *str)
 {
 	while ('\0' != *str)
 	{
-		if (0 != ((1<<7) & *str)) /* check for range 0..127 */
+		if (0 != ((1 << 7) & *str))	/* check for range 0..127 */
 			return FAIL;
 
 		str++;

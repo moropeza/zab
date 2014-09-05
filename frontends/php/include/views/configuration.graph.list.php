@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -112,7 +112,9 @@ foreach ($this->data['graphs'] as $graph) {
 				'&hostid='.$this->data['hostid']
 		);
 
-		$isCheckboxEnabled = false;
+		if ($graph['discoveryRule']) {
+			$isCheckboxEnabled = false;
+		}
 	}
 	elseif (!empty($graph['discoveryRule']) && empty($this->data['parent_discoveryid'])) {
 		$name[] = new CLink(

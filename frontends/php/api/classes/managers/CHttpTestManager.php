@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -144,6 +144,8 @@ class CHttpTestManager {
 			'preservekeys' => true
 		));
 
+		$deleteStepItemIds = array();
+
 		foreach ($httpTests as $httpTest) {
 			DB::update('httptest', array(
 				'values' => $httpTest,
@@ -151,6 +153,7 @@ class CHttpTestManager {
 			));
 
 			$checkItemsUpdate = $updateFields = array();
+			$itemids = array();
 			$dbCheckItems = DBselect(
 				'SELECT i.itemid,hi.type'.
 				' FROM items i,httptestitem hi'.
@@ -199,7 +202,15 @@ class CHttpTestManager {
 				$stepidsDelete = array_keys($dbSteps);
 
 				if (!empty($stepidsDelete)) {
-					$this->deleteStepsReal($stepidsDelete);
+					$result = DBselect(
+						'SELECT hi.itemid FROM httpstepitem hi WHERE '.dbConditionInt('hi.httpstepid', $stepidsDelete)
+					);
+
+					foreach (DBfetchColumn($result, 'itemid') as $itemId) {
+						$deleteStepItemIds[] = $itemId;
+					}
+
+					DB::delete('httpstep', array('httpstepid' => $stepidsDelete));
 				}
 				if (!empty($stepsUpdate)) {
 					$this->updateStepsReal($httpTest, $stepsUpdate);
@@ -238,6 +249,10 @@ class CHttpTestManager {
 			}
 		}
 
+		if ($deleteStepItemIds) {
+			API::Item()->delete($deleteStepItemIds, true);
+		}
+
 		// TODO: REMOVE info
 		$dbCursor = DBselect(
 			'SELECT ht.name,h.name AS hostname'.
@@ -264,7 +279,7 @@ class CHttpTestManager {
 		$httpTests = array();
 		$dbCursor = DBselect(
 			'SELECT ht.httptestid,ht.name,ht.applicationid,ht.delay,ht.status,ht.variables,ht.agent,'.
-				'ht.authentication,ht.http_user,ht.http_password,ht.hostid,ht.templateid'.
+				'ht.authentication,ht.http_user,ht.http_password,ht.hostid,ht.templateid,ht.http_proxy,ht.retries'.
 			' FROM httptest ht'.
 			' WHERE ht.hostid='.zbx_dbstr($templateId)
 		);
@@ -295,12 +310,12 @@ class CHttpTestManager {
 	 * @return bool
 	 */
 	public function inherit(array $httpTests, array $hostIds = array()) {
-		$hostsTemaplatesMap = $this->getChildHostsFromHttpTests($httpTests, $hostIds);
-		if (empty($hostsTemaplatesMap)) {
+		$hostsTemplatesMap = $this->getChildHostsFromHttpTests($httpTests, $hostIds);
+		if (empty($hostsTemplatesMap)) {
 			return true;
 		}
 
-		$preparedHttpTests = $this->prepareInheritedHttpTests($httpTests, $hostsTemaplatesMap);
+		$preparedHttpTests = $this->prepareInheritedHttpTests($httpTests, $hostsTemplatesMap);
 		$inheritedHttpTests = $this->save($preparedHttpTests);
 		$this->inherit($inheritedHttpTests);
 
@@ -318,7 +333,7 @@ class CHttpTestManager {
 	 * @return array
 	 */
 	protected function getChildHostsFromHttpTests(array $httpTests, array $hostIds = array()) {
-		$hostsTemaplatesMap = array();
+		$hostsTemplatesMap = array();
 
 		$sqlWhere = $hostIds ? ' AND '.dbConditionInt('ht.hostid', $hostIds) : '';
 		$dbCursor = DBselect(
@@ -328,10 +343,10 @@ class CHttpTestManager {
 				$sqlWhere
 		);
 		while ($dbHost = DBfetch($dbCursor)) {
-			$hostsTemaplatesMap[$dbHost['hostid']] = $dbHost['templateid'];
+			$hostsTemplatesMap[$dbHost['hostid']] = $dbHost['templateid'];
 		}
 
-		return $hostsTemaplatesMap;
+		return $hostsTemplatesMap;
 	}
 
 	/**
@@ -339,20 +354,20 @@ class CHttpTestManager {
 	 * Using passed parameters decide if new http tests must be created on host or existing ones must be updated.
 	 *
 	 * @param array $httpTests which we need to inherit
-	 * @param array $hostsTemaplatesMap
+	 * @param array $hostsTemplatesMap
 	 *
 	 * @throws Exception
 	 * @return array with http tests, existing apps have 'httptestid' key.
 	 */
-	protected function prepareInheritedHttpTests(array $httpTests, array $hostsTemaplatesMap) {
-		$hostHttpTests = $this->getHttpTestsMapsByHostIds(array_keys($hostsTemaplatesMap));
+	protected function prepareInheritedHttpTests(array $httpTests, array $hostsTemplatesMap) {
+		$hostHttpTests = $this->getHttpTestsMapsByHostIds(array_keys($hostsTemplatesMap));
 
 		$result = array();
 		foreach ($httpTests as $httpTest) {
 			$httpTestId = $httpTest['httptestid'];
 			foreach ($hostHttpTests as $hostId => $hostHttpTest) {
 				// if http test template is not linked to host we skip it
-				if ($hostsTemaplatesMap[$hostId] != $httpTest['hostid']) {
+				if ($hostsTemplatesMap[$hostId] != $httpTest['hostid']) {
 					continue;
 				}
 
@@ -942,22 +957,6 @@ class CHttpTestManager {
 	}
 
 	/**
-	 * Delete web scenario steps.
-	 *
-	 * @param $httpStepIds
-	 */
-	protected function deleteStepsReal($httpStepIds) {
-		$itemIds = DBfetchColumn(
-			DBselect('SELECT hi.itemid FROM httpstepitem hi WHERE '.dbConditionInt('hi.httpstepid', $httpStepIds)),
-			'itemid'
-		);
-
-		DB::delete('httpstep', array('httpstepid' => $httpStepIds));
-
-		API::Item()->delete($itemIds, true);
-	}
-
-	/**
 	 * Update web item application linkage.
 	 *
 	 * @param array  $itemIds
@@ -1060,8 +1059,17 @@ class CHttpTestManager {
 		$history = Manager::History()->getLast($httpItems);
 
 		$data = array();
+
 		foreach ($httpItems as $httpItem) {
 			if (isset($history[$httpItem['itemid']])) {
+				if (!isset($data[$httpItem['httptestid']])) {
+					$data[$httpItem['httptestid']] = array(
+						'lastcheck' => null,
+						'lastfailedstep' => null,
+						'error' => null
+					);
+				}
+
 				$itemHistory = $history[$httpItem['itemid']][0];
 
 				if ($httpItem['type'] == HTTPSTEP_ITEM_TYPE_LASTSTEP) {

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -39,7 +39,7 @@ $fields = array(
 	'variables' =>		array(T_ZBX_STR, O_OPT, null,	null,				'isset({save})'),
 	'timeout' =>		array(T_ZBX_INT, O_OPT, null,	BETWEEN(0,65535),	'isset({save})', _('Timeout')),
 	'required' =>		array(T_ZBX_STR, O_OPT, null,	null,				'isset({save})'),
-	'status_codes' =>	array(T_ZBX_INT_RANGE, O_OPT, 	null, null,			'isset({save})'),
+	'status_codes' =>	array(T_ZBX_STR, O_OPT, null,	null,				'isset({save})'),
 	'templated' =>		array(T_ZBX_STR, O_OPT, null, 	null, null),
 	'old_name'=>		array(T_ZBX_STR, O_OPT, null, 	null, null),
 	'steps_names'=>		array(T_ZBX_STR, O_OPT, null, 	null, null),

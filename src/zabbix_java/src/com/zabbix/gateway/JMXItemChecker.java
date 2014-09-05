@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -124,16 +124,13 @@ class JMXItemChecker extends ItemChecker
 			String attributeName = item.getArgument(2);
 			String realAttributeName;
 			String fieldNames = "";
-			int sep;
 
-			//
 			// Attribute name and composite data field names are separated by dots. On the other hand the
 			// name may contain a dot too. In this case user needs to escape it with a backslash. Also the
 			// backslash symbols in the name must be escaped. So a real separator is unescaped dot and
 			// separatorIndex() is used to locate it.
-			//
 
-			sep = HelperFunctionChest.separatorIndex(attributeName);
+			int sep = HelperFunctionChest.separatorIndex(attributeName);
 
 			if (-1 != sep)
 			{

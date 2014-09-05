@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -288,11 +288,9 @@ class CScreenBuilder {
 		}
 
 		// create screen table
-		$screenTable = new CTable(
-			new CLink(
-				_('No rows in screen.').SPACE.$this->screen['name'],
-				'screenconf.php?config=0&form=update&screenid='.$this->screen['screenid']),
-				($this->mode == SCREEN_MODE_PREVIEW || $this->mode == SCREEN_MODE_SLIDESHOW) ? 'screen_view' : 'screen_edit'
+		$screenTable = new CTable();
+		$screenTable->setAttribute('class',
+			in_array($this->mode, array(SCREEN_MODE_PREVIEW, SCREEN_MODE_SLIDESHOW)) ? 'screen_view' : 'screen_edit'
 		);
 		$screenTable->setAttribute('id', 'iframe');
 

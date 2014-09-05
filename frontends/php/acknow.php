@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -61,7 +61,9 @@ if (isset($_REQUEST['cancel'])) {
 	ob_end_clean();
 
 	if (in_array($_REQUEST['backurl'], array('tr_events.php', 'events.php'))) {
-		redirect($_REQUEST['backurl'].'?eventid='.$_REQUEST['eventid'].'&triggerid='.$_REQUEST['triggerid']);
+		redirect($_REQUEST['backurl'].'?eventid='.$_REQUEST['eventid'].'&triggerid='.$_REQUEST['triggerid'].
+			'&source='.EVENT_SOURCE_TRIGGERS
+		);
 	}
 	elseif ($_REQUEST['backurl'] == 'screenedit.php') {
 		redirect($_REQUEST['backurl'].'?screenid='.$_REQUEST['screenid']);
@@ -107,6 +109,7 @@ elseif (get_request('triggers')) {
  */
 $eventTrigger = null;
 $eventAcknowledged = null;
+$eventTriggerName = null;
 
 $bulk = !isset($_REQUEST['eventid']);
 
@@ -116,6 +119,7 @@ if (!$bulk) {
 		'output' => API_OUTPUT_EXTEND,
 		'selectRelatedObject' => API_OUTPUT_EXTEND
 	));
+
 	if ($events) {
 		$event = reset($events);
 
@@ -163,7 +167,9 @@ if (isset($_REQUEST['save']) || isset($_REQUEST['saveandreturn'])) {
 		ob_end_clean();
 
 		if (in_array($_REQUEST['backurl'], array('tr_events.php', 'events.php'))) {
-			redirect($_REQUEST['backurl'].'?eventid='.$_REQUEST['eventid'].'&triggerid='.$_REQUEST['triggerid']);
+			redirect($_REQUEST['backurl'].'?eventid='.$_REQUEST['eventid'].'&triggerid='.$_REQUEST['triggerid'].
+				'&source='.EVENT_SOURCE_TRIGGERS
+			);
 		}
 		elseif ($_REQUEST['backurl'] == 'screenedit.php') {
 			redirect($_REQUEST['backurl'].'?screenid='.$_REQUEST['screenid']);
@@ -232,6 +238,7 @@ $messageTable->addVar('backurl', $_REQUEST['backurl']);
 if (in_array($_REQUEST['backurl'], array('tr_events.php', 'events.php'))) {
 	$messageTable->addVar('eventid', $_REQUEST['eventid']);
 	$messageTable->addVar('triggerid', $_REQUEST['triggerid']);
+	$messageTable->addVar('source', EVENT_SOURCE_TRIGGERS);
 }
 elseif (in_array($_REQUEST['backurl'], array('screenedit.php', 'screens.php'))) {
 	$messageTable->addVar('screenid', $_REQUEST['screenid']);

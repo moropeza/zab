@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -72,6 +72,9 @@ function sysmapElementLabel($label = null) {
  * @return CAreaMap
  */
 function getActionMapBySysmap($sysmap, array $options = array()) {
+	$sysmap['selements'] = zbx_toHash($sysmap['selements'], 'selementid');
+	$sysmap['links'] = zbx_toHash($sysmap['links'], 'linkid');
+
 	$actionMap = new CAreaMap('links'.$sysmap['sysmapid']);
 
 	$areas = populateFromMapAreas($sysmap);
@@ -83,7 +86,7 @@ function getActionMapBySysmap($sysmap, array $options = array()) {
 		if ($selement['elementtype'] == SYSMAP_ELEMENT_TYPE_HOST) {
 			$hostIds[$selement['elementid']] = $selement['elementid'];
 
-			// expanding hosts url macros again as some hosts were added from hostgroup areeas
+			// expanding host URL macros again as some hosts were added from hostgroup areas
 			// and automatic expanding only happens for elements that are defined for map in db
 			foreach ($selement['urls'] as $urlId => $url) {
 				$selement['urls'][$urlId]['url'] = str_replace('{HOST.ID}', $selement['elementid'], $url['url']);
@@ -158,7 +161,8 @@ function getActionMapBySysmap($sysmap, array $options = array()) {
 			case SYSMAP_ELEMENT_TYPE_TRIGGER:
 				$gotos['events'] = array(
 					'triggerid' => $elem['elementid'],
-					'nav_time' => time() - SEC_PER_WEEK
+					'stime' => date(TIMESTAMP_FORMAT, time() - SEC_PER_WEEK),
+					'period' => SEC_PER_WEEK
 				);
 				break;
 
@@ -348,7 +352,7 @@ function resolveMapLabelMacrosAll(array $selement) {
 		foreach ($hostsByNr as $i => $host) {
 			$replace = array(
 				'{HOST.NAME'.$i.'}' => $host['name'],
-				'{HOSTNAME'.$i.'}' => $host['name'],
+				'{HOSTNAME'.$i.'}' => $host['host'],
 				'{HOST.HOST'.$i.'}' => $host['host'],
 				'{HOST.DNS'.$i.'}' => $host['dns'],
 				'{HOST.IP'.$i.'}' => $host['ip'],
@@ -415,20 +419,23 @@ function resolveMapLabelMacrosAll(array $selement) {
  * @return string expanded label
  */
 function resolveMapLabelMacros($label, $replaceHosts = null) {
+	$functionsPattern = '(last|max|min|avg)\(([0-9]+['.ZBX_TIME_SUFFIXES.']?)?\)';
+
 	// find functional macro pattern
 	$pattern = (null === $replaceHosts)
-		? '/{'.ZBX_PREG_HOST_FORMAT.":.+\.(last|max|min|avg)\([0-9]+[smhdwKMGT]?\)}/Uu"
-		: '/{('.ZBX_PREG_HOST_FORMAT."|{HOSTNAME[0-9]?}|{HOST\.HOST[0-9]?}):.+\.(last|max|min|avg)\([0-9]+[smhdwKMGT]?\)}/Uu";
+		? '/{'.ZBX_PREG_HOST_FORMAT.':.+\.'.$functionsPattern.'}/Uu'
+		: '/{('.ZBX_PREG_HOST_FORMAT.'|{HOSTNAME[0-9]?}|{HOST\.HOST[0-9]?}):.+\.'.$functionsPattern.'}/Uu';
+
 	preg_match_all($pattern, $label, $matches);
 
 	// for each functional macro
 	foreach ($matches[0] as $expr) {
 		$macro = $expr;
 		if ($replaceHosts !== null) {
-			// search for macros with all possible indecies
+			// search for macros with all possible indices
 			foreach ($replaceHosts as $i => $host) {
 				$macroTmp = $macro;
-				// repalce only macro in first position
+				// replace only macro in first position
 				$macro = preg_replace('/{({HOSTNAME'.$i.'}|{HOST\.HOST'.$i.'}):(.*)}/U', '{'.$host['host'].':$2}', $macro);
 				// only one simple macro possible inside functional macro
 				if ($macro != $macroTmp) {
@@ -443,11 +450,10 @@ function resolveMapLabelMacros($label, $replaceHosts = null) {
 			continue;
 		}
 
-		// look in DB for coressponding item
+		// look in DB for corresponding item
 		$itemHost = $expressionData->expressions[0]['host'];
 		$key = $expressionData->expressions[0]['item'];
 		$function = $expressionData->expressions[0]['functionName'];
-		$parameter = convertFunctionValue($expressionData->expressions[0]['functionParamList'][0]);
 
 		$item = API::Item()->get(array(
 			'webitems' => true,
@@ -455,24 +461,36 @@ function resolveMapLabelMacros($label, $replaceHosts = null) {
 				'host' => $itemHost,
 				'key_' => $key
 			),
-			'output' => array('lastclock', 'value_type', 'lastvalue', 'units', 'valuemapid')
+			'output' => array('itemid', 'value_type', 'units', 'valuemapid')
 		));
 
 		$item = reset($item);
 
 		// if no corresponding item found with functional macro key and host
 		if (!$item) {
-			$label = str_replace($expr, '???', $label);
+			$label = str_replace($expr, UNRESOLVED_MACRO_STRING, $label);
 			continue;
 		}
 
+		$lastValue = Manager::History()->getLast(array($item));
+		if ($lastValue) {
+			$lastValue = reset($lastValue[$item['itemid']]);
+			$item['lastvalue'] = $lastValue['value'];
+			$item['lastclock'] = $lastValue['clock'];
+		}
+		else {
+			$item['lastvalue'] = '0';
+			$item['lastclock'] = '0';
+		}
+
 		// do function type (last, min, max, avg) related actions
-		if (0 == strcmp($function, 'last')) {
+		if ($function == 'last') {
 			$value = ($item['lastclock']) ? formatHistoryValue($item['lastvalue'], $item) : UNRESOLVED_MACRO_STRING;
 		}
-		elseif (0 == strcmp($function, 'min') || 0 == strcmp($function, 'max') || 0 == strcmp($function, 'avg')) {
-			$value = getItemFunctionalValue($item, $function, $parameter);
+		else {
+			$value = getItemFunctionalValue($item, $function, $expressionData->expressions[0]['functionParamList'][0]);
 		}
+
 		if (isset($value)) {
 			$label = str_replace($expr, $value, $label);
 		}
@@ -556,7 +574,7 @@ function add_elementNames(&$selements) {
 	$triggers = API::Trigger()->get(array(
 		'triggerids' => $triggerids,
 		'output' => API_OUTPUT_EXTEND,
-		'selectHosts' => array('name'),
+		'selectHosts' => array('hostid', 'name'),
 		'nopermissions' => true,
 		'nodeids' => get_current_nodeid(true),
 		'preservekeys' => true
@@ -987,7 +1005,7 @@ function getSelementsInfo($sysmap, array $options = array()) {
 		$hostsToGetInventories = array();
 	}
 
-	$selements = zbx_toHash($sysmap['selements'], 'selementid');
+	$selements = $sysmap['selements'];
 	foreach ($selements as $selementId => $selement) {
 		$selements[$selementId]['hosts'] = array();
 		$selements[$selementId]['triggers'] = array();

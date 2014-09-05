@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -80,7 +80,7 @@ class CTimePeriodValidator extends CValidator {
 	 *
 	 * @return bool
 	 */
-	protected  function validateSinglePeriod($period) {
+	protected function validateSinglePeriod($period) {
 		$daysRegExp = '(?P<day1>[1-7])(-(?P<day2>[1-7]))?';
 		$time1RegExp = '(?P<hour1>20|21|22|23|24|[0-1]\d|\d):(?P<min1>[0-5]\d)';
 		$time2RegExp = '(?P<hour2>20|21|22|23|24|[0-1]\d|\d):(?P<min2>[0-5]\d)';

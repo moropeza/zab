@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -86,7 +86,10 @@ $httpTest['error'] = '';
 
 // fetch http test execution data
 $httpTestData = Manager::HttpTest()->getLastData(array($httpTest['httptestid']));
-$httpTestData = array_pop($httpTestData);
+
+if ($httpTestData) {
+	$httpTestData = reset($httpTestData);
+}
 
 // fetch HTTP step items
 $query = DBselect(
@@ -110,14 +113,13 @@ $itemHistory = Manager::History()->getLast($items);
  * Display
  */
 $httpdetailsWidget = new CWidget();
-
-$lastcheck = null;
-if (isset($httpTestData['lastcheck'])) {
-	$lastcheck = ' ['.zbx_date2str(_('d M Y H:i:s'), $httpTestData['lastcheck']).']';
-}
-
 $httpdetailsWidget->addPageHeader(
-	array(_('DETAILS OF SCENARIO').SPACE, bold(CMacrosResolverHelper::resolveHttpTestName($httpTest['hostid'], $httpTest['name'])), $lastcheck),
+	array(
+		_('DETAILS OF SCENARIO'),
+		SPACE,
+		bold(CMacrosResolverHelper::resolveHttpTestName($httpTest['hostid'], $httpTest['name'])),
+		isset($httpTestData['lastcheck']) ? ' ['.zbx_date2str(_('d M Y H:i:s'), $httpTestData['lastcheck']).']' : null
+	),
 	array(
 		get_icon('reset', array('id' => get_request('httptestid'))),
 		get_icon('fullscreen', array('fullscreen' => $_REQUEST['fullscreen']))
@@ -150,13 +152,15 @@ while ($httpstep_data = DBfetch($db_httpsteps)) {
 	$status['style'] = 'enabled';
 	$status['afterError'] = false;
 
-	if (!isset($httpTestData['lastcheck'])) {
+	if (!isset($httpTestData['lastfailedstep'])) {
 		$status['msg'] = _('Never executed');
 		$status['style'] = 'unknown';
 	}
 	elseif ($httpTestData['lastfailedstep'] != 0) {
 		if ($httpTestData['lastfailedstep'] == $httpstep_data['no']) {
-			$status['msg'] = _s('Error: %1$s', $httpTestData['error']);
+			$status['msg'] = ($httpTestData['error'] === null)
+				? _('Unknown error')
+				: _s('Error: %1$s', $httpTestData['error']);
 			$status['style'] = 'disabled';
 		}
 		elseif ($httpTestData['lastfailedstep'] < $httpstep_data['no']) {
@@ -222,12 +226,14 @@ while ($httpstep_data = DBfetch($db_httpsteps)) {
 	));
 }
 
-if (!isset($httpTestData['lastcheck'])) {
+if (!isset($httpTestData['lastfailedstep'])) {
 	$status['msg'] = _('Never executed');
 	$status['style'] = 'unknown';
 }
 elseif ($httpTestData['lastfailedstep'] != 0) {
-	$status['msg'] = _s('Error: %1$s', $httpTestData['error']);
+	$status['msg'] = ($httpTestData['error'] === null)
+		? _('Unknown error')
+		: _s('Error: %1$s', $httpTestData['error']);
 	$status['style'] = 'disabled';
 }
 else {

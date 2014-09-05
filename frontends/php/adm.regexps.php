@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -164,14 +164,8 @@ elseif (isset($_REQUEST['go'])) {
 		DBstart();
 
 		$result = DBexecute('DELETE FROM regexps WHERE '.dbConditionInt('regexpid', $regExpIds));
-		$result = Dbend($result);
 
 		$regExpCount = count($regExpIds);
-
-		show_messages($result,
-			_n('Regular expression deleted', 'Regular expressions deleted', $regExpCount),
-			_n('Cannot delete regular expression', 'Cannot delete regular expressions', $regExpCount)
-		);
 
 		if ($result) {
 			foreach ($regExps as $regExpId => $regExp) {
@@ -179,8 +173,16 @@ elseif (isset($_REQUEST['go'])) {
 			}
 
 			unset($_REQUEST['form'], $_REQUEST['regexpid']);
-			clearCookies($result);
 		}
+
+		$result = DBend($result);
+
+		show_messages($result,
+			_n('Regular expression deleted', 'Regular expressions deleted', $regExpCount),
+			_n('Cannot delete regular expression', 'Cannot delete regular expressions', $regExpCount)
+		);
+
+		clearCookies($result);
 	}
 }
 

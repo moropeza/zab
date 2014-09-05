@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -136,7 +136,7 @@ $fields = array(
 	'massupdate' =>				array(T_ZBX_STR, O_OPT, P_SYS,	null,		null),
 	'form_refresh' =>			array(T_ZBX_INT, O_OPT, null,	null,		null),
 	// filter
-	'filter_set' =>				array(T_ZBX_STR, O_OPT, P_ACT,	null,		null),
+	'filter_set' =>				array(T_ZBX_STR, O_OPT, P_SYS,	null,		null),
 	'filter_groupid' =>			array(T_ZBX_INT, O_OPT, null,	DB_ID,		null),
 	'filter_hostid' =>			array(T_ZBX_INT, O_OPT, null,	DB_ID,		null),
 	'filter_application' =>		array(T_ZBX_STR, O_OPT, null,	null,		null),
@@ -444,9 +444,11 @@ elseif (isset($_REQUEST['save'])) {
 			'inventory_link' => get_request('inventory_link')
 		);
 
-		if (isset($_REQUEST['itemid'])) {
-			$db_item = get_item_by_itemid_limited($_REQUEST['itemid']);
-			$db_item['applications'] = get_applications_by_itemid($_REQUEST['itemid']);
+		if (hasRequest('itemid')) {
+			$itemId = getRequest('itemid');
+
+			$dbItem = get_item_by_itemid_limited($itemId);
+			$dbItem['applications'] = get_applications_by_itemid($itemId);
 
 			// unset snmpv3 fields
 			if ($item['snmpv3_securitylevel'] == ITEM_SNMPV3_SECURITYLEVEL_NOAUTHNOPRIV) {
@@ -457,14 +459,8 @@ elseif (isset($_REQUEST['save'])) {
 				$item['snmpv3_privprotocol'] = ITEM_PRIVPROTOCOL_DES;
 			}
 
-			// unset fields without changes
-			foreach ($item as $field => $value) {
-				if ($item[$field] == $db_item[$field]) {
-					unset($item[$field]);
-				}
-			}
-
-			$item['itemid'] = $_REQUEST['itemid'];
+			$item = CArrayHelper::unsetEqualValues($item, $dbItem);
+			$item['itemid'] = $itemId;
 
 			$result = API::Item()->update($item);
 		}
@@ -668,27 +664,25 @@ elseif (isset($_REQUEST['update']) && isset($_REQUEST['massupdate']) && isset($_
 		clearCookies($result, get_request('hostid'));
 	}
 }
-elseif ($_REQUEST['go'] == 'activate' && isset($_REQUEST['group_itemid'])) {
-	$group_itemid = $_REQUEST['group_itemid'];
+elseif (str_in_array(getRequest('go'), array('activate', 'disable')) && hasRequest('group_itemid')) {
+	$groupItemId = getRequest('group_itemid');
+	$enable = (getRequest('go') == 'activate');
 
 	DBstart();
+	$result = $enable ? activate_item($groupItemId) : disable_item($groupItemId);
+	$result = DBend($result);
 
-	$goResult = activate_item($group_itemid);
-	$goResult = DBend($goResult);
+	$updated = count($groupItemId);
 
-	show_messages($goResult, _('Items activated'), null);
-	clearCookies($goResult, get_request('hostid'));
-}
-elseif ($_REQUEST['go'] == 'disable' && isset($_REQUEST['group_itemid'])) {
-	$group_itemid = $_REQUEST['group_itemid'];
+	$messageSuccess = $enable
+		? _n('Item enabled', 'Items enabled', $updated)
+		: _n('Item disabled', 'Items disabled', $updated);
+	$messageFailed = $enable
+		? _n('Cannot enable item', 'Cannot enable items', $updated)
+		: _n('Cannot disable item', 'Cannot disable items', $updated);
 
-	DBstart();
-
-	$goResult = disable_item($group_itemid);
-	$goResult = DBend($goResult);
-
-	show_messages($goResult, _('Items disabled'), null);
-	clearCookies($goResult, get_request('hostid'));
+	show_messages($result, $messageSuccess, $messageFailed);
+	clearCookies($result, getRequest('hostid'));
 }
 elseif ($_REQUEST['go'] == 'copy_to' && isset($_REQUEST['copy']) && isset($_REQUEST['group_itemid'])) {
 	if (isset($_REQUEST['copy_targetid']) && $_REQUEST['copy_targetid'] > 0 && isset($_REQUEST['copy_type'])) {
@@ -827,41 +821,66 @@ elseif ($_REQUEST['go'] == 'massupdate' || isset($_REQUEST['massupdate']) && iss
 		'visible' => get_request('visible', array())
 	);
 
+	$data['displayApplications'] = true;
+	$data['displayInterfaces'] = true;
+
 	// hosts
 	$data['hosts'] = API::Host()->get(array(
 		'itemids' => $data['itemids'],
 		'selectInterfaces' => API_OUTPUT_EXTEND
 	));
-	$data['is_multiple_hosts'] = count($data['hosts']) > 1;
-	if (!$data['is_multiple_hosts']) {
-		$data['hosts'] = reset($data['hosts']);
+	$hostCount = count($data['hosts']);
 
-		// set the initial chosen interface to one of the interfaces the items use
-		$items = API::Item()->get(array(
-			'itemids' => zbx_objectValues($data['hosts']['items'], 'itemid'),
-			'output' => array('itemid', 'type')
+	if ($hostCount > 1) {
+		$data['displayApplications'] = false;
+		$data['displayInterfaces'] = false;
+	}
+	else {
+		// get template count to display applications multiselect only for single template
+		$templates = API::Template()->get(array(
+			'output' => array('templateid'),
+			'itemids' => $data['itemids']
 		));
-		$usedInterfacesTypes = array();
-		foreach ($items as $item) {
-			$usedInterfacesTypes[$item['type']] = itemTypeInterface($item['type']);
+		$templateCount = count($templates);
+
+		if ($templateCount != 0) {
+			$data['displayInterfaces'] = false;
+
+			if ($templateCount == 1 && !$data['hostid']) {
+				// if selected from filter without 'hostid'
+				$templates = reset($templates);
+				$data['hostid'] = $templates['templateid'];
+			}
+
+			// if items belong to single template and some belong to single host, don't display application multiselect
+			// and don't display application multiselect for multiple templates
+			if ($hostCount == 1 && $templateCount == 1 || $templateCount > 1) {
+				$data['displayApplications'] = false;
+			}
 		}
-		$initialItemType = min(array_keys($usedInterfacesTypes));
-		$data['type'] = (get_request('type') !== null) ? ($data['type']) : $initialItemType;
-		$data['initial_item_type'] = $initialItemType;
-		$data['multiple_interface_types'] = (count(array_unique($usedInterfacesTypes)) > 1);
-	}
 
-	// application
-	if (count($data['applications']) == 0) {
-		array_push($data['applications'], 0);
-	}
-	if (!empty($data['hostid'])) {
-		$data['db_applications'] = DBfetchArray(DBselect(
-			'SELECT a.applicationid,a.name'.
-			' FROM applications a'.
-			' WHERE a.hostid='.zbx_dbstr($data['hostid'])
-		));
-		order_result($data['db_applications'], 'name');
+		if ($hostCount == 1 && $data['displayInterfaces']) {
+			$data['hosts'] = reset($data['hosts']);
+
+			// if selected from filter without 'hostid'
+			if (!$data['hostid']) {
+				$data['hostid'] = $data['hosts']['hostid'];
+			}
+
+			// set the initial chosen interface to one of the interfaces the items use
+			$items = API::Item()->get(array(
+				'itemids' => zbx_objectValues($data['hosts']['items'], 'itemid'),
+				'output' => array('itemid', 'type')
+			));
+			$usedInterfacesTypes = array();
+			foreach ($items as $item) {
+				$usedInterfacesTypes[$item['type']] = itemTypeInterface($item['type']);
+			}
+			$initialItemType = min(array_keys($usedInterfacesTypes));
+			$data['type'] = (get_request('type') !== null) ? ($data['type']) : $initialItemType;
+			$data['initial_item_type'] = $initialItemType;
+			$data['multiple_interface_types'] = (count(array_unique($usedInterfacesTypes)) > 1);
+		}
 	}
 
 	// item types
@@ -937,7 +956,10 @@ else {
 	$options = array(
 		'hostids' => $data['hostid'],
 		'search' => array(),
-		'output' => API_OUTPUT_EXTEND,
+		'output' => array(
+			'itemid', 'type', 'hostid', 'name', 'key_', 'delay', 'history', 'trends', 'status', 'value_type', 'error',
+			'templateid', 'flags', 'state'
+		),
 		'editable' => true,
 		'selectHosts' => API_OUTPUT_EXTEND,
 		'selectTriggers' => API_OUTPUT_REFER,
@@ -1024,9 +1046,10 @@ else {
 	}
 
 	// set values for subfilters, if any of subfilters = false then item shouldnt be shown
-	if (!empty($data['items'])) {
+	if ($data['items']) {
 		// fill template host
 		fillItemsWithChildTemplates($data['items']);
+
 		$dbHostItems = DBselect(
 			'SELECT i.itemid,h.name,h.hostid'.
 			' FROM hosts h,items i'.
@@ -1034,16 +1057,19 @@ else {
 				' AND '.dbConditionInt('i.itemid', zbx_objectValues($data['items'], 'templateid'))
 		);
 		while ($dbHostItem = DBfetch($dbHostItems)) {
-			foreach ($data['items'] as $itemid => $item) {
+			foreach ($data['items'] as &$item) {
 				if ($item['templateid'] == $dbHostItem['itemid']) {
-					$data['items'][$itemid]['template_host'] = $dbHostItem;
+					$item['template_host'] = $dbHostItem;
 				}
 			}
+			unset($item);
 		}
+
+		// resolve name macros
+		$data['items'] = CMacrosResolverHelper::resolveItemNames($data['items']);
 
 		foreach ($data['items'] as &$item) {
 			$item['hostids'] = zbx_objectValues($item['hosts'], 'hostid');
-			$item['name_expanded'] = itemName($item);
 
 			if (empty($data['filter_hostid'])) {
 				$host = reset($item['hosts']);
@@ -1075,6 +1101,7 @@ else {
 					|| uint_in_array($item['delay'], $_REQUEST['subfilter_interval']),
 				'subfilter_apps' => empty($_REQUEST['subfilter_apps'])
 			);
+
 			if (!empty($_REQUEST['subfilter_apps'])) {
 				foreach ($item['applications'] as $application) {
 					if (str_in_array($application['name'], $_REQUEST['subfilter_apps'])) {
@@ -1138,7 +1165,13 @@ else {
 		}
 	}
 
-	order_result($data['items'], $data['sortfield'], getPageSortOrder());
+	if ($data['sortfield'] === 'status') {
+		orderItemsByStatus($data['items'], getPageSortOrder());
+	}
+	else {
+		order_result($data['items'], $data['sortfield'], getPageSortOrder());
+	}
+
 	$data['paging'] = getPagingLine($data['items'], array('itemid'));
 
 	$itemTriggerIds = array();

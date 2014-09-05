@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -132,17 +132,31 @@ if ($pageFilter->hostsSelected) {
 	// fetch the latest results of the web scenario
 	$lastHttpTestData = Manager::HttpTest()->getLastData(array_keys($httpTests));
 
-	foreach($httpTests as $httpTest) {
-		$lastData = isset($lastHttpTestData[$httpTest['httptestid']]) ? $lastHttpTestData[$httpTest['httptestid']] : null;
+	foreach ($httpTests as $httpTest) {
+		if (isset($lastHttpTestData[$httpTest['httptestid']])
+				&& $lastHttpTestData[$httpTest['httptestid']]['lastfailedstep'] !== null) {
+			$lastData = $lastHttpTestData[$httpTest['httptestid']];
 
-		// test has history data
-		if ($lastData) {
 			$lastcheck = zbx_date2str(_('d M Y H:i:s'), $lastData['lastcheck']);
 
 			if ($lastData['lastfailedstep'] != 0) {
-				$step_data = get_httpstep_by_no($httpTest['httptestid'], $lastData['lastfailedstep']);
-				$status['msg'] = _s('Step "%1$s" [%2$s of %3$s] failed: %4$s', $step_data['name'],
-					$lastData['lastfailedstep'], $httpTest['steps'], $lastData['error']);
+				$stepData = get_httpstep_by_no($httpTest['httptestid'], $lastData['lastfailedstep']);
+
+				$error = ($lastData['error'] === null) ? _('Unknown error') : $lastData['error'];
+
+				if ($stepData) {
+					$status['msg'] = _s(
+						'Step "%1$s" [%2$s of %3$s] failed: %4$s',
+						$stepData['name'],
+						$lastData['lastfailedstep'],
+						$httpTest['steps'],
+						$error
+					);
+				}
+				else {
+					$status['msg'] = _s('Unknown step failed: %1$s', $error);
+				}
+
 				$status['style'] = 'disabled';
 			}
 			else {
@@ -152,7 +166,7 @@ if ($pageFilter->hostsSelected) {
 		}
 		// no history data exists
 		else {
-			$lastcheck =  _('Never');
+			$lastcheck = _('Never');
 			$status['msg'] = _('Unknown');
 			$status['style'] = 'unknown';
 		}

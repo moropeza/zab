@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -109,12 +109,12 @@ static int	get_swap_dev_stat(const char *swapdev, swap_stat_t *result)
 	int		ret = SYSINFO_RET_FAIL;
 	char		line[MAX_STRING_LEN];
 	int		rdev_major, rdev_minor;
-	struct stat	dev_st;
+	zbx_stat_t	dev_st;
 	FILE		*f;
 
 	assert(result);
 
-	if (-1 == stat(swapdev, &dev_st))
+	if (-1 == zbx_stat(swapdev, &dev_st))
 		return ret;
 
 	if (NULL == (f = fopen(INFO_FILE_NAME, "r")))

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -60,70 +60,6 @@ $graphTypeComboBox = new CComboBox('graphtype', $this->data['graphtype'], 'submi
 $graphTypeComboBox->addItems(graphType());
 $graphFormList->addRow(_('Graph type'), $graphTypeComboBox);
 
-// append items to form list
-$itemsTable = new CTable(null, 'formElementTable');
-$itemsTable->attr('style', 'min-width: 700px;');
-$itemsTable->attr('id', 'itemsTable');
-$itemsTable->setHeader(array(
-	new CCol(SPACE, null, null, 15),
-	new CCol(SPACE, null, null, 15),
-	new CCol(_('Name'), null, null, ($this->data['graphtype'] != GRAPH_TYPE_NORMAL) ? 360 : 280),
-	($this->data['graphtype'] == GRAPH_TYPE_PIE || $this->data['graphtype'] == GRAPH_TYPE_EXPLODED)
-		? new CCol(_('Type'), null, null, 80) : null,
-	new CCol(_('Function'), null, null, 80),
-	($this->data['graphtype'] == GRAPH_TYPE_NORMAL) ? new CCol(_('Draw style'), 'nowrap', null, 80) : null,
-	($this->data['graphtype'] == GRAPH_TYPE_NORMAL || $this->data['graphtype'] == GRAPH_TYPE_STACKED)
-		? new CCol(_('Y axis side'), 'nowrap', null, 80) : null,
-	new CCol(_('Colour'), null, null, 100),
-	new CCol(_('Action'), null, null, 50)
-));
-
-if (!empty($this->data['items'])) {
-	foreach ($this->data['items'] as $number => $item) {
-		if (!empty($item['itemid'])) {
-			$host = get_host_by_itemid($item['itemid']);
-			$name = $host['name'].NAME_DELIMITER.itemName(get_item_by_itemid($item['itemid']));
-		}
-		else {
-			$name = _('Select');
-		}
-
-		if (empty($item['drawtype'])) {
-			$item['drawtype'] = 0;
-		}
-
-		if (empty($item['yaxisside'])) {
-			$item['yaxisside'] = 0;
-		}
-
-		insert_js('loadItem('.$number.', '.CJs::encodeJson($item['gitemid']).', '.$this->data['graphid'].', '.$item['itemid'].', '.
-			CJs::encodeJson($name).', '.$item['type'].', '.$item['calc_fnc'].', '.$item['drawtype'].', '.
-			$item['yaxisside'].', \''.$item['color'].'\', '.$item['flags'].');',
-			true
-		);
-	}
-}
-
-$addButton = new CButton('add_item', _('Add'),
-	'return PopUp("popup.php?writeonly=1&multiselect=1&dstfrm='.$graphForm->getName().
-		(!empty($this->data['normal_only']) ? '&normal_only=1' : '').
-		'&srctbl=items&srcfld1=itemid&srcfld2=name&numeric=1" + getOnlyHostParam(), 800, 600);',
-	'link_menu'
-);
-
-$addPrototypeButton = null;
-if (!empty($this->data['parent_discoveryid'])) {
-	$addPrototypeButton = new CButton('add_protoitem', _('Add prototype'),
-		'return PopUp("popup.php?writeonly=1&multiselect=1&dstfrm='.$graphForm->getName().
-			url_param($this->data['graphtype'], false, 'graphtype').
-			url_param('parent_discoveryid').
-			(!empty($this->data['normal_only']) ? '&normal_only=1' : '').
-			'&srctbl=prototypes&srcfld1=itemid&srcfld2=name&numeric=1", 800, 600);',
-		'link_menu'
-	);
-}
-$itemsTable->addRow(new CRow(new CCol(array($addButton, SPACE, SPACE, SPACE, $addPrototypeButton), null, 8), null, 'itemButtonsRow'));
-
 // append legend to form list
 $graphFormList->addRow(_('Show legend'), new CCheckBox('show_legend', $this->data['show_legend'], null, 1));
 
@@ -133,25 +69,21 @@ if ($this->data['graphtype'] == GRAPH_TYPE_NORMAL || $this->data['graphtype'] ==
 	$graphFormList->addRow(_('Show triggers'), new CCheckBox('show_triggers', $this->data['show_triggers'], null, 1));
 
 	if ($this->data['graphtype'] == GRAPH_TYPE_NORMAL) {
-		if (is_numeric($this->data['percent_left'])) {
-			$this->data['percent_left'] = sprintf('%2.2f', $this->data['percent_left']);
-		}
-		$percentLeftTextBox = new CTextBox('percent_left', $this->data['percent_left'], 5, 'no', 6);
+		// percent left
+		$percentLeftTextBox = new CTextBox('percent_left', $this->data['percent_left'], 6, 'no', 7);
 		$percentLeftCheckbox = new CCheckBox('visible[percent_left]', 1, 'javascript: showHideVisible("percent_left");', 1);
 
-		if (strcmp($this->data['percent_left'], '0.00') == 0) {
+		if ($this->data['percent_left'] == 0) {
 			$percentLeftTextBox->attr('style', 'visibility: hidden;');
 			$percentLeftCheckbox->setChecked(0);
 		}
 		$graphFormList->addRow(_('Percentile line (left)'), array($percentLeftCheckbox, SPACE, $percentLeftTextBox));
 
-		if (is_numeric($this->data['percent_right'])) {
-			$this->data['percent_right'] = sprintf('%2.2f', $this->data['percent_right']);
-		}
-		$percentRightTextBox = new CTextBox('percent_right', $this->data['percent_right'], 5, 'no', 6);
+		// percent right
+		$percentRightTextBox = new CTextBox('percent_right', $this->data['percent_right'], 6, 'no', 7);
 		$percentRightCheckbox = new CCheckBox('visible[percent_right]', 1, 'javascript: showHideVisible("percent_right");', 1);
 
-		if (strcmp($this->data['percent_right'], '0.00') == 0) {
+		if ($this->data['percent_right'] == 0) {
 			$percentRightTextBox->attr('style', 'visibility: hidden;');
 			$percentRightCheckbox->setChecked(0);
 		}
@@ -160,7 +92,7 @@ if ($this->data['graphtype'] == GRAPH_TYPE_NORMAL || $this->data['graphtype'] ==
 
 	$yaxisMinData = array();
 
-	$yTypeComboBox = new CComboBox('ymin_type', $this->data['ymin_type'], 'submit();');
+	$yTypeComboBox = new CComboBox('ymin_type', $this->data['ymin_type']);
 	$yTypeComboBox->addItem(GRAPH_YAXIS_TYPE_CALCULATED, _('Calculated'));
 	$yTypeComboBox->addItem(GRAPH_YAXIS_TYPE_FIXED, _('Fixed'));
 	$yTypeComboBox->addItem(GRAPH_YAXIS_TYPE_ITEM_VALUE, _('Item'));
@@ -176,8 +108,11 @@ if ($this->data['graphtype'] == GRAPH_TYPE_NORMAL || $this->data['graphtype'] ==
 		$ymin_name = '';
 		if (!empty($this->data['ymin_itemid'])) {
 			$min_host = get_host_by_itemid($this->data['ymin_itemid']);
-			$min_item = get_item_by_itemid($this->data['ymin_itemid']);
-			$ymin_name = $min_host['name'].NAME_DELIMITER.itemName($min_item);
+
+			$minItems = CMacrosResolverHelper::resolveItemNames(array(get_item_by_itemid($this->data['ymin_itemid'])));
+			$minItem = reset($minItems);
+
+			$ymin_name = $min_host['name'].NAME_DELIMITER.$minItem['name_expanded'];
 		}
 
 		$yaxisMinData[] = new CTextBox('ymin_name', $ymin_name, 36, 'yes');
@@ -215,7 +150,7 @@ if ($this->data['graphtype'] == GRAPH_TYPE_NORMAL || $this->data['graphtype'] ==
 	$graphFormList->addRow(_('Y axis MIN value'), $yaxisMinData);
 
 	$yaxisMaxData = array();
-	$yTypeComboBox = new CComboBox('ymax_type', $this->data['ymax_type'], 'submit()');
+	$yTypeComboBox = new CComboBox('ymax_type', $this->data['ymax_type']);
 	$yTypeComboBox->addItem(GRAPH_YAXIS_TYPE_CALCULATED, _('Calculated'));
 	$yTypeComboBox->addItem(GRAPH_YAXIS_TYPE_FIXED, _('Fixed'));
 	$yTypeComboBox->addItem(GRAPH_YAXIS_TYPE_ITEM_VALUE, _('Item'));
@@ -231,8 +166,11 @@ if ($this->data['graphtype'] == GRAPH_TYPE_NORMAL || $this->data['graphtype'] ==
 		$ymax_name = '';
 		if (!empty($this->data['ymax_itemid'])) {
 			$max_host = get_host_by_itemid($this->data['ymax_itemid']);
-			$max_item = get_item_by_itemid($this->data['ymax_itemid']);
-			$ymax_name = $max_host['name'].NAME_DELIMITER.itemName($max_item);
+
+			$maxItems = CMacrosResolverHelper::resolveItemNames(array(get_item_by_itemid($this->data['ymax_itemid'])));
+			$maxItem = reset($maxItems);
+
+			$ymax_name = $max_host['name'].NAME_DELIMITER.$maxItem['name_expanded'];
 		}
 
 		$yaxisMaxData[] = new CTextBox('ymax_name', $ymax_name, 36, 'yes');
@@ -273,6 +211,66 @@ else {
 	$graphFormList->addRow(_('3D view'), new CCheckBox('show_3d', $this->data['show_3d'], null, 1));
 }
 
+// append items to form list
+$itemsTable = new CTable(null, 'formElementTable');
+$itemsTable->attr('style', 'min-width: 700px;');
+$itemsTable->attr('id', 'itemsTable');
+$itemsTable->setHeader(array(
+	new CCol(SPACE, null, null, 15),
+	new CCol(SPACE, null, null, 15),
+	new CCol(_('Name'), null, null, ($this->data['graphtype'] == GRAPH_TYPE_NORMAL) ? 280 : 360),
+	($this->data['graphtype'] == GRAPH_TYPE_PIE || $this->data['graphtype'] == GRAPH_TYPE_EXPLODED)
+		? new CCol(_('Type'), null, null, 80) : null,
+	new CCol(_('Function'), null, null, 80),
+	($this->data['graphtype'] == GRAPH_TYPE_NORMAL) ? new CCol(_('Draw style'), 'nowrap', null, 80) : null,
+	($this->data['graphtype'] == GRAPH_TYPE_NORMAL || $this->data['graphtype'] == GRAPH_TYPE_STACKED)
+		? new CCol(_('Y axis side'), 'nowrap', null, 80) : null,
+	new CCol(_('Colour'), null, null, 100),
+	new CCol(_('Action'), null, null, 50)
+));
+
+$addButton = new CButton('add_item', _('Add'),
+	'return PopUp("popup.php?writeonly=1&multiselect=1&dstfrm='.$graphForm->getName().
+		($this->data['normal_only'] ? '&normal_only=1' : '').
+		'&srctbl=items&srcfld1=itemid&srcfld2=name&numeric=1" + getOnlyHostParam(), 800, 600);',
+	'link_menu'
+);
+
+$addPrototypeButton = null;
+if ($this->data['parent_discoveryid']) {
+	$addPrototypeButton = new CButton('add_protoitem', _('Add prototype'),
+		'return PopUp("popup.php?writeonly=1&multiselect=1&dstfrm='.$graphForm->getName().
+			url_param($this->data['graphtype'], false, 'graphtype').
+			url_param('parent_discoveryid').
+			($this->data['normal_only'] ? '&normal_only=1' : '').
+			'&srctbl=prototypes&srcfld1=itemid&srcfld2=name&numeric=1", 800, 600);',
+		'link_menu'
+	);
+}
+$itemsTable->addRow(new CRow(
+	new CCol(array($addButton, SPACE, SPACE, SPACE, $addPrototypeButton), null, 8),
+	null,
+	'itemButtonsRow'
+));
+
+foreach ($this->data['items'] as $n => $item) {
+	$name = $item['host'].NAME_DELIMITER.$item['name_expanded'];
+
+	if (zbx_empty($item['drawtype'])) {
+		$item['drawtype'] = 0;
+	}
+
+	if (zbx_empty($item['yaxisside'])) {
+		$item['yaxisside'] = 0;
+	}
+
+	insert_js('loadItem('.$n.', '.CJs::encodeJson($item['gitemid']).', '.$this->data['graphid'].', '.$item['itemid'].', '.
+		CJs::encodeJson($name).', '.$item['type'].', '.$item['calc_fnc'].', '.$item['drawtype'].', '.
+		$item['yaxisside'].', \''.$item['color'].'\', '.$item['flags'].');',
+		true
+	);
+}
+
 $graphFormList->addRow(_('Items'), new CDiv($itemsTable, 'objectgroup inlineblock border_dotted ui-corner-all'));
 
 // append tabs to form
@@ -291,7 +289,7 @@ $graphTab->addTab(
 $chartImage = new CImg('chart3.php?period=3600');
 $chartImage->preload();
 
-$graphPreviewTable = new CTable(null, 'graph');
+$graphPreviewTable = new CTable(null, 'center maxwidth');
 $graphPreviewTable->addRow(new CDiv($chartImage, null, 'previewChar'));
 $graphTab->addTab('previewTab', _('Preview'), $graphPreviewTable);
 $graphForm->addItem($graphTab);

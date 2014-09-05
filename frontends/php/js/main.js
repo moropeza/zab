@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -832,7 +832,7 @@ var hintBox = {
 			target.clientY = e.clientY;
 		}
 
-		// doesn't fit in the screen horizontaly
+		// doesn't fit in the screen horizontally
 		if (target.hintBoxItem.width() + 10 > wWidth) {
 			left = scrollLeft + 2;
 		}
@@ -858,7 +858,7 @@ var hintBox = {
 			top = scrollTop + target.clientY + 10;
 		}
 
-		// fallback if doesnt't fit verticaly but could fit if aligned to right or left
+		// fallback if doesn't fit verticaly but could fit if aligned to right or left
 		if ((top - scrollTop + target.hintBoxItem.height() > wHeight)
 				&& (target.clientX - 10 > target.hintBoxItem.width() || wWidth - target.clientX - 10 > target.hintBoxItem.width())) {
 
@@ -1140,19 +1140,34 @@ function switch_mute(icon) {
 function createPlaceholders() {
 	if (IE) {
 		jQuery(document).ready(function() {
-			jQuery('[placeholder]').focus(function() {
-				var obj = jQuery(this);
-				if (obj.val() == obj.attr('placeholder')) {
-					obj.val('');
-					obj.removeClass('placeholder');
-				}
-			}).blur(function() {
-				var obj = jQuery(this);
-				if (obj.val() == '' || obj.val() == obj.attr('placeholder')) {
-					obj.val(obj.attr('placeholder'));
-					obj.addClass('placeholder');
-				}
-			}).blur();
+			jQuery('[placeholder]')
+				.focus(function() {
+					var obj = jQuery(this);
+
+					if (obj.val() == obj.attr('placeholder')) {
+						obj.val('');
+						obj.removeClass('placeholder');
+					}
+				})
+				.blur(function() {
+					var obj = jQuery(this);
+
+					if (obj.val() == '' || obj.val() == obj.attr('placeholder')) {
+						obj.val(obj.attr('placeholder'));
+						obj.addClass('placeholder');
+					}
+				})
+				.blur();
+
+			jQuery('form').submit(function() {
+				jQuery('.placeholder').each(function() {
+					var obj = jQuery(this);
+
+					if (obj.val() == obj.attr('placeholder')) {
+						obj.val('');
+					}
+				});
+			});
 		});
 	}
 }

@@ -1379,7 +1379,7 @@ CREATE TABLE dbversion (
 	mandatory                number(10)      DEFAULT '0'               NOT NULL,
 	optional                 number(10)      DEFAULT '0'               NOT NULL
 );
-INSERT INTO dbversion VALUES ('2020000','2020000');
+INSERT INTO dbversion VALUES ('2020000','2020001');
 CREATE SEQUENCE history_sync_seq
 START WITH 1
 INCREMENT BY 1

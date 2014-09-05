@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -19,24 +19,32 @@
 **/
 
 
-$pageHeader = new CPageHeader('Warning [refreshed every 30 sec]');
+$pageHeader = new CPageHeader(_('Warning').' ['._s('refreshed every %1$s sec.', 30).']');
 $pageHeader->addCssInit();
 $pageHeader->display();
+
 ?>
 <body>
 <?php
+
 // check if a CWarning object is passed
-if(!$warning = $this->get('warning')) {
+if (!$warning = $this->get('warning')) {
+	$message = $this->get('message');
+
+	if (is_array($message) && isset($message['header'])) {
+		$message = array(bold($message['header']), BR(), $message['text']);
+	}
+
 	// if not - render a standard warning with a message
-	$warning = new CWarning('Zabbix '.ZABBIX_VERSION, $this->get('message'));
-	$warning->setButtons(array(
-		new CButton('login', _('Retry'), 'document.location.reload();', 'formlist'),
-	));
+	$warning = new CWarning('Zabbix '.ZABBIX_VERSION, $message);
+	$warning->setButtons(array(new CButton('login', _('Retry'), 'document.location.reload();', 'formlist')));
 }
+
 $warning->show();
+
 ?>
-<script>
-	setTimeout("document.location.reload();", 30000);
+<script type="text/javascript">
+	setTimeout('document.location.reload();', 30000);
 </script>
 
 </body>

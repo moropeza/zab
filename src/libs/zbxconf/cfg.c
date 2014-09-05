@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2013 Zabbix SIA
+** Copyright (C) 2001-2014 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -36,12 +36,12 @@ static int	parse_cfg_object(const char *cfg_file, struct cfg_line *cfg, int leve
 	return __parse_cfg_file(cfg_file, cfg, level, ZBX_CFG_FILE_REQUIRED, strict);
 #else
 	DIR		*dir;
-	struct stat	sb;
+	zbx_stat_t	sb;
 	struct dirent	*d;
 	char		*incl_file = NULL;
 	int		result = SUCCEED;
 
-	if (-1 == stat(cfg_file, &sb))
+	if (-1 == zbx_stat(cfg_file, &sb))
 	{
 		zbx_error("%s: %s\n", cfg_file, zbx_strerror(errno));
 		return FAIL;
@@ -60,7 +60,7 @@ static int	parse_cfg_object(const char *cfg_file, struct cfg_line *cfg, int leve
 	{
 		incl_file = zbx_dsprintf(incl_file, "%s/%s", cfg_file, d->d_name);
 
-		if (-1 == stat(incl_file, &sb) || !S_ISREG(sb.st_mode))
+		if (-1 == zbx_stat(incl_file, &sb) || !S_ISREG(sb.st_mode))
 			continue;
 
 		if (FAIL == __parse_cfg_file(incl_file, cfg, level, ZBX_CFG_FILE_REQUIRED, strict))
@@ -175,10 +175,6 @@ static int	__parse_cfg_file(const char *cfg_file, struct cfg_line *cfg, int leve
 					case TYPE_INT:
 						if (FAIL == str2uint64(value, "KMGT", &var))
 							goto incorrect_config;
-
-						/* usability: 2G converts to 0x7fffffff (2GB - 1 byte) */
-						if ((zbx_uint64_t)2 * ZBX_GIBIBYTE == var)
-							var--;
 
 						if (cfg[i].min > var || (0 != cfg[i].max && var > cfg[i].max))
 							goto incorrect_config;
