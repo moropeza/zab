@@ -25,8 +25,8 @@ require_once dirname(__FILE__).'/items.inc.php';
 function httptest_authentications($type = null) {
 	$authentication_types = array(
 		HTTPTEST_AUTH_NONE => _('None'),
-		HTTPTEST_AUTH_BASIC => _('Basic authentication'),
-		HTTPTEST_AUTH_NTLM => _('NTLM authentication')
+		HTTPTEST_AUTH_BASIC => _('Basic'),
+		HTTPTEST_AUTH_NTLM => _('NTLM')
 	);
 
 	if (is_null($type)) {
@@ -71,18 +71,33 @@ function httptest_status2style($status) {
 	}
 }
 
-function delete_history_by_httptestid($httptestid) {
-	$db_items = DBselect(
-		'SELECT DISTINCT i.itemid'.
-		' FROM items i,httpstepitem si,httpstep s'.
-		' WHERE i.itemid=si.itemid'.
-			' AND si.httpstepid=s.httpstepid'.
-			' AND s.httptestid='.zbx_dbstr($httptestid)
+/**
+ * Delete web scenario item and web scenario step item history and trends by given web scenario IDs.
+ *
+ * @param array $httpTestIds
+ *
+ * @return bool
+ */
+function deleteHistoryByHttpTestIds(array $httpTestIds) {
+	$itemIds = array();
+
+	$dbItems = DBselect(
+		'SELECT hti.itemid'.
+		' FROM httptestitem hti'.
+		' WHERE '.dbConditionInt('httptestid', $httpTestIds).
+		' UNION ALL '.
+		'SELECT hsi.itemid'.
+		' FROM httpstep hs,httpstepitem hsi'.
+		' WHERE hs.httpstepid=hsi.httpstepid'.
+			' AND '.dbConditionInt('httptestid', $httpTestIds)
 	);
-	while ($item_data = DBfetch($db_items)) {
-		if (!delete_history_by_itemid($item_data['itemid'])) {
-			return false;
-		}
+
+	while ($dbItem = DBfetch($dbItems)) {
+		$itemIds[] = $dbItem['itemid'];
+	}
+
+	if ($itemIds) {
+		return deleteHistoryByItemIds($itemIds);
 	}
 
 	return true;
@@ -205,10 +220,13 @@ function resolveHttpTestMacros(array $httpTests, $resolveName = true, $resolveSt
 function copyHttpTests($srcHostId, $dstHostId) {
 	$httpTests = API::HttpTest()->get(array(
 		'output' => array('name', 'applicationid', 'delay', 'status', 'variables', 'agent', 'authentication',
-			'http_user', 'http_password', 'http_proxy', 'retries'
+			'http_user', 'http_password', 'http_proxy', 'retries', 'ssl_cert_file', 'ssl_key_file',
+			'ssl_key_password', 'verify_peer', 'verify_host', 'headers'
 		),
 		'hostids' => $srcHostId,
-		'selectSteps' => array('name', 'no', 'url', 'timeout', 'posts', 'required', 'status_codes', 'variables'),
+		'selectSteps' => array('name', 'no', 'url', 'timeout', 'posts', 'required', 'status_codes', 'variables',
+			'follow_redirects', 'retrieve_mode', 'headers'
+		),
 		'inherited' => false
 	));
 

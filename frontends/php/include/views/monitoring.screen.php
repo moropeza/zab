@@ -72,7 +72,7 @@ else {
 	$elementsComboBox = new CComboBox('elementid', $screen['screenid'], 'submit()');
 	foreach ($this->data['screens'] as $dbScreen) {
 		$elementsComboBox->addItem($dbScreen['screenid'],
-			htmlspecialchars(get_node_name_by_elid($dbScreen['screenid'], null, NAME_DELIMITER).$dbScreen['name']));
+			htmlspecialchars($dbScreen['name']));
 	}
 	$headerForm->addItem(array(_('Screens').SPACE, $elementsComboBox));
 
@@ -85,16 +85,16 @@ else {
 			'hosts' => array(
 				'monitored_hosts' => true,
 				'with_items' => true,
-				'DDFirstLabel' => _('Default')
+				'DDFirstLabel' => _('not selected')
 			),
-			'hostid' => get_request('hostid', null),
-			'groupid' => get_request('groupid', null)
+			'hostid' => getRequest('hostid'),
+			'groupid' => getRequest('groupid')
 		));
 		$_REQUEST['groupid'] = $pageFilter->groupid;
 		$_REQUEST['hostid'] = $pageFilter->hostid;
 
-		$headerForm->addItem(array(SPACE, _('Group'), SPACE, $pageFilter->getGroupsCB(true)));
-		$headerForm->addItem(array(SPACE, _('Host'), SPACE, $pageFilter->getHostsCB(true)));
+		$headerForm->addItem(array(SPACE, _('Group'), SPACE, $pageFilter->getGroupsCB()));
+		$headerForm->addItem(array(SPACE, _('Host'), SPACE, $pageFilter->getHostsCB()));
 	}
 
 	$screenWidget->addHeader($screen['name'], $headerForm);
@@ -105,8 +105,8 @@ else {
 		'mode' => SCREEN_MODE_PREVIEW,
 		'profileIdx' => 'web.screens',
 		'profileIdx2' => $screen['screenid'],
-		'groupid' => get_request('groupid'),
-		'hostid' => get_request('hostid'),
+		'groupid' => getRequest('groupid'),
+		'hostid' => getRequest('hostid'),
 		'period' => $this->data['period'],
 		'stime' => $this->data['stime']
 	));

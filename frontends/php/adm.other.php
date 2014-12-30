@@ -29,12 +29,13 @@ require_once dirname(__FILE__).'/include/page_header.php';
 
 // VAR	TYPE	OPTIONAL	FLAGS	VALIDATION	EXCEPTION
 $fields = array(
-	'refresh_unsupported' => array(T_ZBX_INT, O_NO,	null, BETWEEN(0, 65535), 'isset({save})',
+	'refresh_unsupported' => array(T_ZBX_INT, O_NO,	null, BETWEEN(0, 65535), 'isset({update})',
 		_('Refresh unsupported items (in sec)')),
-	'alert_usrgrpid' =>			array(T_ZBX_INT, O_NO,	null,		DB_ID,				'isset({save})'),
-	'discovery_groupid' =>		array(T_ZBX_INT, O_NO,	null,		DB_ID,				'isset({save})'),
+	'alert_usrgrpid' =>			array(T_ZBX_INT, O_NO,	null,		DB_ID,				'isset({update})'),
+	'discovery_groupid' =>		array(T_ZBX_INT, O_NO,	null,		DB_ID,				'isset({update})'),
 	'snmptrap_logging' =>		array(T_ZBX_INT, O_OPT,	null,		IN('1'),			null),
-	'save' =>					array(T_ZBX_STR, O_OPT,	P_SYS|P_ACT, null,				null),
+	// actions
+	'update' =>					array(T_ZBX_STR, O_OPT,	P_SYS|P_ACT, null,				null),
 	'form_refresh' =>			array(T_ZBX_INT, O_OPT,	null,		null,				null)
 );
 check_fields($fields);
@@ -42,29 +43,27 @@ check_fields($fields);
 /*
  * Actions
  */
-if (isset($_REQUEST['save'])) {
+if (hasRequest('update')) {
 	DBstart();
 
 	$orig_config = select_config(false);
 
 	$configs = array(
-		'refresh_unsupported' => get_request('refresh_unsupported'),
-		'alert_usrgrpid' => get_request('alert_usrgrpid'),
-		'discovery_groupid' => get_request('discovery_groupid'),
-		'snmptrap_logging' => get_request('snmptrap_logging') ? 1 : 0
+		'refresh_unsupported' => getRequest('refresh_unsupported'),
+		'alert_usrgrpid' => getRequest('alert_usrgrpid'),
+		'discovery_groupid' => getRequest('discovery_groupid'),
+		'snmptrap_logging' => getRequest('snmptrap_logging') ? 1 : 0
 	);
 	$result = update_config($configs);
 
-	show_messages($result, _('Configuration updated'), _('Cannot update configuration'));
-
 	if ($result) {
 		$audit = array(
-			_s('Refresh unsupported items (in sec) "%1$s".', get_request('refresh_unsupported'))
+			_s('Refresh unsupported items (in sec) "%1$s".', getRequest('refresh_unsupported'))
 		);
 
 		if (hasRequest('discovery_groupid')) {
 			$hostGroup = API::HostGroup()->get(array(
-				'groupids' => get_request('discovery_groupid'),
+				'groupids' => getRequest('discovery_groupid'),
 				'editable' => true,
 				'output' => array('groupid', 'name')
 			));
@@ -81,7 +80,7 @@ if (isset($_REQUEST['save'])) {
 		}
 
 		if (hasRequest('alert_usrgrpid')) {
-			$userGroupId = get_request('alert_usrgrpid');
+			$userGroupId = getRequest('alert_usrgrpid');
 
 			if ($userGroupId) {
 				$userGroupName = DBfetch(DBselect('SELECT u.name FROM usrgrp u WHERE u.usrgrpid='.zbx_dbstr($userGroupId)));
@@ -97,7 +96,8 @@ if (isset($_REQUEST['save'])) {
 		add_audit(AUDIT_ACTION_UPDATE, AUDIT_RESOURCE_ZABBIX_CONFIG, implode('; ', $audit));
 	}
 
-	DBend($result);
+	$result = DBend($result);
+	show_messages($result, _('Configuration updated'), _('Cannot update configuration'));
 }
 
 /*
@@ -125,13 +125,12 @@ $cnf_wdgt = new CWidget();
 $cnf_wdgt->addPageHeader(_('OTHER CONFIGURATION PARAMETERS'), $form);
 
 $data = array();
-$data['form_refresh'] = get_request('form_refresh', 0);
 
-if ($data['form_refresh']) {
-	$data['config']['discovery_groupid'] = get_request('discovery_groupid');
-	$data['config']['alert_usrgrpid'] = get_request('alert_usrgrpid');
-	$data['config']['refresh_unsupported'] = get_request('refresh_unsupported');
-	$data['config']['snmptrap_logging'] = get_request('snmptrap_logging');
+if (hasRequest('form_refresh')) {
+	$data['config']['discovery_groupid'] = getRequest('discovery_groupid');
+	$data['config']['alert_usrgrpid'] = getRequest('alert_usrgrpid');
+	$data['config']['refresh_unsupported'] = getRequest('refresh_unsupported');
+	$data['config']['snmptrap_logging'] = getRequest('snmptrap_logging');
 }
 else {
 	$data['config'] = select_config(false);
@@ -145,10 +144,9 @@ $data['discovery_groups'] = API::HostGroup()->get(array(
 order_result($data['discovery_groups'], 'name');
 
 $data['alert_usrgrps'] = DBfetchArray(DBselect(
-	'SELECT u.usrgrpid,u.name'.
-	' FROM usrgrp u'.
-	whereDbNode('u.usrgrpid')
+	'SELECT u.usrgrpid,u.name FROM usrgrp u'
 ));
+
 order_result($data['alert_usrgrps'], 'name');
 
 $otherForm = new CView('administration.general.other.edit', $data);

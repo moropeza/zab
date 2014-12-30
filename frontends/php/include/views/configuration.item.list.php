@@ -55,22 +55,23 @@ if (!empty($this->data['hostid'])) {
 }
 
 // create table
-$itemTable = new CTableInfo(_('No items found.'));
+$itemTable = new CTableInfo(
+	($this->data['filterSet']) ? _('No items found.') : _('Specify some filter condition to see the items.')
+);
 $itemTable->setHeader(array(
 	new CCheckBox('all_items', null, "checkAll('".$itemForm->getName()."', 'all_items', 'group_itemid');"),
-	$this->data['displayNodes'] ? _('Node') : null,
 	_('Wizard'),
 	empty($this->data['filter_hostid']) ? _('Host') : null,
-	make_sorting_header(_('Name'), 'name'),
+	make_sorting_header(_('Name'), 'name', $this->data['sort'], $this->data['sortorder']),
 	_('Triggers'),
-	make_sorting_header(_('Key'), 'key_'),
-	make_sorting_header(_('Interval'), 'delay'),
-	make_sorting_header(_('History'), 'history'),
-	make_sorting_header(_('Trends'), 'trends'),
-	make_sorting_header(_('Type'), 'type'),
+	make_sorting_header(_('Key'), 'key_', $this->data['sort'], $this->data['sortorder']),
+	make_sorting_header(_('Interval'), 'delay', $this->data['sort'], $this->data['sortorder']),
+	make_sorting_header(_('History'), 'history', $this->data['sort'], $this->data['sortorder']),
+	make_sorting_header(_('Trends'), 'trends', $this->data['sort'], $this->data['sortorder']),
+	make_sorting_header(_('Type'), 'type', $this->data['sort'], $this->data['sortorder']),
 	_('Applications'),
-	make_sorting_header(_('Status'), 'status'),
-	$data['showErrorColumn'] ? _('Error') : null
+	make_sorting_header(_('Status'), 'status', $this->data['sort'], $this->data['sortorder']),
+	$data['showInfoColumn'] ? _('Info') : null
 ));
 
 foreach ($this->data['items'] as $item) {
@@ -103,35 +104,45 @@ foreach ($this->data['items'] as $item) {
 	// status
 	$status = new CCol(new CLink(
 		itemIndicator($item['status'], $item['state']),
-		'?group_itemid='.$item['itemid'].'&hostid='.$item['hostid'].'&go='.($item['status'] ? 'activate' : 'disable'),
+		'?group_itemid='.$item['itemid'].
+			'&hostid='.$item['hostid'].
+			'&action='.($item['status'] == ITEM_STATUS_DISABLED ? 'item.massenable' : 'item.massdisable'),
 		itemIndicatorStyle($item['status'], $item['state'])
 	));
 
-	if ($data['showErrorColumn']) {
-		$statusIcons = array();
-		if ($item['status'] == ITEM_STATUS_ACTIVE) {
-			if (zbx_empty($item['error'])) {
-				$error = new CDiv(SPACE, 'status_icon iconok');
-			}
-			else {
-				$error = new CDiv(SPACE, 'status_icon iconerror');
-				$error->setHint($item['error'], '', 'on');
-			}
-			$statusIcons[] = $error;
+	// info
+	if ($data['showInfoColumn']) {
+		$infoIcons = array();
+
+		if ($item['status'] == ITEM_STATUS_ACTIVE && !zbx_empty($item['error'])) {
+			$info = new CDiv(SPACE, 'status_icon iconerror');
+			$info->setHint($item['error'], 'on');
+
+			$infoIcons[] = $info;
 		}
 
 		// discovered item lifetime indicator
 		if ($item['flags'] == ZBX_FLAG_DISCOVERY_CREATED && $item['itemDiscovery']['ts_delete']) {
 			$deleteError = new CDiv(SPACE, 'status_icon iconwarning');
-			$deleteError->setHint(
-				_s('The item is not discovered anymore and will be deleted in %1$s (on %2$s at %3$s).',
-					zbx_date2age($item['itemDiscovery']['ts_delete']), zbx_date2str(_('d M Y'), $item['itemDiscovery']['ts_delete']),
-					zbx_date2str(_('H:i:s'), $item['itemDiscovery']['ts_delete'])
+			$deleteError->setHint(_s(
+				'The item is not discovered anymore and will be deleted in %1$s (on %2$s at %3$s).',
+				zbx_date2age($item['itemDiscovery']['ts_delete']),
+				zbx_date2str(DATE_FORMAT, $item['itemDiscovery']['ts_delete']),
+				zbx_date2str(TIME_FORMAT, $item['itemDiscovery']['ts_delete'])
 			));
-			$statusIcons[] = $deleteError;
+
+			$infoIcons[] = $deleteError;
+		}
+
+		if (!$infoIcons) {
+			$infoIcons[] = '';
 		}
 	}
+	else {
+		$infoIcons = null;
+	}
 
+	// triggers info
 	$triggerHintTable = new CTableInfo();
 	$triggerHintTable->setHeader(array(
 		_('Severity'),
@@ -140,7 +151,6 @@ foreach ($this->data['items'] as $item) {
 		_('Status')
 	));
 
-	// triggers info
 	foreach ($item['triggers'] as $num => &$trigger) {
 		$trigger = $this->data['itemTriggers'][$trigger['triggerid']];
 		$triggerDescription = array();
@@ -207,8 +217,7 @@ foreach ($this->data['items'] as $item) {
 
 	// if item type is 'Log' we must show log menu
 	if (in_array($item['value_type'], array(ITEM_VALUE_TYPE_LOG, ITEM_VALUE_TYPE_STR, ITEM_VALUE_TYPE_TEXT))) {
-		$triggersFlag = false;
-		$triggers = 'Array("'._('Edit trigger').'", null, null, {"outer" : "pum_o_submenu", "inner" : ["pum_i_submenu"]}'."\n";
+		$triggers = array();
 
 		foreach ($item['triggers'] as $trigger) {
 			foreach ($trigger['functions'] as $function) {
@@ -217,31 +226,14 @@ foreach ($this->data['items'] as $item) {
 				}
 			}
 
-			$triggers .= ', ["'.$trigger['description'].'",'.
-				zbx_jsvalue("javascript: openWinCentered('tr_logform.php?sform=1&itemid=".$item['itemid'].
-					"&triggerid=".$trigger['triggerid'].
-					"','TriggerLog', 760, 540,".
-					"'titlebar=no, resizable=yes, scrollbars=yes');").']';
-			$triggersFlag = true;
+			$triggers[] = array(
+				'id' => $trigger['triggerid'],
+				'name' => $trigger['description']
+			);
 		}
 
-		if ($triggersFlag) {
-			$triggers = rtrim($triggers, ',').')';
-		}
-		else {
-			$triggers = 'Array()';
-		}
-
-		$menuIcon = new CIcon(
-			_('Menu'),
-			'iconmenu_b',
-			'call_triggerlog_menu('.
-				'event, '.
-				CJs::encodeJson($item['itemid']).', '.
-				CJs::encodeJson(CHtml::encode($item['name'])).', '.
-				$triggers.
-			');'
-		);
+		$menuIcon = new CIcon(_('Menu'), 'iconmenu_b');
+		$menuIcon->setMenuPopup(CMenuPopupHelper::getTriggerLog($item['itemid'], $item['name'], $triggers));
 	}
 	else {
 		$menuIcon = SPACE;
@@ -252,7 +244,6 @@ foreach ($this->data['items'] as $item) {
 
 	$itemTable->addRow(array(
 		$checkBox,
-		$this->data['displayNodes'] ? $item['nodename'] : null,
 		$menuIcon,
 		empty($this->data['filter_hostid']) ? $item['host'] : null,
 		$description,
@@ -264,31 +255,32 @@ foreach ($this->data['items'] as $item) {
 		item_type2str($item['type']),
 		new CCol(CHtml::encode($item['applications_list']), 'wraptext'),
 		$status,
-		$data['showErrorColumn'] ? $statusIcons : null
+		$infoIcons
 	));
 }
 
 // create go buttons
-$goComboBox = new CComboBox('go');
-$goOption = new CComboItem('activate', _('Enable selected'));
+$goComboBox = new CComboBox('action');
+
+$goOption = new CComboItem('item.massenable', _('Enable selected'));
 $goOption->setAttribute('confirm', _('Enable selected items?'));
 $goComboBox->addItem($goOption);
 
-$goOption = new CComboItem('disable', _('Disable selected'));
+$goOption = new CComboItem('item.massdisable', _('Disable selected'));
 $goOption->setAttribute('confirm', _('Disable selected items?'));
 $goComboBox->addItem($goOption);
 
-$goOption = new CComboItem('massupdate', _('Mass update'));
+$goOption = new CComboItem('item.massupdateform', _('Mass update'));
 $goComboBox->addItem($goOption);
 
-$goOption = new CComboItem('copy_to', _('Copy selected to ...'));
+$goOption = new CComboItem('item.masscopyto', _('Copy selected to ...'));
 $goComboBox->addItem($goOption);
 
-$goOption = new CComboItem('clean_history', _('Clear history for selected'));
+$goOption = new CComboItem('item.massclearhistory', _('Clear history for selected'));
 $goOption->setAttribute('confirm', _('Delete history of selected items?'));
 $goComboBox->addItem($goOption);
 
-$goOption = new CComboItem('delete', _('Delete selected'));
+$goOption = new CComboItem('item.massdelete', _('Delete selected'));
 $goOption->setAttribute('confirm', _('Delete selected items?'));
 $goComboBox->addItem($goOption);
 

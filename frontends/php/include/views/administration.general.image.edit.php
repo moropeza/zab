@@ -22,22 +22,20 @@
 $imageForm = new CForm('post', null, 'multipart/form-data');
 $imageForm->setName('imageForm');
 $imageForm->addVar('form', $this->data['form']);
-$imageForm->addVar('imageid', $this->data['imageid']);
-
-$imageComboBox = new CComboBox('imagetype', $this->data['imagetype']);
-$imageComboBox->addItem(IMAGE_TYPE_ICON, _('Icon'));
-$imageComboBox->addItem(IMAGE_TYPE_BACKGROUND, _('Background'));
+if (isset($this->data['imageid'])) {
+	$imageForm->addVar('imageid', $this->data['imageid']);
+}
+$imageForm->addVar('imagetype', $this->data['imagetype']);
 
 // append form list
 $imageFormList = new CFormList('imageFormList');
-$nameTextBox = new CTextBox('name', $this->data['imagename'], 64, 'no', 64);
+$nameTextBox = new CTextBox('name', $this->data['imagename'], 64, false, 64);
 $nameTextBox->attr('autofocus', 'autofocus');
 $imageFormList->addRow(_('Name'), $nameTextBox);
-$imageFormList->addRow(_('Type'), $imageComboBox);
 $imageFormList->addRow(_('Upload'), new CFile('image'));
 
-if (!empty($this->data['imageid'])) {
-	if ($data['imagetype'] == IMAGE_TYPE_BACKGROUND) {
+if (isset($this->data['imageid'])) {
+	if ($this->data['imagetype'] == IMAGE_TYPE_BACKGROUND) {
 		$imageFormList->addRow(_('Image'), new CLink(new CImg('imgstore.php?width=200&height=200&iconid='.$this->data['imageid'], 'no image'), 'image.php?imageid='.$this->data['imageid']));
 	}
 	else {
@@ -47,20 +45,23 @@ if (!empty($this->data['imageid'])) {
 
 // append tab
 $imageTab = new CTabView();
-$imageTab->addTab('imageTab', _('Image'), $imageFormList);
+$imageTab->addTab('imageTab', ($this->data['imagetype'] == IMAGE_TYPE_ICON) ? _('Icon') : _('Background'), $imageFormList);
 $imageForm->addItem($imageTab);
 
 // append buttons
-if (empty($this->data['imageid'])) {
-	$imageForm->addItem(makeFormFooter(new CSubmit('save', _('Save')), new CButtonCancel()));
-}
-else {
+if (isset($this->data['imageid'])) {
 	$imageForm->addItem(makeFormFooter(
-		new CSubmit('save', _('Save')),
+		new CSubmit('update', _('Update')),
 		array(
 			new CButtonDelete(_('Delete selected image?'), url_param('form').url_param('imageid')),
 			new CButtonCancel()
 		)
+	));
+}
+else {
+	$imageForm->addItem(makeFormFooter(
+		new CSubmit('add', _('Add')),
+		new CButtonCancel()
 	));
 }
 

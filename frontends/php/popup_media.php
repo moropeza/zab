@@ -50,7 +50,7 @@ $fields = array(
 	'add'=>			array(T_ZBX_STR, O_OPT, P_SYS|P_ACT,	NULL,	NULL),
 /* other */
 	'form'=>		array(T_ZBX_STR, O_OPT, P_SYS,	NULL,	NULL),
-	'form_refresh'=>array(T_ZBX_STR, O_OPT, NULL,	NULL,	NULL)
+	'form_refresh'=>array(T_ZBX_INT, O_OPT, null,	null,	null)
 );
 
 check_fields($fields);
@@ -61,7 +61,7 @@ if (isset($_REQUEST['add'])) {
 	$validator = new CTimePeriodValidator();
 	if ($validator->validate($_REQUEST['period'])) {
 		$severity = 0;
-		$_REQUEST['severity'] = get_request('severity', array());
+		$_REQUEST['severity'] = getRequest('severity', array());
 		foreach ($_REQUEST['severity'] as $id) {
 			$severity |= 1 << $id;
 		}
@@ -82,7 +82,7 @@ if (isset($_REQUEST['add'])) {
 }
 
 if (isset($_REQUEST['media']) && !isset($_REQUEST['form_refresh'])) {
-	$rq_severity = get_request('severity', 63);
+	$rq_severity = getRequest('severity', 63);
 
 	$severity = array();
 	for ($i = 0; $i < TRIGGER_SEVERITY_COUNT; $i++) {
@@ -92,14 +92,14 @@ if (isset($_REQUEST['media']) && !isset($_REQUEST['form_refresh'])) {
 	}
 }
 else {
-	$severity = get_request('severity', array(0, 1, 2, 3, 4, 5));
+	$severity = getRequest('severity', array(0, 1, 2, 3, 4, 5));
 }
 
-$media = get_request('media', -1);
-$sendto = get_request('sendto', '');
-$mediatypeid = get_request('mediatypeid', 0);
-$active = get_request('active', 0);
-$period = get_request('period', ZBX_DEFAULT_INTERVAL);
+$media = getRequest('media', -1);
+$sendto = getRequest('sendto', '');
+$mediatypeid = getRequest('mediatypeid', 0);
+$active = getRequest('active', 0);
+$period = getRequest('period', ZBX_DEFAULT_INTERVAL);
 
 
 $frmMedia = new CFormTable(_('New media'));
@@ -107,16 +107,12 @@ $frmMedia->addVar('media', $media);
 $frmMedia->addVar('dstfrm', $_REQUEST['dstfrm']);
 
 $cmbType = new CComboBox('mediatypeid', $mediatypeid);
-$types = DBfetchArrayAssoc(DBselect(
-	'SELECT mt.mediatypeid,mt.description'.
-	' FROM media_type mt'.
-	whereDbNode('mt.mediatypeid')
-), 'mediatypeid');
+
+$types = DBfetchArrayAssoc(DBselect('SELECT mt.mediatypeid,mt.description FROM media_type mt'), 'mediatypeid');
 CArrayHelper::sort($types, array('description'));
+
 foreach ($types as $mediaTypeId => $type) {
-	$cmbType->addItem($mediaTypeId,
-		get_node_name_by_elid($type['mediatypeid'], null, NAME_DELIMITER).$type['description']
-	);
+	$cmbType->addItem($mediaTypeId, $type['description']);
 }
 $frmMedia->addRow(_('Type'), $cmbType);
 $frmMedia->addRow(_('Send to'), new CTextBox('sendto', $sendto, 48));
@@ -138,7 +134,7 @@ $cmbStat->addItem(1, _('Disabled'));
 $frmMedia->addRow(_('Status'), $cmbStat);
 
 $frmMedia->addItemToBottomRow(array(
-	new CSubmit('add', ($media > -1) ? _('Save') : _('Add')),
+	new CSubmit('add', ($media > -1) ? _('Update') : _('Add')),
 	new CButtonCancel(null, 'close_window();')
 ));
 $frmMedia->Show();

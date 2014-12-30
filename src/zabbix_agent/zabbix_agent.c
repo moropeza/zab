@@ -34,12 +34,16 @@ const char	title_message[] = "Zabbix agent";
 const char	syslog_app_name[] = "zabbix_agent";
 const char	usage_message[] = "[-Vhp] [-c <file>] [-t <item>]";
 
+unsigned char process_type	= 255;	/* ZBX_PROCESS_TYPE_UNKNOWN */
+int process_num;
+int server_num			= 0;
+
 const char	*help_message[] = {
 	"Options:",
 	"  -c --config <file>  Absolute path to the configuration file",
 	"  -p --print          Print known items and exit",
 	"  -t --test <item>    Test specified item and exit",
-	"  -h --help           Give this help",
+	"  -h --help           Display help information",
 	"  -V --version        Display version number",
 	NULL	/* end of text */
 };
@@ -117,7 +121,7 @@ static void	zbx_load_config(int optional)
  * Comments:                                                                  *
  *                                                                            *
  ******************************************************************************/
-static void	zbx_free_config()
+static void	zbx_free_config(void)
 {
 	zbx_strarr_free(CONFIG_ALIASES);
 	zbx_strarr_free(CONFIG_LOAD_MODULE);
@@ -133,7 +137,7 @@ int	main(int argc, char **argv)
 	zbx_sock_t	s_out;
 
 	int		ret;
-	char		**value, *command;
+	char		**value;
 
 	AGENT_RESULT	result;
 
@@ -149,14 +153,14 @@ int	main(int argc, char **argv)
 				break;
 			case 'h':
 				help();
-				exit(FAIL);
+				exit(EXIT_SUCCESS);
 				break;
 			case 'V':
 				version();
 #ifdef _AIX
 				tl_version();
 #endif
-				exit(FAIL);
+				exit(EXIT_SUCCESS);
 				break;
 			case 'p':
 				if (task == ZBX_TASK_START)
@@ -171,7 +175,7 @@ int	main(int argc, char **argv)
 				break;
 			default:
 				usage();
-				exit(FAIL);
+				exit(EXIT_FAILURE);
 				break;
 		}
 	}
@@ -235,15 +239,15 @@ int	main(int argc, char **argv)
 
 	if (SUCCEED == (ret = zbx_tcp_check_security(&s_in, CONFIG_HOSTS_ALLOWED, 0)))
 	{
-		if (SUCCEED == (ret = zbx_tcp_recv(&s_in, &command)))
+		if (SUCCEED == (ret = zbx_tcp_recv(&s_in)))
 		{
-			zbx_rtrim(command, "\r\n");
+			zbx_rtrim(s_in.buffer, "\r\n");
 
-			zabbix_log(LOG_LEVEL_DEBUG, "requested [%s]", command);
+			zabbix_log(LOG_LEVEL_DEBUG, "requested [%s]", s_in.buffer);
 
 			init_result(&result);
 
-			process(command, 0, &result);
+			process(s_in.buffer, 0, &result);
 
 			if (NULL == (value = GET_TEXT_RESULT(&result)))
 				value = GET_MSG_RESULT(&result);
@@ -271,7 +275,7 @@ int	main(int argc, char **argv)
 	return SUCCEED;
 }
 
-void	zbx_on_exit()
+void	zbx_on_exit(void)
 {
 	unload_modules();
 	zabbix_close_log();
@@ -279,5 +283,5 @@ void	zbx_on_exit()
 	free_metrics();
 	alias_list_free();
 
-	exit(SUCCEED);
+	exit(EXIT_SUCCESS);
 }

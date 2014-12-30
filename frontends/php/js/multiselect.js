@@ -57,34 +57,120 @@ jQuery(function($) {
 		});
 	};
 
+	/*
+	 * Multiselect methods
+	 */
+	var methods = {
+		/**
+		 * Get multi select selected data.
+		 *
+		 * @return array    array of multiselect value objects
+		 */
+		getData: function() {
+			var ms = this.first().data('multiSelect');
+
+			var data = [];
+			for (var id in ms.values.selected) {
+				var item = ms.values.selected[id];
+
+				data[data.length] = {
+					id: id,
+					name: item.name,
+					prefix: item.prefix === 'undefined' ? '' : item.prefix
+				};
+			}
+
+			return data;
+		},
+
+		/**
+		 * Rezise multiselect selected text
+		 *
+		 * @return jQuery
+		 */
+		resize: function() {
+			return this.each(function() {
+				var obj = $(this);
+				var ms = $(this).data('multiSelect');
+
+				resizeAllSelectedTexts(obj, ms.options, ms.values);
+			});
+		},
+
+		/**
+		 * Insert outside data
+		 *
+		 * @param object    multiselect value object
+		 *
+		 * @return jQuery
+		 */
+		addData: function(item) {
+			return this.each(function() {
+				var obj = $(this);
+				var ms = $(this).data('multiSelect');
+
+				// clean input if selectedLimit = 1
+				if (ms.options.selectedLimit == 1) {
+					for (var id in ms.values.selected) {
+						removeSelected(id, obj, ms.values, ms.options);
+					}
+
+					cleanAvailable(item, ms.values);
+				}
+				addSelected(item, obj, ms.values, ms.options);
+			});
+		},
+
+		/**
+		 * Clean multi select object values.
+		 *
+		 * @return jQuery
+		 */
+		clean: function() {
+			return this.each(function() {
+				var obj = $(this);
+				var ms = $(this).data('multiSelect');
+
+				for (var id in ms.values.selected) {
+					removeSelected(id, obj, ms.values, ms.options);
+				}
+
+				cleanAvailable(obj, ms.values);
+			});
+		}
+	};
+
 	/**
 	 * Create multi select input element.
 	 *
-	 * @param string options['id']					multi select id in dom
 	 * @param string options['url']					backend url
 	 * @param string options['name']				input element name
-	 * @param object options['labels']				translated labels
-	 * @param object options['data']				preload data {id, name, prefix}
+	 * @param object options['labels']				translated labels (optional)
+	 * @param object options['data']				preload data {id, name, prefix} (optional)
 	 * @param string options['data'][id]
 	 * @param string options['data'][name]
-	 * @param string options['data'][prefix]
-	 * @param array  options['ignored']				preload ignored {id: name}
-	 * @param string options['defaultValue']		default value for input element
-	 * @param bool   options['disabled']			turn on/off readonly state
-	 * @param bool   options['addNew']				allow user to create new names
-	 * @param int    options['selectedLimit']		how many items can be selected
-	 * @param int    options['limit']				how many available items can be received from backend
-	 * @param object options['popup']				popup data {parameters, width, height, buttonClass}
+	 * @param string options['data'][prefix]		(optional)
+	 * @param array  options['ignored']				preload ignored {id: name} (optional)
+	 * @param string options['defaultValue']		default value for input element (optional)
+	 * @param bool   options['disabled']			turn on/off readonly state (optional)
+	 * @param bool   options['addNew']				allow user to create new names (optional)
+	 * @param int    options['selectedLimit']		how many items can be selected (optional)
+	 * @param int    options['limit']				how many available items can be received from backend (optional)
+	 * @param object options['popup']				popup data {parameters, width, height, buttonClass} (optional)
 	 * @param string options['popup']['parameters']
 	 * @param int    options['popup']['width']
 	 * @param int    options['popup']['height']
-	 * @param string options['popup']['buttonClass']
+	 * @param string options['popup']['buttonClass'](optional)
 	 *
 	 * @return object
 	 */
 	$.fn.multiSelect = function(options) {
+		// call a public method
+		if (methods[options]) {
+			return methods[options].apply(this, Array.prototype.slice.call(arguments, 1));
+		}
+
 		var defaults = {
-			id: '',
 			url: '',
 			name: '',
 			labels: {
@@ -118,107 +204,32 @@ jQuery(function($) {
 		};
 
 		return this.each(function() {
-			/**
-			 * Clean multi select object values.
-			 */
-			$.fn.multiSelect.clean = function(msId) {
-				var ms = window.multiSelect[msId];
+			var obj = $(this);
 
-				for (var id in ms.values.selected) {
-					removeSelected(id, ms.obj, ms.values, ms.options);
-				}
-
-				cleanAvailable(ms.obj, ms.values);
-			};
-
-			/**
-			 * Get multi select selected data.
-			 *
-			 * @return array
-			 */
-			$.fn.multiSelect.getData = function(msId) {
-				var ms = window.multiSelect[msId],
-					data = [];
-
-				for (var id in ms.values.selected) {
-					data[data.length] = {
-						id: id,
-						name: $('input[value="' + id + '"]', ms.obj).data('name'),
-						prefix: typeof $('input[value="' + id + '"]', ms.obj).data('prefix') === 'undefined'
-							? ''
-							: $('input[value="' + id + '"]', ms.obj).data('prefix')
-					};
-				}
-
-				return data;
-			};
-
-			/**
-			 * Insert outside data
-			 */
-			$.fn.multiSelect.addData = function(item, msId) {
-				var ms = window.multiSelect[msId];
-
-				// clean input if selectedLimit = 1
-				if (ms.options.selectedLimit == 1) {
-					for (var id in ms.values.selected) {
-						removeSelected(id, ms.obj, ms.values, ms.options);
-					}
-
-					cleanAvailable(ms.obj, ms.values);
-				}
-				addSelected(item, ms.obj, ms.values, ms.options);
-			};
-
-			/**
-			 * Rezise multiselect selected text
-			 */
-			$.fn.multiSelect.resize = function() {
-				$.each(window.multiSelect, function(i) {
-					var ms = window.multiSelect[i];
-					if (!empty(ms.options.data)) {
-						resizeAllSelectedTexts(ms.obj, ms.options, ms.values);
-					}
-				});
-			}
-
-			/**
-			 * MultiSelect object.
-			 */
-			if (empty(window.multiSelect)) {
-				window.multiSelect = {};
-			}
-
-			window.multiSelect[options.id] = {
+			var ms = {
 				options: options,
-				obj: $(this),
-				jqxhr: null,
 				values: {
 					search: '',
-					width: null,
+					width: parseInt(obj.css('width')),
 					isWaiting: false,
 					isAjaxLoaded: true,
 					isMoreMatchesFound: false,
-					isAvailableOpenned: false,
+					isAvailableOpened: false,
 					selected: {},
 					available: {},
 					ignored: empty(options.ignored) ? {} : options.ignored
 				}
 			};
 
-			var ms = window.multiSelect[options.id],
-				obj = ms.obj,
-				jqxhr = ms.jqxhr,
-				values = ms.values;
+			// store the configuration in the elements data
+			obj.data('multiSelect', ms);
 
-			ms.values.width = parseInt(obj.css('width'));
+			var values = ms.values;
 
 			// add wrap
-			var multiselectWrapper = jQuery('<div>', {
+			obj.wrap(jQuery('<div>', {
 				'class': 'multiselect-wrapper'
-			});
-
-			$('#' + options.id).wrap(multiselectWrapper);
+			}));
 
 			// search input
 			if (!options.disabled) {
@@ -241,12 +252,12 @@ jQuery(function($) {
 					}
 
 					var search = input.val();
-
 					if (!empty(search)) {
 						if (input.data('lastSearch') != search) {
 							if (!values.isWaiting) {
 								values.isWaiting = true;
 
+								var jqxhr = null;
 								window.setTimeout(function() {
 									values.isWaiting = false;
 
@@ -399,15 +410,15 @@ jQuery(function($) {
 				.focusin(function() {
 					if (options.selectedLimit > 0) {
 						if ($('.selected li', obj).length == 0) {
-							$('.selected ul', obj).addClass('active');
+							$(obj).addClass('active');
 						}
 					}
 					else {
-						$('.selected ul', obj).addClass('active');
+						$(obj).addClass('active');
 					}
 				})
 				.focusout(function() {
-					$('.selected ul', obj).removeClass('active');
+					$(obj).removeClass('active');
 					cleanSearchInput(obj);
 				});
 				obj.append(input);
@@ -426,24 +437,21 @@ jQuery(function($) {
 			if (!options.disabled) {
 				var available = $('<div>', {
 					'class': 'available',
-					css: {
-						width: values.width + 1,
-						display: 'none'
-					}
+					css: { display: 'none' }
 				})
 				.append($('<ul>'))
 				.mouseenter(function() {
-					values.isAvailableOpenned = true;
+					values.isAvailableOpened = true;
 				})
 				.mouseleave(function() {
-					values.isAvailableOpenned = false;
+					values.isAvailableOpened = false;
 				});
 
 				// multi select
 				obj.append(available)
 				.focusout(function() {
 					setTimeout(function() {
-						if (!values.isAvailableOpenned && $('.available', obj).is(':visible')) {
+						if (!values.isAvailableOpened && $('.available', obj).is(':visible')) {
 							hideAvailable(obj);
 						}
 					}, 200);
@@ -491,7 +499,12 @@ jQuery(function($) {
 					});
 				}
 
-				obj.parent().append(popupButton);
+				obj.parent().append($('<div class="multiselect-button"></div>').append(popupButton));
+			}
+
+			// IE browsers use default width
+			if (IE) {
+				options.defaultWidth = $('input[type="text"]', obj).width();
 			}
 		});
 	};
@@ -771,7 +784,7 @@ jQuery(function($) {
 
 	function showAvailable(obj, values) {
 		if ($('.label-empty-result', obj).length > 0 || objectLength(values.available) > 0) {
-			$('.selected ul', obj).addClass('active');
+			$(obj).addClass('active');
 			$('.available', obj).fadeIn(0);
 
 			// remove selected item pressed state
@@ -821,7 +834,7 @@ jQuery(function($) {
 		// settings
 		var settingTopPaddingsEmpty = IE8 ? 1 : 0,
 			settingTopPaddingsExist = IE8 ? 1 : 2,
-			settingTopPaddingsInit = 3,
+			settingTopPaddingsInit = 2,
 			settingRightPaddings = 4,
 			settingMinimumWidth = 50,
 			settingMinimumHeight = 12,
@@ -872,14 +885,19 @@ jQuery(function($) {
 		}
 
 		if (IE) {
-			$('input[type="text"]', obj).css({
+			var input = $('input[type="text"]', obj);
+
+			input.css({
 				'padding-top': top,
-				'padding-left': left
+				'padding-left': left,
+				'width': options.defaultWidth - left
 			});
 
-			// IE8 hack to fix inline-block container resizing
+			// IE8 hack to fix inline-block container resizing and poke input element value to trigger reflow
 			if (IE8) {
 				$('.multiselect-wrapper').addClass('ie8fix-inline').removeClass('ie8fix-inline');
+				var currentInputVal = input.val();
+				input.val(' ').val(currentInputVal);
 			}
 		}
 		else {
@@ -973,7 +991,7 @@ jQuery(function($) {
 	function setReadonly(obj) {
 		cleanSearchInput(obj);
 		$('input[type="text"]', obj).prop('disabled', true);
-		$('.selected ul', obj).removeClass('active');
+		$(obj).removeClass('active');
 	}
 
 	function setPlaceholder(obj, options) {
@@ -983,7 +1001,10 @@ jQuery(function($) {
 	}
 
 	function removePlaceholder(obj) {
-		$('input[type="text"]', obj).removeAttr('placeholder');
+		$('input[type="text"]', obj)
+			.removeAttr('placeholder')
+			.removeClass('placeholder')
+			.val('');
 	}
 
 	function getLimit(values, options) {

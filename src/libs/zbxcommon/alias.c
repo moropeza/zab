@@ -61,7 +61,7 @@ void	add_alias(const char *name, const char *value)
 		if (0 == strcmp(alias->name, name))
 		{
 			zabbix_log(LOG_LEVEL_CRIT, "failed to add Alias \"%s\": duplicate name", name);
-			exit(FAIL);
+			exit(EXIT_FAILURE);
 		}
 	}
 }
@@ -83,18 +83,15 @@ void	alias_list_free()
 	aliasList = NULL;
 }
 
-void	alias_expand(const char *orig, char *expanded, size_t exp_buf_len)
+const char	*zbx_alias_get(const char *orig)
 {
 	ALIAS	*alias;
 
 	for (alias = aliasList; NULL != alias; alias = alias->next)
 	{
 		if (0 == strcmp(alias->name, orig))
-		{
-			zbx_strlcpy(expanded, alias->value, exp_buf_len);
-			return;
-		}
+			return alias->value;
 	}
 
-	zbx_strlcpy(expanded, orig, exp_buf_len);
+	return orig;
 }

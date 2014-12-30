@@ -53,7 +53,6 @@ static size_t		sql_alloc = 64 * ZBX_KIBIBYTE;
 extern unsigned char	daemon_type;
 
 extern int		CONFIG_HISTSYNCER_FREQUENCY;
-extern int		CONFIG_NODE_NOHISTORY;
 
 static int		ZBX_HISTORY_SIZE = 0;	/* must be greater than ZBX_SYNC_MAX */
 
@@ -1369,7 +1368,6 @@ static void	DCmass_proxy_update_items(ZBX_DC_HISTORY *history, int history_num)
  * Function: dc_add_history_dbl                                               *
  *                                                                            *
  * Purpose: helper function for DCmass_add_history()                          *
- *          for writing float-type items into history/history_sync tables.    *
  *                                                                            *
  ******************************************************************************/
 static void	dc_add_history_dbl(ZBX_DC_HISTORY *history, int history_num)
@@ -1393,25 +1391,6 @@ static void	dc_add_history_dbl(ZBX_DC_HISTORY *history, int history_num)
 
 	zbx_db_insert_execute(&db_insert);
 	zbx_db_insert_clean(&db_insert);
-
-	if (0 == CONFIG_NODE_NOHISTORY && 0 != CONFIG_MASTER_NODEID)
-	{
-		zbx_db_insert_prepare(&db_insert, "history_sync", "nodeid", "itemid", "clock", "ns", "value", NULL);
-
-		for (i = 0; i < history_num; i++)
-		{
-			if (ITEM_VALUE_TYPE_FLOAT != history[i].value_type)
-				continue;
-
-			if (0 != history[i].value_null || 0 == history[i].keep_history)
-				continue;
-
-			zbx_db_insert_add_values(&db_insert, get_nodeid_by_id(history[i].itemid), history[i].itemid,
-					history[i].ts.sec, history[i].ts.ns, history[i].value.dbl);
-		}
-		zbx_db_insert_execute(&db_insert);
-		zbx_db_insert_clean(&db_insert);
-	}
 }
 
 /******************************************************************************
@@ -1442,27 +1421,6 @@ static void	dc_add_history_uint(ZBX_DC_HISTORY *history, int history_num)
 
 	zbx_db_insert_execute(&db_insert);
 	zbx_db_insert_clean(&db_insert);
-
-	if (0 == CONFIG_NODE_NOHISTORY && 0 != CONFIG_MASTER_NODEID)
-	{
-		zbx_db_insert_prepare(&db_insert, "history_uint_sync", "nodeid", "itemid", "clock", "ns", "value",
-				NULL);
-
-		for (i = 0; i < history_num; i++)
-		{
-			if (ITEM_VALUE_TYPE_UINT64 != history[i].value_type)
-				continue;
-
-			if (0 != history[i].value_null || 0 == history[i].keep_history)
-				continue;
-
-			zbx_db_insert_add_values(&db_insert, get_nodeid_by_id(history[i].itemid), history[i].itemid,
-					history[i].ts.sec, history[i].ts.ns, history[i].value.ui64);
-		}
-
-		zbx_db_insert_execute(&db_insert);
-		zbx_db_insert_clean(&db_insert);
-	}
 }
 
 /******************************************************************************
@@ -1493,26 +1451,6 @@ static void	dc_add_history_str(ZBX_DC_HISTORY *history, int history_num)
 
 	zbx_db_insert_execute(&db_insert);
 	zbx_db_insert_clean(&db_insert);
-
-	if (0 == CONFIG_NODE_NOHISTORY && 0 != CONFIG_MASTER_NODEID)
-	{
-		zbx_db_insert_prepare(&db_insert, "history_str_sync", "nodeid", "itemid", "clock", "ns", "value", NULL);
-
-		for (i = 0; i < history_num; i++)
-		{
-			if (ITEM_VALUE_TYPE_STR != history[i].value_type)
-				continue;
-
-			if (0 != history[i].value_null || 0 == history[i].keep_history)
-				continue;
-
-			zbx_db_insert_add_values(&db_insert, get_nodeid_by_id(history[i].itemid), history[i].itemid,
-					history[i].ts.sec, history[i].ts.ns, history[i].value_orig.str);
-		}
-
-		zbx_db_insert_execute(&db_insert);
-		zbx_db_insert_clean(&db_insert);
-	}
 }
 
 /******************************************************************************
@@ -1900,7 +1838,7 @@ int	DCsync_history(int sync_type)
 	const char		*__function_name = "DCsync_history";
 	static ZBX_DC_HISTORY	*history = NULL;
 	int			i, history_num, n, f;
-	int			syncs;
+	int			syncs, iterations;
 	int			total_num = 0;
 	int			skipped_clock, max_delay;
 	time_t			now = 0;
@@ -1937,6 +1875,7 @@ int	DCsync_history(int sync_type)
 
 		candidate_num = 0;
 		skipped_clock = 0;
+		iterations = 0;
 
 		for (n = cache->history_num, f = cache->history_first; 0 < n && ZBX_SYNC_MAX > candidate_num;)
 		{
@@ -1960,6 +1899,16 @@ int	DCsync_history(int sync_type)
 				f += num;
 				continue;
 			}
+
+			/* Limit iteration count to improve handling of situation when few items */
+			/* have flooded history cache with several hundred thousands of values.  */
+			/* This is achieved by breaking out of the loop if the number of values  */
+			/* that we take is less than 10% of the values that we see. This way, at */
+			/* least ZBX_SYNC_MAX and at most ZBX_SYNC_MAX * 10 iterations are done. */
+			if (ZBX_SYNC_MAX <= iterations && candidate_num * 10 < iterations)
+				break;
+
+			iterations++;
 
 			if (SUCCEED == uint64_array_exists(cache->itemids, cache->itemids_num,
 					cache->history[f].itemid))
@@ -2317,7 +2266,7 @@ retry:
 		if (text_len > CONFIG_TEXT_CACHE_SIZE)
 		{
 			zabbix_log(LOG_LEVEL_ERR, "insufficient shared memory for text cache");
-			exit(-1);
+			exit(EXIT_FAILURE);
 		}
 
 		free_len = CONFIG_TEXT_CACHE_SIZE - (cache->last_text - cache->text);
@@ -2631,7 +2580,7 @@ static void	dc_local_add_history_str(zbx_uint64_t itemid, zbx_timespec_t *ts, co
 	item_value->value_type = ITEM_VALUE_TYPE_STR;
 	item_value->state = ITEM_STATE_NORMAL;
 	item_value->flags = 0;
-	item_value->value.value_str.len = zbx_strlen_utf8_n(value_orig, HISTORY_STR_VALUE_LEN) + 1;
+	item_value->value.value_str.len = zbx_db_strlen_n(value_orig, HISTORY_STR_VALUE_LEN) + 1;
 
 	dc_string_buffer_realloc(item_value->value.value_str.len);
 	item_value->value.value_str.pvalue = string_values_offset;
@@ -2650,7 +2599,7 @@ static void	dc_local_add_history_text(zbx_uint64_t itemid, zbx_timespec_t *ts, c
 	item_value->value_type = ITEM_VALUE_TYPE_TEXT;
 	item_value->state = ITEM_STATE_NORMAL;
 	item_value->flags = 0;
-	item_value->value.value_str.len = zbx_strlen_utf8_n(value_orig, HISTORY_TEXT_VALUE_LEN) + 1;
+	item_value->value.value_str.len = zbx_db_strlen_n(value_orig, HISTORY_TEXT_VALUE_LEN) + 1;
 
 	dc_string_buffer_realloc(item_value->value.value_str.len);
 	item_value->value.value_str.pvalue = string_values_offset;
@@ -2670,10 +2619,10 @@ static void	dc_local_add_history_log(zbx_uint64_t itemid, zbx_timespec_t *ts, co
 	item_value->value_type = ITEM_VALUE_TYPE_LOG;
 	item_value->state = ITEM_STATE_NORMAL;
 	item_value->flags = 0;
-	item_value->value.value_str.len = zbx_strlen_utf8_n(value_orig, HISTORY_LOG_VALUE_LEN) + 1;
+	item_value->value.value_str.len = zbx_db_strlen_n(value_orig, HISTORY_LOG_VALUE_LEN) + 1;
 	item_value->timestamp = timestamp;
 	if (NULL != source && '\0' != *source)
-		item_value->source.len = zbx_strlen_utf8_n(source, HISTORY_LOG_SOURCE_LEN) + 1;
+		item_value->source.len = zbx_db_strlen_n(source, HISTORY_LOG_SOURCE_LEN) + 1;
 	else
 		item_value->source.len = 0;
 	item_value->severity = severity;
@@ -2702,7 +2651,7 @@ static void	dc_local_add_history_notsupported(zbx_uint64_t itemid, zbx_timespec_
 	item_value->itemid = itemid;
 	item_value->ts = *ts;
 	item_value->state = ITEM_STATE_NOTSUPPORTED;
-	item_value->value.value_str.len = zbx_strlen_utf8_n(error, ITEM_ERROR_LEN) + 1;
+	item_value->value.value_str.len = zbx_db_strlen_n(error, ITEM_ERROR_LEN) + 1;
 
 	dc_string_buffer_realloc(item_value->value.value_str.len);
 	item_value->value.value_str.pvalue = string_values_offset;
@@ -2875,13 +2824,13 @@ static void	init_trend_cache()
 	if (-1 == (trend_shm_key = zbx_ftok(CONFIG_FILE, ZBX_IPC_TREND_ID)))
 	{
 		zabbix_log(LOG_LEVEL_CRIT, "cannot create IPC key for trend cache");
-		exit(FAIL);
+		exit(EXIT_FAILURE);
 	}
 
 	if (ZBX_MUTEX_ERROR == zbx_mutex_create_force(&trends_lock, ZBX_MUTEX_TRENDS))
 	{
 		zbx_error("cannot create mutex for trend cache");
-		exit(FAIL);
+		exit(EXIT_FAILURE);
 	}
 
 	sz = zbx_mem_required_size(1, "trend cache", "TrendCacheSize");
@@ -2894,7 +2843,7 @@ static void	init_trend_cache()
 #define INIT_HASHSET_SIZE	1000	/* should be calculated dynamically based on trends size? */
 
 	zbx_hashset_create_ext(&cache->trends, INIT_HASHSET_SIZE,
-			ZBX_DEFAULT_UINT64_HASH_FUNC, ZBX_DEFAULT_UINT64_COMPARE_FUNC,
+			ZBX_DEFAULT_UINT64_HASH_FUNC, ZBX_DEFAULT_UINT64_COMPARE_FUNC, NULL,
 			__trend_mem_malloc_func, __trend_mem_realloc_func, __trend_mem_free_func);
 
 #undef INIT_HASHSET_SIZE
@@ -2928,19 +2877,19 @@ void	init_database_cache()
 			-1 == (history_text_shm_key = zbx_ftok(CONFIG_FILE, ZBX_IPC_HISTORY_TEXT_ID)))
 	{
 		zabbix_log(LOG_LEVEL_CRIT, "cannot create IPC keys for history cache");
-		exit(FAIL);
+		exit(EXIT_FAILURE);
 	}
 
 	if (ZBX_MUTEX_ERROR == zbx_mutex_create_force(&cache_lock, ZBX_MUTEX_CACHE))
 	{
 		zbx_error("cannot create mutex for history cache");
-		exit(FAIL);
+		exit(EXIT_FAILURE);
 	}
 
 	if (ZBX_MUTEX_ERROR == zbx_mutex_create_force(&cache_ids_lock, ZBX_MUTEX_CACHE_IDS))
 	{
 		zbx_error("cannot create mutex for IDs cache");
-		exit(FAIL);
+		exit(EXIT_FAILURE);
 	}
 
 	itemids_alloc = CONFIG_HISTSYNCER_FORKS * ZBX_SYNC_MAX;
@@ -3070,7 +3019,7 @@ zbx_uint64_t	DCget_nextid(const char *table_name, int num)
 	DB_ROW		row;
 	const ZBX_TABLE	*table;
 	ZBX_DC_ID	*id;
-	zbx_uint64_t	min, max, nextid, lastid;
+	zbx_uint64_t	min = 0, max = ZBX_DB_MAX_ID, nextid, lastid;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() table:'%s' num:%d",
 			__function_name, table_name, num);
@@ -3101,35 +3050,15 @@ zbx_uint64_t	DCget_nextid(const char *table_name, int num)
 	if (i == ZBX_IDS_SIZE)
 	{
 		zabbix_log(LOG_LEVEL_ERR, "insufficient shared memory for ids");
-		exit(-1);
+		exit(EXIT_FAILURE);
 	}
 
 	zbx_strlcpy(id->table_name, table_name, sizeof(id->table_name));
 
 	table = DBget_table(table_name);
 
-	if (0 == CONFIG_NODEID)
-	{
-		min = 0;
-		max = ZBX_STANDALONE_MAX_IDS;
-	}
-	else if (0 != (table->flags & ZBX_SYNC))
-	{
-		min = ZBX_DM_MAX_HISTORY_IDS * (zbx_uint64_t)CONFIG_NODEID +
-			ZBX_DM_MAX_CONFIG_IDS * (zbx_uint64_t)CONFIG_NODEID;
-		max = min + ZBX_DM_MAX_CONFIG_IDS - 1;
-	}
-	else
-	{
-		min = ZBX_DM_MAX_HISTORY_IDS * (zbx_uint64_t)CONFIG_NODEID;
-		max = min + ZBX_DM_MAX_HISTORY_IDS - 1;
-	}
-
 	result = DBselect("select max(%s) from %s where %s between " ZBX_FS_UI64 " and " ZBX_FS_UI64,
-			table->recid,
-			table_name,
-			table->recid,
-			min, max);
+			table->recid, table_name, table->recid, min, max);
 
 	if (NULL == (row = DBfetch(result)) || SUCCEED == DBis_null(row[0]))
 		id->lastid = min;

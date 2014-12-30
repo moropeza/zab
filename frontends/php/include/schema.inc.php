@@ -1,7 +1,6 @@
 <?php
 return array(
 	'maintenances' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'maintenanceid',
 		'fields' => array(
 			'maintenanceid' => array(
@@ -41,7 +40,6 @@ return array(
 		),
 	),
 	'hosts' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'hostid',
 		'fields' => array(
 			'hostid' => array(
@@ -59,7 +57,7 @@ return array(
 			'host' => array(
 				'null' => false,
 				'type' => DB::FIELD_TYPE_CHAR,
-				'length' => 64,
+				'length' => 128,
 				'default' => '',
 			),
 			'status' => array(
@@ -222,7 +220,7 @@ return array(
 			'name' => array(
 				'null' => false,
 				'type' => DB::FIELD_TYPE_CHAR,
-				'length' => 64,
+				'length' => 128,
 				'default' => '',
 			),
 			'flags' => array(
@@ -238,10 +236,14 @@ return array(
 				'ref_table' => 'hosts',
 				'ref_field' => 'hostid',
 			),
+			'description' => array(
+				'null' => false,
+				'type' => DB::FIELD_TYPE_TEXT,
+				'default' => '',
+			),
 		),
 	),
 	'groups' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'groupid',
 		'fields' => array(
 			'groupid' => array(
@@ -270,7 +272,6 @@ return array(
 		),
 	),
 	'group_prototype' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'group_prototypeid',
 		'fields' => array(
 			'group_prototypeid' => array(
@@ -308,7 +309,6 @@ return array(
 		),
 	),
 	'group_discovery' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'groupid',
 		'fields' => array(
 			'groupid' => array(
@@ -346,7 +346,6 @@ return array(
 		),
 	),
 	'screens' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'screenid',
 		'fields' => array(
 			'screenid' => array(
@@ -381,7 +380,6 @@ return array(
 		),
 	),
 	'screens_items' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'screenitemid',
 		'fields' => array(
 			'screenitemid' => array(
@@ -436,13 +434,13 @@ return array(
 				'null' => false,
 				'type' => DB::FIELD_TYPE_INT,
 				'length' => 10,
-				'default' => '0',
+				'default' => '1',
 			),
 			'rowspan' => array(
 				'null' => false,
 				'type' => DB::FIELD_TYPE_INT,
 				'length' => 10,
-				'default' => '0',
+				'default' => '1',
 			),
 			'elements' => array(
 				'null' => false,
@@ -492,10 +490,15 @@ return array(
 				'length' => 255,
 				'default' => '',
 			),
+			'max_columns' => array(
+				'null' => false,
+				'type' => DB::FIELD_TYPE_INT,
+				'length' => 10,
+				'default' => '3',
+			),
 		),
 	),
 	'slideshows' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'slideshowid',
 		'fields' => array(
 			'slideshowid' => array(
@@ -518,7 +521,6 @@ return array(
 		),
 	),
 	'slides' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'slideid',
 		'fields' => array(
 			'slideid' => array(
@@ -555,7 +557,6 @@ return array(
 		),
 	),
 	'drules' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'druleid',
 		'fields' => array(
 			'druleid' => array(
@@ -603,7 +604,6 @@ return array(
 		),
 	),
 	'dchecks' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'dcheckid',
 		'fields' => array(
 			'dcheckid' => array(
@@ -693,7 +693,6 @@ return array(
 		),
 	),
 	'applications' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'applicationid',
 		'fields' => array(
 			'applicationid' => array(
@@ -717,7 +716,6 @@ return array(
 		),
 	),
 	'httptest' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'httptestid',
 		'fields' => array(
 			'httptestid' => array(
@@ -811,10 +809,44 @@ return array(
 				'length' => 10,
 				'default' => '1',
 			),
+			'ssl_cert_file' => array(
+				'null' => false,
+				'type' => DB::FIELD_TYPE_CHAR,
+				'length' => 255,
+				'default' => '',
+			),
+			'ssl_key_file' => array(
+				'null' => false,
+				'type' => DB::FIELD_TYPE_CHAR,
+				'length' => 255,
+				'default' => '',
+			),
+			'ssl_key_password' => array(
+				'null' => false,
+				'type' => DB::FIELD_TYPE_CHAR,
+				'length' => 64,
+				'default' => '',
+			),
+			'verify_peer' => array(
+				'null' => false,
+				'type' => DB::FIELD_TYPE_INT,
+				'length' => 10,
+				'default' => '0',
+			),
+			'verify_host' => array(
+				'null' => false,
+				'type' => DB::FIELD_TYPE_INT,
+				'length' => 10,
+				'default' => '0',
+			),
+			'headers' => array(
+				'null' => false,
+				'type' => DB::FIELD_TYPE_TEXT,
+				'default' => '',
+			),
 		),
 	),
 	'httpstep' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'httpstepid',
 		'fields' => array(
 			'httpstepid' => array(
@@ -844,14 +876,14 @@ return array(
 			'url' => array(
 				'null' => false,
 				'type' => DB::FIELD_TYPE_CHAR,
-				'length' => 255,
+				'length' => 2048,
 				'default' => '',
 			),
 			'timeout' => array(
 				'null' => false,
 				'type' => DB::FIELD_TYPE_INT,
 				'length' => 10,
-				'default' => '30',
+				'default' => '15',
 			),
 			'posts' => array(
 				'null' => false,
@@ -875,10 +907,26 @@ return array(
 				'type' => DB::FIELD_TYPE_TEXT,
 				'default' => '',
 			),
+			'follow_redirects' => array(
+				'null' => false,
+				'type' => DB::FIELD_TYPE_INT,
+				'length' => 10,
+				'default' => '1',
+			),
+			'retrieve_mode' => array(
+				'null' => false,
+				'type' => DB::FIELD_TYPE_INT,
+				'length' => 10,
+				'default' => '0',
+			),
+			'headers' => array(
+				'null' => false,
+				'type' => DB::FIELD_TYPE_TEXT,
+				'default' => '',
+			),
 		),
 	),
 	'interface' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'interfaceid',
 		'fields' => array(
 			'interfaceid' => array(
@@ -929,10 +977,15 @@ return array(
 				'length' => 64,
 				'default' => '10050',
 			),
+			'bulk' => array(
+				'null' => false,
+				'type' => DB::FIELD_TYPE_INT,
+				'length' => 10,
+				'default' => '1',
+			),
 		),
 	),
 	'valuemaps' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'valuemapid',
 		'fields' => array(
 			'valuemapid' => array(
@@ -949,7 +1002,6 @@ return array(
 		),
 	),
 	'items' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'itemid',
 		'fields' => array(
 			'itemid' => array(
@@ -1076,12 +1128,12 @@ return array(
 				'null' => false,
 				'type' => DB::FIELD_TYPE_CHAR,
 				'length' => 255,
-				'default' => '1',
+				'default' => '',
 			),
 			'error' => array(
 				'null' => false,
 				'type' => DB::FIELD_TYPE_CHAR,
-				'length' => 128,
+				'length' => 2048,
 				'default' => '',
 			),
 			'lastlogsize' => array(
@@ -1175,12 +1227,6 @@ return array(
 				'length' => 10,
 				'default' => '0',
 			),
-			'filter' => array(
-				'null' => false,
-				'type' => DB::FIELD_TYPE_CHAR,
-				'length' => 255,
-				'default' => '',
-			),
 			'interfaceid' => array(
 				'null' => true,
 				'type' => DB::FIELD_TYPE_ID,
@@ -1235,10 +1281,15 @@ return array(
 				'length' => 255,
 				'default' => '',
 			),
+			'evaltype' => array(
+				'null' => false,
+				'type' => DB::FIELD_TYPE_INT,
+				'length' => 10,
+				'default' => '0',
+			),
 		),
 	),
 	'httpstepitem' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'httpstepitemid',
 		'fields' => array(
 			'httpstepitemid' => array(
@@ -1269,7 +1320,6 @@ return array(
 		),
 	),
 	'httptestitem' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'httptestitemid',
 		'fields' => array(
 			'httptestitemid' => array(
@@ -1300,7 +1350,6 @@ return array(
 		),
 	),
 	'media_type' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'mediatypeid',
 		'fields' => array(
 			'mediatypeid' => array(
@@ -1371,7 +1420,6 @@ return array(
 		),
 	),
 	'users' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'userid',
 		'fields' => array(
 			'userid' => array(
@@ -1470,7 +1518,6 @@ return array(
 		),
 	),
 	'usrgrp' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'usrgrpid',
 		'fields' => array(
 			'usrgrpid' => array(
@@ -1505,7 +1552,6 @@ return array(
 		),
 	),
 	'users_groups' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'id',
 		'fields' => array(
 			'id' => array(
@@ -1530,7 +1576,6 @@ return array(
 		),
 	),
 	'scripts' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'scriptid',
 		'fields' => array(
 			'scriptid' => array(
@@ -1596,7 +1641,6 @@ return array(
 		),
 	),
 	'actions' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'actionid',
 		'fields' => array(
 			'actionid' => array(
@@ -1662,10 +1706,15 @@ return array(
 				'type' => DB::FIELD_TYPE_TEXT,
 				'default' => '',
 			),
+			'formula' => array(
+				'null' => false,
+				'type' => DB::FIELD_TYPE_CHAR,
+				'length' => 255,
+				'default' => '',
+			),
 		),
 	),
 	'operations' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'operationid',
 		'fields' => array(
 			'operationid' => array(
@@ -1713,7 +1762,6 @@ return array(
 		),
 	),
 	'opmessage' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'operationid',
 		'fields' => array(
 			'operationid' => array(
@@ -1750,7 +1798,6 @@ return array(
 		),
 	),
 	'opmessage_grp' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'opmessage_grpid',
 		'fields' => array(
 			'opmessage_grpid' => array(
@@ -1775,7 +1822,6 @@ return array(
 		),
 	),
 	'opmessage_usr' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'opmessage_usrid',
 		'fields' => array(
 			'opmessage_usrid' => array(
@@ -1800,7 +1846,6 @@ return array(
 		),
 	),
 	'opcommand' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'operationid',
 		'fields' => array(
 			'operationid' => array(
@@ -1873,7 +1918,6 @@ return array(
 		),
 	),
 	'opcommand_hst' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'opcommand_hstid',
 		'fields' => array(
 			'opcommand_hstid' => array(
@@ -1898,7 +1942,6 @@ return array(
 		),
 	),
 	'opcommand_grp' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'opcommand_grpid',
 		'fields' => array(
 			'opcommand_grpid' => array(
@@ -1923,7 +1966,6 @@ return array(
 		),
 	),
 	'opgroup' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'opgroupid',
 		'fields' => array(
 			'opgroupid' => array(
@@ -1948,7 +1990,6 @@ return array(
 		),
 	),
 	'optemplate' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'optemplateid',
 		'fields' => array(
 			'optemplateid' => array(
@@ -1973,7 +2014,6 @@ return array(
 		),
 	),
 	'opconditions' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'opconditionid',
 		'fields' => array(
 			'opconditionid' => array(
@@ -2009,7 +2049,6 @@ return array(
 		),
 	),
 	'conditions' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'conditionid',
 		'fields' => array(
 			'conditionid' => array(
@@ -2045,7 +2084,6 @@ return array(
 		),
 	),
 	'config' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'configid',
 		'fields' => array(
 			'configid' => array(
@@ -2418,7 +2456,6 @@ return array(
 		),
 	),
 	'triggers' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'triggerid',
 		'fields' => array(
 			'triggerid' => array(
@@ -2507,7 +2544,6 @@ return array(
 		),
 	),
 	'trigger_depends' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'triggerdepid',
 		'fields' => array(
 			'triggerdepid' => array(
@@ -2532,7 +2568,6 @@ return array(
 		),
 	),
 	'functions' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'functionid',
 		'fields' => array(
 			'functionid' => array(
@@ -2569,7 +2604,6 @@ return array(
 		),
 	),
 	'graphs' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'graphid',
 		'fields' => array(
 			'graphid' => array(
@@ -2691,7 +2725,6 @@ return array(
 		),
 	),
 	'graphs_items' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'gitemid',
 		'fields' => array(
 			'gitemid' => array(
@@ -2752,7 +2785,6 @@ return array(
 		),
 	),
 	'graph_theme' => array(
-		'type' => DB::TABLE_TYPE_HISTORY,
 		'key' => 'graphthemeid',
 		'fields' => array(
 			'graphthemeid' => array(
@@ -2853,7 +2885,6 @@ return array(
 		),
 	),
 	'globalmacro' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'globalmacroid',
 		'fields' => array(
 			'globalmacroid' => array(
@@ -2876,7 +2907,6 @@ return array(
 		),
 	),
 	'hostmacro' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'hostmacroid',
 		'fields' => array(
 			'hostmacroid' => array(
@@ -2906,7 +2936,6 @@ return array(
 		),
 	),
 	'hosts_groups' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'hostgroupid',
 		'fields' => array(
 			'hostgroupid' => array(
@@ -2931,7 +2960,6 @@ return array(
 		),
 	),
 	'hosts_templates' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'hosttemplateid',
 		'fields' => array(
 			'hosttemplateid' => array(
@@ -2956,7 +2984,6 @@ return array(
 		),
 	),
 	'items_applications' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'itemappid',
 		'fields' => array(
 			'itemappid' => array(
@@ -2981,7 +3008,6 @@ return array(
 		),
 	),
 	'mappings' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'mappingid',
 		'fields' => array(
 			'mappingid' => array(
@@ -3011,7 +3037,6 @@ return array(
 		),
 	),
 	'media' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'mediaid',
 		'fields' => array(
 			'mediaid' => array(
@@ -3060,7 +3085,6 @@ return array(
 		),
 	),
 	'rights' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'rightid',
 		'fields' => array(
 			'rightid' => array(
@@ -3091,7 +3115,6 @@ return array(
 		),
 	),
 	'services' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'serviceid',
 		'fields' => array(
 			'serviceid' => array(
@@ -3145,7 +3168,6 @@ return array(
 		),
 	),
 	'services_links' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'linkid',
 		'fields' => array(
 			'linkid' => array(
@@ -3176,7 +3198,6 @@ return array(
 		),
 	),
 	'services_times' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'timeid',
 		'fields' => array(
 			'timeid' => array(
@@ -3218,7 +3239,6 @@ return array(
 		),
 	),
 	'icon_map' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'iconmapid',
 		'fields' => array(
 			'iconmapid' => array(
@@ -3242,7 +3262,6 @@ return array(
 		),
 	),
 	'icon_mapping' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'iconmappingid',
 		'fields' => array(
 			'iconmappingid' => array(
@@ -3285,7 +3304,6 @@ return array(
 		),
 	),
 	'sysmaps' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'sysmapid',
 		'fields' => array(
 			'sysmapid' => array(
@@ -3460,7 +3478,6 @@ return array(
 		),
 	),
 	'sysmaps_elements' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'selementid',
 		'fields' => array(
 			'selementid' => array(
@@ -3575,10 +3592,15 @@ return array(
 				'length' => 10,
 				'default' => '1',
 			),
+			'application' => array(
+				'null' => false,
+				'type' => DB::FIELD_TYPE_CHAR,
+				'length' => 255,
+				'default' => '',
+			),
 		),
 	),
 	'sysmaps_links' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'linkid',
 		'fields' => array(
 			'linkid' => array(
@@ -3628,7 +3650,6 @@ return array(
 		),
 	),
 	'sysmaps_link_triggers' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'linktriggerid',
 		'fields' => array(
 			'linktriggerid' => array(
@@ -3665,7 +3686,6 @@ return array(
 		),
 	),
 	'sysmap_element_url' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'sysmapelementurlid',
 		'fields' => array(
 			'sysmapelementurlid' => array(
@@ -3694,7 +3714,6 @@ return array(
 		),
 	),
 	'sysmap_url' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'sysmapurlid',
 		'fields' => array(
 			'sysmapurlid' => array(
@@ -3729,7 +3748,6 @@ return array(
 		),
 	),
 	'maintenances_hosts' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'maintenance_hostid',
 		'fields' => array(
 			'maintenance_hostid' => array(
@@ -3754,7 +3772,6 @@ return array(
 		),
 	),
 	'maintenances_groups' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'maintenance_groupid',
 		'fields' => array(
 			'maintenance_groupid' => array(
@@ -3779,7 +3796,6 @@ return array(
 		),
 	),
 	'timeperiods' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'timeperiodid',
 		'fields' => array(
 			'timeperiodid' => array(
@@ -3797,7 +3813,7 @@ return array(
 				'null' => false,
 				'type' => DB::FIELD_TYPE_INT,
 				'length' => 10,
-				'default' => '0',
+				'default' => '1',
 			),
 			'month' => array(
 				'null' => false,
@@ -3838,7 +3854,6 @@ return array(
 		),
 	),
 	'maintenances_windows' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'maintenance_timeperiodid',
 		'fields' => array(
 			'maintenance_timeperiodid' => array(
@@ -3863,7 +3878,6 @@ return array(
 		),
 	),
 	'regexps' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'regexpid',
 		'fields' => array(
 			'regexpid' => array(
@@ -3885,7 +3899,6 @@ return array(
 		),
 	),
 	'expressions' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'expressionid',
 		'fields' => array(
 			'expressionid' => array(
@@ -3926,100 +3939,9 @@ return array(
 			),
 		),
 	),
-	'nodes' => array(
-		'type' => DB::TABLE_TYPE_HISTORY,
-		'key' => 'nodeid',
-		'fields' => array(
-			'nodeid' => array(
-				'null' => false,
-				'type' => DB::FIELD_TYPE_INT,
-				'length' => 10,
-			),
-			'name' => array(
-				'null' => false,
-				'type' => DB::FIELD_TYPE_CHAR,
-				'length' => 64,
-				'default' => '0',
-			),
-			'ip' => array(
-				'null' => false,
-				'type' => DB::FIELD_TYPE_CHAR,
-				'length' => 39,
-				'default' => '',
-			),
-			'port' => array(
-				'null' => false,
-				'type' => DB::FIELD_TYPE_INT,
-				'length' => 10,
-				'default' => '10051',
-			),
-			'nodetype' => array(
-				'null' => false,
-				'type' => DB::FIELD_TYPE_INT,
-				'length' => 10,
-				'default' => '0',
-			),
-			'masterid' => array(
-				'null' => true,
-				'type' => DB::FIELD_TYPE_INT,
-				'length' => 10,
-				'ref_table' => 'nodes',
-				'ref_field' => 'nodeid',
-			),
-		),
-	),
-	'node_cksum' => array(
-		'type' => DB::TABLE_TYPE_HISTORY,
-		'key' => '',
-		'fields' => array(
-			'nodeid' => array(
-				'null' => false,
-				'type' => DB::FIELD_TYPE_INT,
-				'length' => 10,
-				'ref_table' => 'nodes',
-				'ref_field' => 'nodeid',
-			),
-			'tablename' => array(
-				'null' => false,
-				'type' => DB::FIELD_TYPE_CHAR,
-				'length' => 64,
-				'default' => '',
-			),
-			'recordid' => array(
-				'null' => false,
-				'type' => DB::FIELD_TYPE_ID,
-				'length' => 20,
-			),
-			'cksumtype' => array(
-				'null' => false,
-				'type' => DB::FIELD_TYPE_INT,
-				'length' => 10,
-				'default' => '0',
-			),
-			'cksum' => array(
-				'null' => false,
-				'type' => DB::FIELD_TYPE_TEXT,
-				'default' => '',
-			),
-			'sync' => array(
-				'null' => false,
-				'type' => DB::FIELD_TYPE_CHAR,
-				'length' => 128,
-				'default' => '',
-			),
-		),
-	),
 	'ids' => array(
-		'type' => DB::TABLE_TYPE_HISTORY,
-		'key' => 'nodeid,table_name,field_name',
+		'key' => 'table_name,field_name',
 		'fields' => array(
-			'nodeid' => array(
-				'null' => false,
-				'type' => DB::FIELD_TYPE_INT,
-				'length' => 10,
-				'ref_table' => 'nodes',
-				'ref_field' => 'nodeid',
-			),
 			'table_name' => array(
 				'null' => false,
 				'type' => DB::FIELD_TYPE_CHAR,
@@ -4040,7 +3962,6 @@ return array(
 		),
 	),
 	'alerts' => array(
-		'type' => DB::TABLE_TYPE_HISTORY,
 		'key' => 'alertid',
 		'fields' => array(
 			'alertid' => array(
@@ -4132,52 +4053,8 @@ return array(
 		),
 	),
 	'history' => array(
-		'type' => DB::TABLE_TYPE_HISTORY,
 		'key' => '',
 		'fields' => array(
-			'itemid' => array(
-				'null' => false,
-				'type' => DB::FIELD_TYPE_ID,
-				'length' => 20,
-				'ref_table' => 'items',
-				'ref_field' => 'itemid',
-			),
-			'clock' => array(
-				'null' => false,
-				'type' => DB::FIELD_TYPE_INT,
-				'length' => 10,
-				'default' => '0',
-			),
-			'value' => array(
-				'null' => false,
-				'type' => DB::FIELD_TYPE_FLOAT,
-				'length' => 16,
-				'default' => '0.0000',
-			),
-			'ns' => array(
-				'null' => false,
-				'type' => DB::FIELD_TYPE_INT,
-				'length' => 10,
-				'default' => '0',
-			),
-		),
-	),
-	'history_sync' => array(
-		'type' => DB::TABLE_TYPE_HISTORY,
-		'key' => 'id',
-		'fields' => array(
-			'id' => array(
-				'null' => false,
-				'type' => DB::FIELD_TYPE_UINT,
-				'length' => 20,
-			),
-			'nodeid' => array(
-				'null' => false,
-				'type' => DB::FIELD_TYPE_INT,
-				'length' => 10,
-				'ref_table' => 'nodes',
-				'ref_field' => 'nodeid',
-			),
 			'itemid' => array(
 				'null' => false,
 				'type' => DB::FIELD_TYPE_ID,
@@ -4206,52 +4083,8 @@ return array(
 		),
 	),
 	'history_uint' => array(
-		'type' => DB::TABLE_TYPE_HISTORY,
 		'key' => '',
 		'fields' => array(
-			'itemid' => array(
-				'null' => false,
-				'type' => DB::FIELD_TYPE_ID,
-				'length' => 20,
-				'ref_table' => 'items',
-				'ref_field' => 'itemid',
-			),
-			'clock' => array(
-				'null' => false,
-				'type' => DB::FIELD_TYPE_INT,
-				'length' => 10,
-				'default' => '0',
-			),
-			'value' => array(
-				'null' => false,
-				'type' => DB::FIELD_TYPE_UINT,
-				'length' => 20,
-				'default' => '0',
-			),
-			'ns' => array(
-				'null' => false,
-				'type' => DB::FIELD_TYPE_INT,
-				'length' => 10,
-				'default' => '0',
-			),
-		),
-	),
-	'history_uint_sync' => array(
-		'type' => DB::TABLE_TYPE_HISTORY,
-		'key' => 'id',
-		'fields' => array(
-			'id' => array(
-				'null' => false,
-				'type' => DB::FIELD_TYPE_UINT,
-				'length' => 20,
-			),
-			'nodeid' => array(
-				'null' => false,
-				'type' => DB::FIELD_TYPE_INT,
-				'length' => 10,
-				'ref_table' => 'nodes',
-				'ref_field' => 'nodeid',
-			),
 			'itemid' => array(
 				'null' => false,
 				'type' => DB::FIELD_TYPE_ID,
@@ -4280,7 +4113,6 @@ return array(
 		),
 	),
 	'history_str' => array(
-		'type' => DB::TABLE_TYPE_HISTORY,
 		'key' => '',
 		'fields' => array(
 			'itemid' => array(
@@ -4310,51 +4142,7 @@ return array(
 			),
 		),
 	),
-	'history_str_sync' => array(
-		'type' => DB::TABLE_TYPE_HISTORY,
-		'key' => 'id',
-		'fields' => array(
-			'id' => array(
-				'null' => false,
-				'type' => DB::FIELD_TYPE_UINT,
-				'length' => 20,
-			),
-			'nodeid' => array(
-				'null' => false,
-				'type' => DB::FIELD_TYPE_INT,
-				'length' => 10,
-				'ref_table' => 'nodes',
-				'ref_field' => 'nodeid',
-			),
-			'itemid' => array(
-				'null' => false,
-				'type' => DB::FIELD_TYPE_ID,
-				'length' => 20,
-				'ref_table' => 'items',
-				'ref_field' => 'itemid',
-			),
-			'clock' => array(
-				'null' => false,
-				'type' => DB::FIELD_TYPE_INT,
-				'length' => 10,
-				'default' => '0',
-			),
-			'value' => array(
-				'null' => false,
-				'type' => DB::FIELD_TYPE_CHAR,
-				'length' => 255,
-				'default' => '',
-			),
-			'ns' => array(
-				'null' => false,
-				'type' => DB::FIELD_TYPE_INT,
-				'length' => 10,
-				'default' => '0',
-			),
-		),
-	),
 	'history_log' => array(
-		'type' => DB::TABLE_TYPE_HISTORY,
 		'key' => 'id',
 		'fields' => array(
 			'id' => array(
@@ -4413,7 +4201,6 @@ return array(
 		),
 	),
 	'history_text' => array(
-		'type' => DB::TABLE_TYPE_HISTORY,
 		'key' => 'id',
 		'fields' => array(
 			'id' => array(
@@ -4448,7 +4235,6 @@ return array(
 		),
 	),
 	'proxy_history' => array(
-		'type' => DB::TABLE_TYPE_HISTORY,
 		'key' => 'id',
 		'fields' => array(
 			'id' => array(
@@ -4513,7 +4299,6 @@ return array(
 		),
 	),
 	'proxy_dhistory' => array(
-		'type' => DB::TABLE_TYPE_HISTORY,
 		'key' => 'id',
 		'fields' => array(
 			'id' => array(
@@ -4586,7 +4371,6 @@ return array(
 		),
 	),
 	'events' => array(
-		'type' => DB::TABLE_TYPE_HISTORY,
 		'key' => 'eventid',
 		'fields' => array(
 			'eventid' => array(
@@ -4639,7 +4423,6 @@ return array(
 		),
 	),
 	'trends' => array(
-		'type' => DB::TABLE_TYPE_HISTORY,
 		'key' => 'itemid,clock',
 		'fields' => array(
 			'itemid' => array(
@@ -4682,7 +4465,6 @@ return array(
 		),
 	),
 	'trends_uint' => array(
-		'type' => DB::TABLE_TYPE_HISTORY,
 		'key' => 'itemid,clock',
 		'fields' => array(
 			'itemid' => array(
@@ -4725,7 +4507,6 @@ return array(
 		),
 	),
 	'acknowledges' => array(
-		'type' => DB::TABLE_TYPE_HISTORY,
 		'key' => 'acknowledgeid',
 		'fields' => array(
 			'acknowledgeid' => array(
@@ -4762,7 +4543,6 @@ return array(
 		),
 	),
 	'auditlog' => array(
-		'type' => DB::TABLE_TYPE_HISTORY,
 		'key' => 'auditid',
 		'fields' => array(
 			'auditid' => array(
@@ -4822,7 +4602,6 @@ return array(
 		),
 	),
 	'auditlog_details' => array(
-		'type' => DB::TABLE_TYPE_HISTORY,
 		'key' => 'auditdetailid',
 		'fields' => array(
 			'auditdetailid' => array(
@@ -4862,7 +4641,6 @@ return array(
 		),
 	),
 	'service_alarms' => array(
-		'type' => DB::TABLE_TYPE_HISTORY,
 		'key' => 'servicealarmid',
 		'fields' => array(
 			'servicealarmid' => array(
@@ -4892,7 +4670,6 @@ return array(
 		),
 	),
 	'autoreg_host' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'autoreg_hostid',
 		'fields' => array(
 			'autoreg_hostid' => array(
@@ -4940,7 +4717,6 @@ return array(
 		),
 	),
 	'proxy_autoreg_host' => array(
-		'type' => DB::TABLE_TYPE_HISTORY,
 		'key' => 'id',
 		'fields' => array(
 			'id' => array(
@@ -4987,7 +4763,6 @@ return array(
 		),
 	),
 	'dhosts' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'dhostid',
 		'fields' => array(
 			'dhostid' => array(
@@ -5023,7 +4798,6 @@ return array(
 		),
 	),
 	'dservices' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'dserviceid',
 		'fields' => array(
 			'dserviceid' => array(
@@ -5102,7 +4876,6 @@ return array(
 		),
 	),
 	'escalations' => array(
-		'type' => DB::TABLE_TYPE_HISTORY,
 		'key' => 'escalationid',
 		'fields' => array(
 			'escalationid' => array(
@@ -5166,7 +4939,6 @@ return array(
 		),
 	),
 	'globalvars' => array(
-		'type' => DB::TABLE_TYPE_HISTORY,
 		'key' => 'globalvarid',
 		'fields' => array(
 			'globalvarid' => array(
@@ -5183,14 +4955,8 @@ return array(
 		),
 	),
 	'graph_discovery' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
-		'key' => 'graphdiscoveryid',
+		'key' => 'graphid',
 		'fields' => array(
-			'graphdiscoveryid' => array(
-				'null' => false,
-				'type' => DB::FIELD_TYPE_ID,
-				'length' => 20,
-			),
 			'graphid' => array(
 				'null' => false,
 				'type' => DB::FIELD_TYPE_ID,
@@ -5205,16 +4971,9 @@ return array(
 				'ref_table' => 'graphs',
 				'ref_field' => 'graphid',
 			),
-			'name' => array(
-				'null' => false,
-				'type' => DB::FIELD_TYPE_CHAR,
-				'length' => 128,
-				'default' => '',
-			),
 		),
 	),
 	'host_inventory' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'hostid',
 		'fields' => array(
 			'hostid' => array(
@@ -5644,7 +5403,6 @@ return array(
 		),
 	),
 	'housekeeper' => array(
-		'type' => DB::TABLE_TYPE_HISTORY,
 		'key' => 'housekeeperid',
 		'fields' => array(
 			'housekeeperid' => array(
@@ -5674,7 +5432,6 @@ return array(
 		),
 	),
 	'images' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'imageid',
 		'fields' => array(
 			'imageid' => array(
@@ -5703,7 +5460,6 @@ return array(
 		),
 	),
 	'item_discovery' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'itemdiscoveryid',
 		'fields' => array(
 			'itemdiscoveryid' => array(
@@ -5746,7 +5502,6 @@ return array(
 		),
 	),
 	'host_discovery' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'hostid',
 		'fields' => array(
 			'hostid' => array(
@@ -5791,7 +5546,6 @@ return array(
 		),
 	),
 	'interface_discovery' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'interfaceid',
 		'fields' => array(
 			'interfaceid' => array(
@@ -5811,7 +5565,6 @@ return array(
 		),
 	),
 	'profiles' => array(
-		'type' => DB::TABLE_TYPE_HISTORY,
 		'key' => 'profileid',
 		'fields' => array(
 			'profileid' => array(
@@ -5871,7 +5624,6 @@ return array(
 		),
 	),
 	'sessions' => array(
-		'type' => DB::TABLE_TYPE_HISTORY,
 		'key' => 'sessionid',
 		'fields' => array(
 			'sessionid' => array(
@@ -5902,14 +5654,8 @@ return array(
 		),
 	),
 	'trigger_discovery' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
-		'key' => 'triggerdiscoveryid',
+		'key' => 'triggerid',
 		'fields' => array(
-			'triggerdiscoveryid' => array(
-				'null' => false,
-				'type' => DB::FIELD_TYPE_ID,
-				'length' => 20,
-			),
 			'triggerid' => array(
 				'null' => false,
 				'type' => DB::FIELD_TYPE_ID,
@@ -5924,16 +5670,9 @@ return array(
 				'ref_table' => 'triggers',
 				'ref_field' => 'triggerid',
 			),
-			'name' => array(
-				'null' => false,
-				'type' => DB::FIELD_TYPE_CHAR,
-				'length' => 255,
-				'default' => '',
-			),
 		),
 	),
 	'user_history' => array(
-		'type' => DB::TABLE_TYPE_HISTORY,
 		'key' => 'userhistoryid',
 		'fields' => array(
 			'userhistoryid' => array(
@@ -6011,7 +5750,6 @@ return array(
 		),
 	),
 	'application_template' => array(
-		'type' => DB::TABLE_TYPE_CONFIG,
 		'key' => 'application_templateid',
 		'fields' => array(
 			'application_templateid' => array(
@@ -6035,8 +5773,42 @@ return array(
 			),
 		),
 	),
+	'item_condition' => array(
+		'key' => 'item_conditionid',
+		'fields' => array(
+			'item_conditionid' => array(
+				'null' => false,
+				'type' => DB::FIELD_TYPE_ID,
+				'length' => 20,
+			),
+			'itemid' => array(
+				'null' => false,
+				'type' => DB::FIELD_TYPE_ID,
+				'length' => 20,
+				'ref_table' => 'items',
+				'ref_field' => 'itemid',
+			),
+			'operator' => array(
+				'null' => false,
+				'type' => DB::FIELD_TYPE_INT,
+				'length' => 10,
+				'default' => '8',
+			),
+			'macro' => array(
+				'null' => false,
+				'type' => DB::FIELD_TYPE_CHAR,
+				'length' => 64,
+				'default' => '',
+			),
+			'value' => array(
+				'null' => false,
+				'type' => DB::FIELD_TYPE_CHAR,
+				'length' => 255,
+				'default' => '',
+			),
+		),
+	),
 	'dbversion' => array(
-		'type' => DB::TABLE_TYPE_HISTORY,
 		'key' => '',
 		'fields' => array(
 			'mandatory' => array(

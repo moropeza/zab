@@ -17,8 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
-?>
-<?php
+
 
 function serviceAlgorythm($algorythm = null) {
 	$algorythms = array(
@@ -67,12 +66,8 @@ function get_service_childs($serviceid, $soft = 0) {
  */
 function createServiceConfigurationTree(array $services, &$tree, array $parentService = array(), array $service = array(), array $dependency = array()) {
 	if (!$service) {
-		$caption = new CLink(_('root'), '#', 'service-conf-menu');
-		$caption->setAttribute('data-menu', array(
-			'serviceid' => 0,
-			'name' => _('root'),
-			'hasDependencies' => true
-		));
+		$caption = new CLink(_('root'), '#');
+		$caption->setMenuPopup(CMenuPopupHelper::getServiceConfiguration(null, _('root'), false));
 
 		$serviceNode = array(
 			'id' => 0,
@@ -103,7 +98,7 @@ function createServiceConfigurationTree(array $services, &$tree, array $parentSe
 	}
 	else {
 		// caption
-		$caption = new CLink($service['name'], '#', 'service-conf-menu');
+		$caption = new CLink($service['name'], '#');
 
 		// service is deletable only if it has no hard dependency
 		$deletable = true;
@@ -114,17 +109,13 @@ function createServiceConfigurationTree(array $services, &$tree, array $parentSe
 			}
 		}
 
-		$caption->setAttribute('data-menu', array(
-			'serviceid' => $service['serviceid'],
-			'name' => $service['name'],
-			'deletable' => $deletable
-		));
+		$caption->setMenuPopup(CMenuPopupHelper::getServiceConfiguration($service['serviceid'], $service['name'], $deletable));
 
 		$serviceNode = array(
 			'id' => $service['serviceid'],
 			'caption' => $caption,
-			'description' => ($service['trigger']) ? $service['trigger']['description'] : '-',
-			'parentid' => ($parentService) ? $parentService['serviceid'] : 0,
+			'description' => $service['trigger'] ? $service['trigger']['description'] : '-',
+			'parentid' => $parentService ? $parentService['serviceid'] : 0,
 			'algorithm' => serviceAlgorythm($service['algorithm'])
 		);
 	}
@@ -209,13 +200,13 @@ function createServiceMonitoringTree(array $services, array $slaData, $period, &
 		);
 
 		$caption = array(new CLink(
-			array(get_node_name_by_elid($service['serviceid'], null, NAME_DELIMITER), $service['name']),
+			$service['name'],
 			'report3.php?serviceid='.$service['serviceid'].'&year='.date('Y').'&period='.$periods[$period]
 		));
 		$trigger = $service['trigger'];
 		if ($trigger) {
 			$url = new CLink($trigger['description'],
-				'events.php?source='.EVENT_SOURCE_TRIGGERS.'&triggerid='.$trigger['triggerid']
+				'events.php?filter_set=1&source='.EVENT_SOURCE_TRIGGERS.'&triggerid='.$trigger['triggerid']
 			);
 			$caption[] = ' - ';
 			$caption[] = $url;
@@ -227,7 +218,7 @@ function createServiceMonitoringTree(array $services, array $slaData, $period, &
 			$problemList = new CList(null, 'service-problems');
 			foreach ($serviceSla['problems'] as $problemTrigger) {
 				$problemList->addItem(new CLink($problemTrigger['description'],
-					'events.php?source='.EVENT_SOURCE_TRIGGERS.'&triggerid='.$problemTrigger['triggerid']
+					'events.php?filter_set=1&source='.EVENT_SOURCE_TRIGGERS.'&triggerid='.$problemTrigger['triggerid']
 				));
 			}
 		}

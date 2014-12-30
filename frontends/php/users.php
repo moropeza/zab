@@ -38,15 +38,15 @@ $themes[] = THEME_DEFAULT;
 //	VAR			TYPE	OPTIONAL FLAGS	VALIDATION	EXCEPTION
 $fields = array(
 	// users
-	'userid' =>				array(T_ZBX_INT, O_NO,	P_SYS,	DB_ID,		'isset({form})&&{form}=="update"'),
+	'userid' =>				array(T_ZBX_INT, O_NO,	P_SYS,	DB_ID,		'isset({form}) && {form} == "update"'),
 	'group_userid' =>		array(T_ZBX_INT, O_OPT, P_SYS,	DB_ID,		null),
 	'filter_usrgrpid' =>	array(T_ZBX_INT, O_OPT, P_SYS,	DB_ID,		null),
-	'alias' =>				array(T_ZBX_STR, O_OPT, null,	NOT_EMPTY,	'isset({save})', _('Alias')),
-	'name' =>				array(T_ZBX_STR, O_OPT, null,	null,		null, _('Name')),
+	'alias' =>				array(T_ZBX_STR, O_OPT, null,	NOT_EMPTY,	'isset({add}) || isset({update})', _('Alias')),
+	'name' =>				array(T_ZBX_STR, O_OPT, null,	null,		null, _x('Name', 'user first name')),
 	'surname' =>			array(T_ZBX_STR, O_OPT, null,	null,		null, _('Surname')),
-	'password1' =>			array(T_ZBX_STR, O_OPT, null,	null,		'isset({save})&&isset({form})&&{form}!="update"&&isset({change_password})'),
-	'password2' =>			array(T_ZBX_STR, O_OPT, null,	null,		'isset({save})&&isset({form})&&{form}!="update"&&isset({change_password})'),
-	'user_type' =>			array(T_ZBX_INT, O_OPT, null,	IN('1,2,3'),'isset({save})'),
+	'password1' =>			array(T_ZBX_STR, O_OPT, null,	null,		'(isset({add}) || isset({update})) && isset({form}) && {form} != "update" && isset({change_password})'),
+	'password2' =>			array(T_ZBX_STR, O_OPT, null,	null,		'(isset({add}) || isset({update})) && isset({form}) && {form} != "update" && isset({change_password})'),
+	'user_type' =>			array(T_ZBX_INT, O_OPT, null,	IN('1,2,3'),'isset({add}) || isset({update})'),
 	'user_groups' =>		array(T_ZBX_STR, O_OPT, null,	NOT_EMPTY,	null),
 	'user_groups_to_del' =>	array(T_ZBX_INT, O_OPT, null,	DB_ID,		null),
 	'user_medias' =>		array(T_ZBX_STR, O_OPT, null,	NOT_EMPTY,	null),
@@ -56,16 +56,18 @@ $fields = array(
 	'enable_media' =>		array(T_ZBX_INT, O_OPT, null,	null,		null),
 	'disable_media' =>		array(T_ZBX_INT, O_OPT, null,	null,		null),
 	'lang' =>				array(T_ZBX_STR, O_OPT, null,	null,		null),
-	'theme' =>				array(T_ZBX_STR, O_OPT, null,	IN('"'.implode('","', $themes).'"'), 'isset({save})'),
+	'theme' =>				array(T_ZBX_STR, O_OPT, null,	IN('"'.implode('","', $themes).'"'), 'isset({add}) || isset({update})'),
 	'autologin' =>			array(T_ZBX_INT, O_OPT, null,	IN('1'),	null),
 	'autologout' => 		array(T_ZBX_INT, O_OPT, null,	BETWEEN(90, 10000), null, _('Auto-logout (min 90 seconds)')),
-	'url' =>				array(T_ZBX_STR, O_OPT, null,	null,		'isset({save})'),
-	'refresh' =>			array(T_ZBX_INT, O_OPT, null,	BETWEEN(0, SEC_PER_HOUR), 'isset({save})', _('Refresh (in seconds)')),
-	'rows_per_page' =>		array(T_ZBX_INT, O_OPT, null,	BETWEEN(1, 999999),'isset({save})', _('Rows per page')),
+	'autologout_visible' =>	array(T_ZBX_STR, O_OPT, null,	IN('1'),	null),
+	'url' =>				array(T_ZBX_STR, O_OPT, null,	null,		'isset({add}) || isset({update})'),
+	'refresh' =>			array(T_ZBX_INT, O_OPT, null,	BETWEEN(0, SEC_PER_HOUR), 'isset({add}) || isset({update})', _('Refresh (in seconds)')),
+	'rows_per_page' =>		array(T_ZBX_INT, O_OPT, null,	BETWEEN(1, 999999),'isset({add}) || isset({update})', _('Rows per page')),
 	// actions
-	'go' =>					array(T_ZBX_STR, O_OPT, P_SYS|P_ACT,	null,	null),
+	'action' =>				array(T_ZBX_STR, O_OPT, P_SYS|P_ACT,	IN('"user.massdelete","user.massunblock"'),	null),
 	'register' =>			array(T_ZBX_STR, O_OPT, P_SYS|P_ACT,	IN('"add permission","delete permission"'), null),
-	'save' =>				array(T_ZBX_STR, O_OPT, P_SYS|P_ACT,	null,	null),
+	'add' =>				array(T_ZBX_STR, O_OPT, P_SYS|P_ACT,	null,	null),
+	'update' =>				array(T_ZBX_STR, O_OPT, P_SYS|P_ACT,	null,	null),
 	'delete' =>				array(T_ZBX_STR, O_OPT, P_SYS|P_ACT,	null,	null),
 	'delete_selected' =>	array(T_ZBX_STR, O_OPT, P_SYS|P_ACT,	null,	null),
 	'del_user_group' =>		array(T_ZBX_STR, O_OPT, P_SYS|P_ACT,	null,	null),
@@ -75,17 +77,19 @@ $fields = array(
 	'cancel' =>				array(T_ZBX_STR, O_OPT, P_SYS,			null,	null),
 	// form
 	'form' =>				array(T_ZBX_STR, O_OPT, P_SYS,			null,	null),
-	'form_refresh' =>		array(T_ZBX_STR, O_OPT, null,			null,	null)
+	'form_refresh' =>		array(T_ZBX_INT, O_OPT, null,			null,	null),
+	// sort and sortorder
+	'sort' =>				array(T_ZBX_STR, O_OPT, P_SYS, IN('"alias","name","surname","type"'),		null),
+	'sortorder' =>			array(T_ZBX_STR, O_OPT, P_SYS, IN('"'.ZBX_SORT_DOWN.'","'.ZBX_SORT_UP.'"'),	null)
 );
 check_fields($fields);
-validate_sort_and_sortorder('alias', ZBX_SORT_UP);
 
 /*
  * Permissions
  */
 if (isset($_REQUEST['userid'])) {
 	$users = API::User()->get(array(
-		'userids' => get_request('userid'),
+		'userids' => getRequest('userid'),
 		'output' => API_OUTPUT_EXTEND,
 		'editable' => true
 	));
@@ -93,21 +97,22 @@ if (isset($_REQUEST['userid'])) {
 		access_deny();
 	}
 }
-if (get_request('filter_usrgrpid') && !API::UserGroup()->isWritable(array($_REQUEST['filter_usrgrpid']))) {
+if (getRequest('filter_usrgrpid') && !API::UserGroup()->isWritable(array($_REQUEST['filter_usrgrpid']))) {
 	access_deny();
 }
 
-if (isset($_REQUEST['go'])) {
-	if (!isset($_REQUEST['group_userid']) || !is_array($_REQUEST['group_userid'])) {
+if (hasRequest('action')) {
+	if (!hasRequest('group_userid') || !is_array(getRequest('group_userid'))) {
 		access_deny();
 	}
 	else {
 		$usersChk = API::User()->get(array(
-			'userids' => $_REQUEST['group_userid'],
+			'output' => array('userid'),
+			'userids' => getRequest('group_userid'),
 			'countOutput' => true,
 			'editable' => true
 		));
-		if ($usersChk != count($_REQUEST['group_userid'])) {
+		if ($usersChk != count(getRequest('group_userid'))) {
 			access_deny();
 		}
 	}
@@ -116,17 +121,16 @@ if (isset($_REQUEST['go'])) {
 /*
  * Actions
  */
-$_REQUEST['go'] = get_request('go', 'none');
 
 if (isset($_REQUEST['new_groups'])) {
-	$_REQUEST['new_groups'] = get_request('new_groups', array());
-	$_REQUEST['user_groups'] = get_request('user_groups', array());
+	$_REQUEST['new_groups'] = getRequest('new_groups', array());
+	$_REQUEST['user_groups'] = getRequest('user_groups', array());
 	$_REQUEST['user_groups'] += $_REQUEST['new_groups'];
 
 	unset($_REQUEST['new_groups']);
 }
 elseif (isset($_REQUEST['new_media'])) {
-	$_REQUEST['user_medias'] = get_request('user_medias', array());
+	$_REQUEST['user_medias'] = getRequest('user_medias', array());
 
 	array_push($_REQUEST['user_medias'], $_REQUEST['new_media']);
 }
@@ -140,7 +144,7 @@ elseif (isset($_REQUEST['user_medias']) && isset($_REQUEST['disable_media'])) {
 		$_REQUEST['user_medias'][$_REQUEST['disable_media']]['active'] = 1;
 	}
 }
-elseif (isset($_REQUEST['save'])) {
+elseif (hasRequest('add') || hasRequest('update')) {
 	$config = select_config();
 
 	$isValid = true;
@@ -176,8 +180,8 @@ elseif (isset($_REQUEST['save'])) {
 		}
 	}
 	else {
-		$_REQUEST['password1'] = getRequest('password1', null);
-		$_REQUEST['password2'] = getRequest('password2', null);
+		$_REQUEST['password1'] = getRequest('password1');
+		$_REQUEST['password2'] = getRequest('password2');
 	}
 
 	if ($_REQUEST['password1'] != $_REQUEST['password2']) {
@@ -203,67 +207,73 @@ elseif (isset($_REQUEST['save'])) {
 
 	if ($isValid) {
 		$user = array();
-		$user['alias'] = get_request('alias');
-		$user['name'] = get_request('name');
-		$user['surname'] = get_request('surname');
-		$user['passwd'] = get_request('password1');
-		$user['url'] = get_request('url');
-		$user['autologin'] = get_request('autologin', 0);
-		$user['autologout'] = get_request('autologout', 0);
-		$user['theme'] = get_request('theme');
-		$user['refresh'] = get_request('refresh');
-		$user['rows_per_page'] = get_request('rows_per_page');
-		$user['type'] = get_request('user_type');
-		$user['user_medias'] = get_request('user_medias', array());
+		$user['alias'] = getRequest('alias');
+		$user['name'] = getRequest('name');
+		$user['surname'] = getRequest('surname');
+		$user['passwd'] = getRequest('password1');
+		$user['url'] = getRequest('url');
+		$user['autologin'] = getRequest('autologin', 0);
+		$user['autologout'] = hasRequest('autologout_visible') ? getRequest('autologout') : 0;
+		$user['theme'] = getRequest('theme');
+		$user['refresh'] = getRequest('refresh');
+		$user['rows_per_page'] = getRequest('rows_per_page');
+		$user['type'] = getRequest('user_type');
+		$user['user_medias'] = getRequest('user_medias', array());
+		$user['usrgrps'] = zbx_toObject($usrgrps, 'usrgrpid');
 
 		if (hasRequest('lang')) {
 			$user['lang'] = getRequest('lang');
 		}
 
-		$usrgrps = zbx_toObject($usrgrps, 'usrgrpid');
-		$user['usrgrps'] = $usrgrps;
+		DBstart();
 
-		if (isset($_REQUEST['userid'])) {
-			$action = AUDIT_ACTION_UPDATE;
-			$user['userid'] = $_REQUEST['userid'];
-
-			DBstart();
-
+		if (hasRequest('userid')) {
+			$user['userid'] = getRequest('userid');
 			$result = API::User()->update(array($user));
+
 			if ($result) {
 				$result = API::User()->updateMedia(array(
 					'users' => $user,
 					'medias' => $user['user_medias']
 				));
 			}
-			$result = DBend($result);
 
-			show_messages($result, _('User updated'), _('Cannot update user'));
+			$messageSuccess = _('User updated');
+			$messageFailed = _('Cannot update user');
+			$auditAction = AUDIT_ACTION_UPDATE;
 		}
 		else {
-			DBstart();
-			$result = DBend(API::User()->create($user));
+			$result = API::User()->create($user);
 
-			$action = AUDIT_ACTION_ADD;
-			show_messages($result, _('User added'), _('Cannot add user'));
+			$messageSuccess = _('User added');
+			$messageFailed = _('Cannot add user');
+			$auditAction = AUDIT_ACTION_ADD;
 		}
 
 		if ($result) {
-			add_audit($action, AUDIT_RESOURCE_USER, 'User alias ['.$_REQUEST['alias'].'] name ['.$_REQUEST['name'].'] surname ['.$_REQUEST['surname'].']');
+			add_audit($auditAction, AUDIT_RESOURCE_USER,
+				'User alias ['.$_REQUEST['alias'].'] name ['.$_REQUEST['name'].'] surname ['.$_REQUEST['surname'].']'
+			);
 			unset($_REQUEST['form']);
-			clearCookies($result);
 		}
+
+		$result = DBend($result);
+
+		if ($result) {
+			uncheckTableRows();
+		}
+		show_messages($result, $messageSuccess, $messageFailed);
 	}
 }
 elseif (isset($_REQUEST['del_user_media'])) {
-	foreach (get_request('user_medias_to_del', array()) as $mediaId) {
+	foreach (getRequest('user_medias_to_del', array()) as $mediaId) {
 		if (isset($_REQUEST['user_medias'][$mediaId])) {
 			unset($_REQUEST['user_medias'][$mediaId]);
 		}
 	}
 }
 elseif (isset($_REQUEST['del_user_group'])) {
-	foreach (get_request('user_groups_to_del', array()) as $groupId) {
+	foreach (getRequest('user_groups_to_del', array()) as $groupId) {
 		if (isset($_REQUEST['user_groups'][$groupId])) {
 			unset($_REQUEST['user_groups'][$groupId]);
 		}
@@ -272,72 +282,30 @@ elseif (isset($_REQUEST['del_user_group'])) {
 elseif (isset($_REQUEST['delete']) && isset($_REQUEST['userid'])) {
 	$user = reset($users);
 
-	$result = API::User()->delete(array($user['userid']));
+	DBstart();
 
-	show_messages($result, _('User deleted'), _('Cannot delete user'));
-	clearCookies($result);
+	$result = API::User()->delete(array($user['userid']));
 
 	if ($result) {
 		add_audit(AUDIT_ACTION_DELETE, AUDIT_RESOURCE_USER, 'User alias ['.$user['alias'].'] name ['.$user['name'].'] surname ['.$user['surname'].']');
 		unset($_REQUEST['userid'], $_REQUEST['form']);
 	}
-}
-elseif (isset($_REQUEST['grpaction']) && isset($_REQUEST['usrgrpid']) && isset($_REQUEST['userid']) && $_REQUEST['grpaction'] == 1) {
-	$user = reset($users);
 
-	$group = API::UserGroup()->get(array(
-		'usrgrpids' => $_REQUEST['usrgrpid'],
-		'output' => API_OUTPUT_EXTEND
-	));
-	$group = reset($group);
-
-	DBstart();
-
-	$result = add_user_to_group($_REQUEST['userid'], $_REQUEST['usrgrpid']);
 	$result = DBend($result);
 
-	show_messages($result, _('User updated'), _('Cannot update user'));
-	clearCookies($result);
-
 	if ($result) {
-		add_audit(AUDIT_ACTION_ADD, AUDIT_RESOURCE_USER_GROUP, 'User alias ['.$user['alias'].'] name ['.$user['name'].'] surname ['.$user['surname'].']');
-		unset($_REQUEST['usrgrpid'], $_REQUEST['userid']);
+		uncheckTableRows();
 	}
-
-	unset($_REQUEST['grpaction'], $_REQUEST['form']);
+	show_messages($result, _('User deleted'), _('Cannot delete user'));
 }
-elseif (isset($_REQUEST['grpaction']) && isset($_REQUEST['usrgrpid']) && isset($_REQUEST['userid']) && $_REQUEST['grpaction'] == 0) {
-	$user = reset($users);
-
-	$group = API::UserGroup()->get(array(
-		'usrgrpids' => $_REQUEST['usrgrpid'],
-		'output' => API_OUTPUT_EXTEND
-	));
-	$group = reset($group);
+elseif (hasRequest('action') && getRequest('action') == 'user.massunblock' && hasRequest('group_userid')) {
+	$groupUserId = getRequest('group_userid');
 
 	DBstart();
 
-	$result = remove_user_from_group($_REQUEST['userid'], $_REQUEST['usrgrpid']);
-	$result = DBend($result);
-
-	show_messages($result, _('User updated'), _('Cannot update user'));
-	clearCookies($result);
+	$result = unblock_user_login($groupUserId);
 
 	if ($result) {
-		add_audit(AUDIT_ACTION_DELETE, AUDIT_RESOURCE_USER_GROUP, 'User alias ['.$user['alias'].'] name ['.$user['name'].'] surname ['.$user['surname'].']');
-		unset($_REQUEST['usrgrpid'], $_REQUEST['userid']);
-	}
-
-	unset($_REQUEST['grpaction'], $_REQUEST['form']);
-}
-elseif ($_REQUEST['go'] == 'unblock' && isset($_REQUEST['group_userid'])) {
-	$groupUserId = get_request('group_userid', array());
-
-	DBstart();
-
-	$goResult = unblock_user_login($groupUserId);
-
-	if ($goResult) {
 		$users = API::User()->get(array(
 			'userids' => $groupUserId,
 			'output' => API_OUTPUT_EXTEND
@@ -349,15 +317,17 @@ elseif ($_REQUEST['go'] == 'unblock' && isset($_REQUEST['group_userid'])) {
 		}
 	}
 
-	$goResult = DBend($goResult);
+	$result = DBend($result);
 
-	show_messages($goResult, _('Users unblocked'), _('Cannot unblock users'));
-	clearCookies($goResult);
+	if ($result) {
+		uncheckTableRows();
+	}
+	show_messages($result, _('Users unblocked'), _('Cannot unblock users'));
 }
-elseif ($_REQUEST['go'] == 'delete' && isset($_REQUEST['group_userid'])) {
-	$goResult = false;
+elseif (hasRequest('action') && getRequest('action') == 'user.massdelete' && hasRequest('group_userid')) {
+	$result = false;
 
-	$groupUserId = get_request('group_userid', array());
+	$groupUserId = getRequest('group_userid');
 
 	$dbUsers = API::User()->get(array(
 		'userids' => $groupUserId,
@@ -372,35 +342,38 @@ elseif ($_REQUEST['go'] == 'delete' && isset($_REQUEST['group_userid'])) {
 			continue;
 		}
 
-		$userData = $dbUsers[$userId];
+		$result |= (bool) API::User()->delete(array($userId));
 
-		$goResult |= (bool) API::User()->delete(array($userId));
+		if ($result) {
+			$userData = $dbUsers[$userId];
 
-		if ($goResult) {
 			add_audit(AUDIT_ACTION_DELETE, AUDIT_RESOURCE_USER, 'User alias ['.$userData['alias'].'] name ['.$userData['name'].'] surname ['.$userData['surname'].']');
 		}
 	}
 
-	$goResult = DBend($goResult);
+	$result = DBend($result);
 
-	show_messages($goResult, _('User deleted'), _('Cannot delete user'));
-	clearCookies($goResult);
+	if ($result) {
+		uncheckTableRows();
+	}
+	show_messages($result, _('User deleted'), _('Cannot delete user'));
 }
 
 /*
  * Display
  */
-$_REQUEST['filter_usrgrpid'] = get_request('filter_usrgrpid', CProfile::get('web.users.filter.usrgrpid', 0));
+$_REQUEST['filter_usrgrpid'] = getRequest('filter_usrgrpid', CProfile::get('web.users.filter.usrgrpid', 0));
 CProfile::update('web.users.filter.usrgrpid', $_REQUEST['filter_usrgrpid'], PROFILE_TYPE_ID);
 
 if (!empty($_REQUEST['form'])) {
-	$userId = get_request('userid');
+	$userId = getRequest('userid');
 
 	$data = getUserFormData($userId);
 
 	$data['userid'] = $userId;
-	$data['form'] = get_request('form');
-	$data['form_refresh'] = get_request('form_refresh', 0);
+	$data['form'] = getRequest('form');
+	$data['form_refresh'] = getRequest('form_refresh', 0);
+	$data['autologout'] = getRequest('autologout');
 
 	// render view
 	$usersView = new CView('administration.users.edit', $data);
@@ -408,8 +381,16 @@ if (!empty($_REQUEST['form'])) {
 	$usersView->show();
 }
 else {
+	$sortField = getRequest('sort', CProfile::get('web.'.$page['file'].'.sort', 'alias'));
+	$sortOrder = getRequest('sortorder', CProfile::get('web.'.$page['file'].'.sortorder', ZBX_SORT_UP));
+
+	CProfile::update('web.'.$page['file'].'.sort', $sortField, PROFILE_TYPE_STR);
+	CProfile::update('web.'.$page['file'].'.sortorder', $sortOrder, PROFILE_TYPE_STR);
+
 	$data = array(
-		'displayNodes' => is_array(get_current_nodeid())
+		'config' => $config,
+		'sort' => $sortField,
+		'sortorder' => $sortOrder
 	);
 
 	// get user groups
@@ -428,14 +409,11 @@ else {
 	));
 
 	// sorting & paging
-	order_result($data['users'], getPageSortField('alias'), getPageSortOrder());
-	$data['paging'] = getPagingLine($data['users'], array('userid'));
+	order_result($data['users'], $sortField, $sortOrder);
+	$data['paging'] = getPagingLine($data['users']);
 
-	foreach ($data['users'] as $key => $user) {
-		// nodes
-		$data['users'][$key]['nodename'] = $data['displayNodes'] ? get_node_name_by_elid($user['userid'], true) : '';
-
-		// set default lastaccess time to 0
+	// set default lastaccess time to 0
+	foreach ($data['users'] as $user) {
 		$data['usersSessions'][$user['userid']] = array('lastaccess' => 0);
 	}
 

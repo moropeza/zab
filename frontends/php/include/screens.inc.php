@@ -28,7 +28,7 @@ function screen_resources($resource = null) {
 		SCREEN_RESOURCE_CLOCK => _('Clock'),
 		SCREEN_RESOURCE_DATA_OVERVIEW => _('Data overview'),
 		SCREEN_RESOURCE_GRAPH => _('Graph'),
-		SCREEN_RESOURCE_ACTIONS => _('History of actions'),
+		SCREEN_RESOURCE_ACTIONS => _('Action log'),
 		SCREEN_RESOURCE_EVENTS => _('History of events'),
 		SCREEN_RESOURCE_HOSTS_INFO => _('Hosts info'),
 		SCREEN_RESOURCE_MAP => _('Map'),
@@ -41,7 +41,9 @@ function screen_resources($resource = null) {
 		SCREEN_RESOURCE_SYSTEM_STATUS => _('System status'),
 		SCREEN_RESOURCE_TRIGGERS_INFO => _('Triggers info'),
 		SCREEN_RESOURCE_TRIGGERS_OVERVIEW => _('Triggers overview'),
-		SCREEN_RESOURCE_URL => _('Url')
+		SCREEN_RESOURCE_URL => _('URL'),
+		SCREEN_RESOURCE_LLD_GRAPH => _('Graph prototype'),
+		SCREEN_RESOURCE_LLD_SIMPLE_GRAPH => _('Simple graph prototype')
 	);
 
 	if (is_null($resource)) {
@@ -82,30 +84,28 @@ function check_screen_recursion($mother_screenid, $child_screenid) {
 	return false;
 }
 
-function get_slideshow($slideshowid, $step) {
-	$db_slides = DBfetch(DBselect(
+function getSlideshowScreens($slideshowId, $step) {
+	$dbSlides = DBfetch(DBselect(
 		'SELECT MIN(s.step) AS min_step,MAX(s.step) AS max_step'.
 		' FROM slides s'.
-		' WHERE s.slideshowid='.zbx_dbstr($slideshowid)
+		' WHERE s.slideshowid='.zbx_dbstr($slideshowId)
 	));
-	if (!$db_slides || is_null($db_slides['min_step'])) {
+
+	if (!$dbSlides || $dbSlides['min_step'] === null) {
 		return false;
 	}
 
-	$step = $step % ($db_slides['max_step'] + 1);
-	if (!isset($step) || $step < $db_slides['min_step'] || $step > $db_slides['max_step']) {
-		$curr_step = $db_slides['min_step'];
-	}
-	else {
-		$curr_step = $step;
-	}
+	$step = $step % ($dbSlides['max_step'] + 1);
+
+	$currentStep = (!$step || $step < $dbSlides['min_step'] || $step > $dbSlides['max_step'])
+		? $dbSlides['min_step'] : $step;
 
 	return DBfetch(DBselect(
 		'SELECT sl.*'.
 		' FROM slides sl,slideshows ss'.
-		' WHERE ss.slideshowid='.zbx_dbstr($slideshowid).
+		' WHERE ss.slideshowid='.zbx_dbstr($slideshowId).
 			' AND sl.slideshowid=ss.slideshowid'.
-			' AND sl.step='.zbx_dbstr($curr_step)
+			' AND sl.step='.zbx_dbstr($currentStep)
 	));
 }
 
@@ -114,8 +114,8 @@ function slideshow_accessible($slideshowid, $perm) {
 
 	$sql = 'SELECT s.slideshowid'.
 			' FROM slideshows s'.
-			' WHERE s.slideshowid='.zbx_dbstr($slideshowid).
-				andDbNode('s.slideshowid', get_current_nodeid(null, $perm));
+			' WHERE s.slideshowid='.zbx_dbstr($slideshowid);
+
 	if (DBselect($sql)) {
 		$result = true;
 
@@ -130,6 +130,7 @@ function slideshow_accessible($slideshowid, $perm) {
 		}
 
 		$options = array(
+			'output' => array('screenid'),
 			'screenids' => $screenids
 		);
 		if ($perm == PERM_READ_WRITE) {
@@ -175,10 +176,12 @@ function add_slideshow($name, $delay, $slides) {
 
 	// validate slide name
 	$db_slideshow = DBfetch(DBselect(
-		'SELECT s.slideshowid FROM slideshows s WHERE s.name='.zbx_dbstr($name).' '.andDbNode('s.slideshowid')
+		'SELECT s.slideshowid FROM slideshows s WHERE s.name='.zbx_dbstr($name)
 	));
-	if (!empty($db_slideshow)) {
+
+	if ($db_slideshow) {
 		error(_s('Slide show "%s" already exists.', $name));
+
 		return false;
 	}
 
@@ -236,8 +239,7 @@ function update_slideshow($slideshowid, $name, $delay, $slides) {
 		'SELECT s.slideshowid'.
 		' FROM slideshows s'.
 		' WHERE s.name='.zbx_dbstr($name).
-			' AND s.slideshowid<>'.zbx_dbstr($slideshowid).
-			' '.andDbNode('s.slideshowid')
+			' AND s.slideshowid<>'.zbx_dbstr($slideshowid)
 	));
 	if ($dbSlideshow) {
 		error(_s('Slide show "%1$s" already exists.', $name));
@@ -314,7 +316,7 @@ function delete_slideshow($slideshowid) {
 	$result &= DBexecute('DELETE FROM slides where slideshowid='.zbx_dbstr($slideshowid));
 	$result &= DBexecute('DELETE FROM profiles WHERE idx=\'web.favorite.screenids\' AND source=\'slideshowid\' AND value_id='.zbx_dbstr($slideshowid));
 
-	return $result;
+	return (bool) $result;
 }
 
 // check whether there are dynamic items in the screen, if so return TRUE, else FALSE
@@ -323,16 +325,14 @@ function check_dynamic_items($elid, $config = 0) {
 		$sql = 'SELECT si.screenitemid'.
 				' FROM screens_items si'.
 				' WHERE si.screenid='.zbx_dbstr($elid).
-					' AND si.dynamic='.SCREEN_DYNAMIC_ITEM.
-					' '.andDbNode('si.screenitemid');
+					' AND si.dynamic='.SCREEN_DYNAMIC_ITEM;
 	}
 	else {
 		$sql = 'SELECT si.screenitemid'.
 				' FROM slides s,screens_items si'.
 				' WHERE s.slideshowid='.zbx_dbstr($elid).
 					' AND si.screenid=s.screenid'.
-					' AND si.dynamic='.SCREEN_DYNAMIC_ITEM.
-					' '.andDbNode('si.screenitemid');
+					' AND si.dynamic='.SCREEN_DYNAMIC_ITEM;
 	}
 	if (DBfetch(DBselect($sql, 1))) {
 		return true;

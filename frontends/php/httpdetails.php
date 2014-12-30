@@ -40,21 +40,19 @@ $fields = array(
 	'httptestid' =>	array(T_ZBX_INT, O_MAND, P_SYS,	DB_ID,		null),
 	'fullscreen' =>	array(T_ZBX_INT, O_OPT, P_SYS,	IN('0,1'),	null),
 	// ajax
+	'filterState' => array(T_ZBX_INT, O_OPT, P_ACT, null,		null),
 	'favobj' =>		array(T_ZBX_STR, O_OPT, P_ACT,	null,		null),
-	'favref' =>		array(T_ZBX_STR, O_OPT, P_ACT,	NOT_EMPTY,	null),
-	'favid' =>		array(T_ZBX_INT, O_OPT, P_ACT,	null,		null),
-	'favstate' =>	array(T_ZBX_INT, O_OPT, P_ACT,	NOT_EMPTY,	null)
+	'favid' =>		array(T_ZBX_INT, O_OPT, P_ACT,	null,		null)
 );
 check_fields($fields);
 
 /*
  * Ajax
  */
+if (hasRequest('filterState')) {
+	CProfile::update('web.httpdetails.filter.state', getRequest('filterState'), PROFILE_TYPE_INT);
+}
 if (isset($_REQUEST['favobj'])) {
-	if ($_REQUEST['favobj'] == 'filter') {
-		CProfile::update('web.httpdetails.filter.state', $_REQUEST['favstate'], PROFILE_TYPE_INT);
-	}
-
 	// saving fixed/dynamic setting to profile
 	if ($_REQUEST['favobj'] == 'timelinefixedperiod') {
 		if (isset($_REQUEST['favid'])) {
@@ -65,14 +63,14 @@ if (isset($_REQUEST['favobj'])) {
 
 if ($page['type'] == PAGE_TYPE_JS || $page['type'] == PAGE_TYPE_HTML_BLOCK) {
 	require_once dirname(__FILE__).'/include/page_footer.php';
-	exit();
+	exit;
 }
 
 /*
  * Collect data
  */
 $httpTest = API::HttpTest()->get(array(
-	'httptestids' => get_request('httptestid'),
+	'httptestids' => getRequest('httptestid'),
 	'output' => API_OUTPUT_EXTEND,
 	'preservekeys' => true
 ));
@@ -118,10 +116,10 @@ $httpdetailsWidget->addPageHeader(
 		_('DETAILS OF SCENARIO'),
 		SPACE,
 		bold(CMacrosResolverHelper::resolveHttpTestName($httpTest['hostid'], $httpTest['name'])),
-		isset($httpTestData['lastcheck']) ? ' ['.zbx_date2str(_('d M Y H:i:s'), $httpTestData['lastcheck']).']' : null
+		isset($httpTestData['lastcheck']) ? ' ['.zbx_date2str(DATE_TIME_FORMAT_SECONDS, $httpTestData['lastcheck']).']' : null
 	),
 	array(
-		get_icon('reset', array('id' => get_request('httptestid'))),
+		get_icon('reset', array('id' => getRequest('httptestid'))),
 		get_icon('fullscreen', array('fullscreen' => $_REQUEST['fullscreen']))
 	)
 );
@@ -145,6 +143,7 @@ $totalTime = array(
 	'units' => null
 );
 
+$itemIds = array();
 while ($httpstep_data = DBfetch($db_httpsteps)) {
 	$httpStepItemsByType = $httpStepItems[$httpstep_data['httpstepid']];
 
@@ -170,7 +169,6 @@ while ($httpstep_data = DBfetch($db_httpsteps)) {
 		}
 	}
 
-	$itemIds = array();
 	foreach ($httpStepItemsByType as &$httpStepItem) {
 		// calculate the total time it took to execute the scenario
 		// skip steps that come after a failed step
@@ -252,7 +250,7 @@ $httpdetailsTable->addRow(array(
 $httpdetailsWidget->addItem($httpdetailsTable);
 $httpdetailsWidget->show();
 
-echo SBR;
+echo BR();
 
 // create graphs widget
 $graphsWidget = new CWidget();
@@ -276,9 +274,9 @@ $graphInScreen = new CScreenBase(array(
 	'mode' => SCREEN_MODE_PREVIEW,
 	'dataId' => 'graph_in',
 	'profileIdx' => 'web.httptest',
-	'profileIdx2' => get_request('httptestid'),
-	'period' => get_request('period'),
-	'stime' => get_request('stime')
+	'profileIdx2' => getRequest('httptestid'),
+	'period' => getRequest('period'),
+	'stime' => getRequest('stime')
 ));
 $graphInScreen->timeline['starttime'] = date(TIMESTAMP_FORMAT, get_min_itemclock_by_itemid($itemIds));
 
@@ -318,9 +316,9 @@ $graphTimeScreen = new CScreenBase(array(
 	'mode' => SCREEN_MODE_PREVIEW,
 	'dataId' => 'graph_time',
 	'profileIdx' => 'web.httptest',
-	'profileIdx2' => get_request('httptestid'),
-	'period' => get_request('period'),
-	'stime' => get_request('stime')
+	'profileIdx2' => getRequest('httptestid'),
+	'period' => getRequest('period'),
+	'stime' => getRequest('stime')
 ));
 
 $src = 'chart3.php?height=150'.

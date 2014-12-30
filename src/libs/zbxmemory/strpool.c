@@ -65,14 +65,14 @@ void	zbx_strpool_create(size_t size)
 	if (-1 == (shm_key = zbx_ftok(CONFIG_FILE, ZBX_IPC_STRPOOL_ID)))
 	{
 		zabbix_log(LOG_LEVEL_CRIT, "cannot create IPC key for string pool");
-		exit(FAIL);
+		exit(EXIT_FAILURE);
 	}
 
 	zbx_mem_create(&strpool.mem_info, shm_key, ZBX_NO_MUTEX, size, "string pool", "CacheSize", 0);
 
 	strpool.hashset = __strpool_mem_malloc_func(NULL, sizeof(zbx_hashset_t));
 	zbx_hashset_create_ext(strpool.hashset, INIT_HASHSET_SIZE,
-				__strpool_hash_func, __strpool_compare_func,
+				__strpool_hash_func, __strpool_compare_func, NULL,
 				__strpool_mem_malloc_func, __strpool_mem_realloc_func, __strpool_mem_free_func);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
@@ -138,7 +138,7 @@ void	zbx_strpool_clear()
 
 	strpool.hashset = __strpool_mem_malloc_func(NULL, sizeof(zbx_hashset_t));
 	zbx_hashset_create_ext(strpool.hashset, INIT_HASHSET_SIZE,
-				__strpool_hash_func, __strpool_compare_func,
+				__strpool_hash_func, __strpool_compare_func, NULL,
 				__strpool_mem_malloc_func, __strpool_mem_realloc_func, __strpool_mem_free_func);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);

@@ -40,10 +40,8 @@ $fields = array(
 	'severity_min' =>	array(T_ZBX_INT, O_OPT, P_SYS,			IN('0,1,2,3,4,5'),		null),
 	'fullscreen' =>		array(T_ZBX_INT, O_OPT, P_SYS,			IN('0,1'),				null),
 	'favobj' =>			array(T_ZBX_STR, O_OPT, P_ACT,			null,					null),
-	'favref' =>			array(T_ZBX_STR, O_OPT, P_ACT,			NOT_EMPTY,				null),
 	'favid' =>			array(T_ZBX_INT, O_OPT, P_ACT,			null,					null),
-	'favstate' =>		array(T_ZBX_INT, O_OPT, P_ACT,			NOT_EMPTY,				null),
-	'favaction' =>		array(T_ZBX_STR, O_OPT, P_ACT,			IN("'add','remove'"),	null)
+	'favaction' =>		array(T_ZBX_STR, O_OPT, P_ACT,			IN('"add","remove"'),	null)
 );
 check_fields($fields);
 
@@ -54,11 +52,13 @@ if (isset($_REQUEST['favobj'])) {
 	if ($_REQUEST['favobj'] == 'sysmapid') {
 		$result = false;
 
+		DBstart();
+
 		if ($_REQUEST['favaction'] == 'add') {
 			$result = CFavorite::add('web.favorite.sysmapids', $_REQUEST['favid'], $_REQUEST['favobj']);
 			if ($result) {
 				echo '$("addrm_fav").title = "'._('Remove from favourites').'";'."\n".
-					'$("addrm_fav").onclick = function() { rm4favorites("sysmapid", "'.$_REQUEST['favid'].'", 0); }'."\n";
+					'$("addrm_fav").onclick = function() { rm4favorites("sysmapid", "'.$_REQUEST['favid'].'"); }'."\n";
 			}
 		}
 		elseif ($_REQUEST['favaction'] == 'remove') {
@@ -69,15 +69,17 @@ if (isset($_REQUEST['favobj'])) {
 			}
 		}
 
+		$result = DBend($result);
+
 		if ($page['type'] == PAGE_TYPE_JS && $result) {
-			echo 'switchElementsClass("addrm_fav", "iconminus", "iconplus");';
+			echo 'switchElementClass("addrm_fav", "iconminus", "iconplus");';
 		}
 	}
 }
 
 if ($page['type'] == PAGE_TYPE_JS || $page['type'] == PAGE_TYPE_HTML_BLOCK) {
 	require_once dirname(__FILE__).'/include/page_footer.php';
-	exit();
+	exit;
 }
 
 /*
@@ -85,12 +87,11 @@ if ($page['type'] == PAGE_TYPE_JS || $page['type'] == PAGE_TYPE_HTML_BLOCK) {
  */
 $maps = API::Map()->get(array(
 	'output' => array('sysmapid', 'name'),
-	'nodeids' => get_current_nodeid(),
 	'preservekeys' => true
 ));
 order_result($maps, 'name');
 
-if ($mapName = get_request('mapname')) {
+if ($mapName = getRequest('mapname')) {
 	unset($_REQUEST['sysmapid']);
 
 	foreach ($maps as $map) {
@@ -139,7 +140,7 @@ $data['pageFilter'] = new CPageFilter(array(
 		'default' => $data['map']['severity_min'],
 		'mapId' => $data['sysmapid']
 	),
-	'severityMin' => get_request('severity_min')
+	'severityMin' => getRequest('severity_min')
 ));
 $data['severity_min'] = $data['pageFilter']->severityMin;
 

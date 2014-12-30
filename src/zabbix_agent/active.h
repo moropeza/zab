@@ -98,6 +98,7 @@ typedef struct
 	char		*host;
 	char		*key;
 	char		*value;
+	unsigned char	state;
 	zbx_uint64_t	lastlogsize;
 	int		timestamp;
 	char		*source;

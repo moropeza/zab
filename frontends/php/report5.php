@@ -35,7 +35,7 @@ check_fields($fields);
 
 $rprt_wdgt = new CWidget();
 
-$_REQUEST['period'] = get_request('period', 'day');
+$_REQUEST['period'] = getRequest('period', 'day');
 $admin_links = (CWebUser::$data['type'] == USER_TYPE_ZABBIX_ADMIN || CWebUser::$data['type'] == USER_TYPE_SUPER_ADMIN);
 
 $form = new CForm('get');
@@ -55,7 +55,6 @@ $rprt_wdgt->addItem(BR());
 
 $table = new CTableInfo(_('No triggers found.'));
 $table->setHeader(array(
-	is_show_all_nodes() ? _('Node') : null,
 	_('Host'),
 	_('Trigger'),
 	_('Severity'),
@@ -115,9 +114,8 @@ $triggers = API::Trigger()->get(array(
 	'triggerids' => array_keys($triggersEventCount),
 	'output' => array('triggerid', 'description', 'expression', 'priority', 'flags', 'url', 'lastchange'),
 	'selectItems' => array('hostid', 'name', 'value_type', 'key_'),
-	'selectHosts' => array('hostid'),
+	'selectHosts' => array('hostid', 'status', 'name'),
 	'expandDescription' => true,
-	'expandData' => true,
 	'preservekeys' => true,
 	'nopermissions' => true
 ));
@@ -125,7 +123,7 @@ $triggers = API::Trigger()->get(array(
 $hostIds = array();
 
 foreach ($triggers as $triggerId => $trigger) {
-	$hostIds[$trigger['hostid']] = $trigger['hostid'];
+	$hostIds[$trigger['hosts'][0]['hostid']] = $trigger['hosts'][0]['hostid'];
 
 	$triggerItems = array();
 
@@ -137,7 +135,7 @@ foreach ($triggers as $triggerId => $trigger) {
 			'params' => array(
 				'itemid' => $item['itemid'],
 				'action' => in_array($item['value_type'], array(ITEM_VALUE_TYPE_FLOAT, ITEM_VALUE_TYPE_UINT64))
-					? 'showgraph' : 'showvalues'
+					? HISTORY_GRAPH : HISTORY_VALUES
 			)
 		);
 	}
@@ -152,8 +150,9 @@ CArrayHelper::sort($triggers, array(
 ));
 
 $hosts = API::Host()->get(array(
-	'output' => array('hostid'),
+	'output' => array('hostid', 'status'),
 	'hostids' => $hostIds,
+	'selectGraphs' => API_OUTPUT_COUNT,
 	'selectScreens' => API_OUTPUT_COUNT,
 	'preservekeys' => true
 ));
@@ -161,16 +160,18 @@ $hosts = API::Host()->get(array(
 $scripts = API::Script()->getScriptsByHosts($hostIds);
 
 foreach ($triggers as $trigger) {
-	$hostId = $trigger['hostid'];
+	$hostId = $trigger['hosts'][0]['hostid'];
 
-	$hostName = new CSpan($trigger['hostname'], 'link_menu');
-	$hostName->setMenuPopup(getMenuPopupHost($hosts[$hostId], $scripts[$hostId]));
+	$hostName = new CSpan($trigger['hosts'][0]['name'],
+		'link_menu menu-host'.(($hosts[$hostId]['status'] == HOST_STATUS_NOT_MONITORED) ? ' not-monitored' : '')
+	);
+
+	$hostName->setMenuPopup(CMenuPopupHelper::getHost($hosts[$hostId], $scripts[$hostId]));
 
 	$triggerDescription = new CSpan($trigger['description'], 'link_menu');
-	$triggerDescription->setMenuPopup(getMenuPopupTrigger($trigger, $trigger['items']));
+	$triggerDescription->setMenuPopup(CMenuPopupHelper::getTrigger($trigger, $trigger['items']));
 
 	$table->addRow(array(
-		get_node_name_by_elid($trigger['triggerid']),
 		$hostName,
 		$triggerDescription,
 		getSeverityCell($trigger['priority']),

@@ -22,11 +22,11 @@
 $hostInventoryWidget = new CWidget();
 
 $rForm = new CForm('get');
-$rForm->addItem(array(_('Group'), SPACE, $this->data['pageFilter']->getGroupsCB(true)));
+$rForm->addItem(array(_('Group'), SPACE, $this->data['pageFilter']->getGroupsCB()));
 $hostInventoryWidget->addPageHeader(_('HOST INVENTORY'), SPACE);
 $hostInventoryWidget->addHeader(_('Hosts'), $rForm);
 
-$filterTable = new CTable('', 'filter');
+$filterTable = new CTable('', 'filter filter-center');
 // getting inventory fields to make a drop down
 $inventoryFields = getHostInventories(true); // 'true' means list should be ordered by title
 $inventoryFieldsComboBox = new CComboBox('filter_field', $this->data['filterField']);
@@ -49,12 +49,10 @@ $filterTable->addRow(array(
 	),
 ), 'host-inventories');
 
-$filter = new CButton('filter', _('Filter'),
-	"javascript: create_var('zbx_filter', 'filter_set', '1', true); chkbxRange.clearSelectedOnFilterChange();"
-);
+$filter = new CSubmit('filter_set', _('Filter'));
 $filter->useJQueryStyle('main');
 
-$reset = new CButton('reset', _('Reset'), "javascript: clearAllForm('zbx_filter');");
+$reset = new CSubmit('filter_rst', _('Reset'));
 $reset->useJQueryStyle();
 
 $divButtons = new CDiv(array($filter, SPACE, $reset));
@@ -73,16 +71,15 @@ $hostInventoryWidget->addHeaderRowNumber();
 
 $table = new CTableInfo(_('No hosts found.'));
 $table->setHeader(array(
-	is_show_all_nodes() ? make_sorting_header(_('Node'), 'hostid') : null,
-	make_sorting_header(_('Host'), 'name'),
+	make_sorting_header(_('Host'), 'name', $this->data['sort'], $this->data['sortorder']),
 	_('Group'),
-	make_sorting_header(_('Name'), 'pr_name'),
-	make_sorting_header(_('Type'), 'pr_type'),
-	make_sorting_header(_('OS'), 'pr_os'),
-	make_sorting_header(_('Serial number A'), 'pr_serialno_a'),
-	make_sorting_header(_('Tag'), 'pr_tag'),
-	make_sorting_header(_('MAC address A'), 'pr_macaddress_a'))
-);
+	make_sorting_header(_('Name'), 'pr_name', $this->data['sort'], $this->data['sortorder']),
+	make_sorting_header(_('Type'), 'pr_type', $this->data['sort'], $this->data['sortorder']),
+	make_sorting_header(_('OS'), 'pr_os', $this->data['sort'], $this->data['sortorder']),
+	make_sorting_header(_('Serial number A'), 'pr_serialno_a', $this->data['sort'], $this->data['sortorder']),
+	make_sorting_header(_('Tag'), 'pr_tag', $this->data['sort'], $this->data['sortorder']),
+	make_sorting_header(_('MAC address A'), 'pr_macaddress_a', $this->data['sort'], $this->data['sortorder'])
+));
 
 foreach ($this->data['hosts'] as $host) {
 	$hostGroups = array();
@@ -93,7 +90,6 @@ foreach ($this->data['hosts'] as $host) {
 	$hostGroups = implode(', ', $hostGroups);
 
 	$row = array(
-		get_node_name_by_elid($host['hostid']),
 		new CLink(
 			$host['name'],
 			'?hostid='.$host['hostid'].url_param('groupid'),

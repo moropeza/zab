@@ -46,7 +46,6 @@ static int	check_trigger_condition(const DB_EVENT *event, DB_CONDITION *conditio
 	DB_RESULT	result;
 	DB_ROW		row;
 	zbx_uint64_t	condition_value;
-	int		nodeid;
 	char		*tmp_str = NULL;
 	int		ret = FAIL;
 
@@ -124,7 +123,7 @@ static int	check_trigger_condition(const DB_EVENT *event, DB_CONDITION *conditio
 
 					triggerid = 0;
 
-					if (NULL != (row = DBfetch(result)))
+					while (NULL != (row = DBfetch(result)))
 					{
 						ZBX_STR2UINT64(hostid, row[0]);
 						ZBX_STR2UINT64(triggerid, row[1]);
@@ -333,25 +332,6 @@ static int	check_trigger_condition(const DB_EVENT *event, DB_CONDITION *conditio
 				if (NULL != (row = DBfetch(result)) && FAIL == DBis_null(row[0]) && 0 != atoi(row[0]))
 					ret = SUCCEED;
 				DBfree_result(result);
-				break;
-			default:
-				ret = NOTSUPPORTED;
-		}
-	}
-	else if (CONDITION_TYPE_NODE == condition->conditiontype)
-	{
-		nodeid = get_nodeid_by_id(event->objectid);
-		condition_value = atoi(condition->value);
-
-		switch (condition->operator)
-		{
-			case CONDITION_OPERATOR_EQUAL:
-				if (nodeid == condition_value)
-					ret = SUCCEED;
-				break;
-			case CONDITION_OPERATOR_NOT_EQUAL:
-				if (nodeid != condition_value)
-					ret = SUCCEED;
 				break;
 			default:
 				ret = NOTSUPPORTED;
@@ -946,7 +926,7 @@ static int	check_internal_condition(const DB_EVENT *event, DB_CONDITION *conditi
 	DB_RESULT	result;
 	DB_ROW		row;
 	zbx_uint64_t	condition_value;
-	int		nodeid, ret = FAIL;
+	int		ret = FAIL;
 	char		sql[256];
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
@@ -1169,25 +1149,6 @@ static int	check_internal_condition(const DB_EVENT *event, DB_CONDITION *conditi
 		}
 		DBfree_result(result);
 	}
-	else if (CONDITION_TYPE_NODE == condition->conditiontype)
-	{
-		nodeid = get_nodeid_by_id(event->objectid);
-		condition_value = atoi(condition->value);
-
-		switch (condition->operator)
-		{
-			case CONDITION_OPERATOR_EQUAL:
-				if (nodeid == condition_value)
-					ret = SUCCEED;
-				break;
-			case CONDITION_OPERATOR_NOT_EQUAL:
-				if (nodeid != condition_value)
-					ret = SUCCEED;
-				break;
-			default:
-				ret = NOTSUPPORTED;
-		}
-	}
 	else if (CONDITION_TYPE_APPLICATION == condition->conditiontype)
 	{
 		switch (event->object)
@@ -1328,17 +1289,23 @@ int	check_action_condition(const DB_EVENT *event, DB_CONDITION *condition)
  * Author: Alexei Vladishev                                                   *
  *                                                                            *
  ******************************************************************************/
-static int	check_action_conditions(const DB_EVENT *event, zbx_uint64_t actionid, unsigned char evaltype)
+static int	check_action_conditions(const DB_EVENT *event, zbx_uint64_t actionid, unsigned char evaltype,
+		const char *formula)
 {
 	const char	*__function_name = "check_action_conditions";
 
 	DB_RESULT	result;
 	DB_ROW		row;
 	DB_CONDITION	condition;
-	int		cond, exit = 0, ret = SUCCEED;	/* SUCCEED required for ACTION_EVAL_TYPE_AND_OR */
+	int		condition_result, ret = SUCCEED, id_len;
 	unsigned char	old_type = 0xff;
+	char		*expression = NULL, tmp[ZBX_MAX_UINT64_LEN + 2], *ptr, error[256];
+	double		eval_result;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() actionid:" ZBX_FS_UI64, __function_name, actionid);
+
+	if (evaltype == CONDITION_EVAL_TYPE_EXPRESSION)
+		expression = zbx_strdup(expression, formula);
 
 	result = DBselect(
 			"select conditionid,conditiontype,operator,value"
@@ -1347,7 +1314,7 @@ static int	check_action_conditions(const DB_EVENT *event, zbx_uint64_t actionid,
 			" order by conditiontype",
 			actionid);
 
-	while (NULL != (row = DBfetch(result)) && 0 == exit)
+	while (NULL != (row = DBfetch(result)))
 	{
 		ZBX_STR2UINT64(condition.conditionid, row[0]);
 		condition.actionid = actionid;
@@ -1355,54 +1322,68 @@ static int	check_action_conditions(const DB_EVENT *event, zbx_uint64_t actionid,
 		condition.operator = (unsigned char)atoi(row[2]);
 		condition.value = row[3];
 
+		condition_result = check_action_condition(event, &condition);
+
 		switch (evaltype)
 		{
-			case ACTION_EVAL_TYPE_AND_OR:
-				if (old_type == condition.conditiontype)	/* OR conditions */
+			case CONDITION_EVAL_TYPE_AND_OR:
+				if (old_type == condition.conditiontype)
 				{
-					if (SUCCEED == check_action_condition(event, &condition))
+					if (SUCCEED == condition_result)
 						ret = SUCCEED;
 				}
-				else						/* AND conditions */
+				else
 				{
-					if (FAIL == ret)	/* break if PREVIOUS AND condition is FALSE */
-						exit = 1;
-					else if (FAIL == check_action_condition(event, &condition))
-						ret = FAIL;
-				}
+					if (FAIL == ret)
+						goto clean;
 
-				old_type = condition.conditiontype;
+					ret = condition_result;
+					old_type = condition.conditiontype;
+				}
 
 				break;
-			case ACTION_EVAL_TYPE_AND:
-				cond = check_action_condition(event, &condition);
-
-				if (FAIL == cond)	/* break if any AND condition is FALSE */
+			case CONDITION_EVAL_TYPE_AND:
+				if (FAIL == condition_result)	/* break if any AND condition is FALSE */
 				{
 					ret = FAIL;
-					exit = 1;
+					goto clean;
 				}
-				else
-					ret = SUCCEED;
 
 				break;
-			case ACTION_EVAL_TYPE_OR:
-				cond = check_action_condition(event, &condition);
-
-				if (SUCCEED == cond)	/* break if any OR condition is TRUE */
+			case CONDITION_EVAL_TYPE_OR:
+				if (SUCCEED == condition_result)	/* break if any OR condition is TRUE */
 				{
 					ret = SUCCEED;
-					exit = 1;
+					goto clean;
 				}
-				else
-					ret = FAIL;
+				ret = FAIL;
+
+				break;
+			case CONDITION_EVAL_TYPE_EXPRESSION:
+				zbx_snprintf(tmp, sizeof(tmp), "{" ZBX_FS_UI64 "}", condition.conditionid);
+				id_len = strlen(tmp);
+
+				for (ptr = expression; NULL != (ptr = strstr(ptr, tmp)); ptr += id_len)
+				{
+					*ptr = (SUCCEED == condition_result ? '1' : '0');
+					memset(ptr + 1, ' ', id_len - 1);
+				}
 
 				break;
 			default:
 				ret = FAIL;
-				exit = 1;
+				goto clean;
 		}
 	}
+
+	if (evaltype == CONDITION_EVAL_TYPE_EXPRESSION)
+	{
+		if (SUCCEED == evaluate(&eval_result, expression, error, sizeof(error)))
+			ret = (SUCCEED != zbx_double_compare(eval_result, 0) ? SUCCEED : FAIL);
+
+		zbx_free(expression);
+	}
+clean:
 	DBfree_result(result);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
@@ -1592,19 +1573,18 @@ void	process_actions(const DB_EVENT *events, size_t events_num)
 	{
 		event = &events[i];
 
-		result = DBselect("select actionid,evaltype"
+		result = DBselect("select actionid,evaltype,formula"
 				" from actions"
 				" where status=%d"
-					" and eventsource=%d"
-					ZBX_SQL_NODE,
-				ACTION_STATUS_ACTIVE, event->source, DBand_node_local("actionid"));
+					" and eventsource=%d",
+				ACTION_STATUS_ACTIVE, event->source);
 
 		while (NULL != (row = DBfetch(result)))
 		{
 			ZBX_STR2UINT64(actionid, row[0]);
-			evaltype = (unsigned char)atoi(row[1]);
+			ZBX_STR2UCHAR(evaltype, row[1]);
 
-			if (SUCCEED == check_action_conditions(event, actionid, evaltype))
+			if (SUCCEED == check_action_conditions(event, actionid, evaltype, row[2]))
 			{
 				escalation_add_values(&db_insert, escalations_num++, actionid, event, 0);
 

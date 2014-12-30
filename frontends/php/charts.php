@@ -42,27 +42,25 @@ $fields = array(
 	'graphid' =>	array(T_ZBX_INT, O_OPT, P_SYS, DB_ID,		null),
 	'period' =>		array(T_ZBX_INT, O_OPT, P_SYS, null,		null),
 	'stime' =>		array(T_ZBX_STR, O_OPT, P_SYS, null,		null),
-	'action' =>		array(T_ZBX_STR, O_OPT, P_SYS, IN("'go','add','remove'"), null),
 	'fullscreen' =>	array(T_ZBX_INT, O_OPT, P_SYS, IN('0,1'),	null),
 	// ajax
+	'filterState' => array(T_ZBX_INT, O_OPT, P_ACT, null,		null),
 	'favobj' =>		array(T_ZBX_STR, O_OPT, P_ACT, null,		null),
-	'favref' =>		array(T_ZBX_STR, O_OPT, P_ACT, NOT_EMPTY,	null),
 	'favid' =>		array(T_ZBX_INT, O_OPT, P_ACT, null,		null),
-	'favstate' =>	array(T_ZBX_INT, O_OPT, P_ACT, NOT_EMPTY,	null),
-	'favaction' =>	array(T_ZBX_STR, O_OPT, P_ACT, IN("'add','remove'"), null)
+	'favaction' =>	array(T_ZBX_STR, O_OPT, P_ACT, IN('"add","remove"'), null)
 );
 check_fields($fields);
 
 /*
  * Permissions
  */
-if (get_request('groupid') && !API::HostGroup()->isReadable(array($_REQUEST['groupid']))) {
+if (getRequest('groupid') && !API::HostGroup()->isReadable(array($_REQUEST['groupid']))) {
 	access_deny();
 }
-if (get_request('hostid') && !API::Host()->isReadable(array($_REQUEST['hostid']))) {
+if (getRequest('hostid') && !API::Host()->isReadable(array($_REQUEST['hostid']))) {
 	access_deny();
 }
-if (get_request('graphid')) {
+if (getRequest('graphid')) {
 	$graphs = API::Graph()->get(array(
 		'graphids' => array($_REQUEST['graphid']),
 		'output' => array('graphid')
@@ -75,57 +73,62 @@ if (get_request('graphid')) {
 $pageFilter = new CPageFilter(array(
 	'groups' => array('real_hosts' => true, 'with_graphs' => true),
 	'hosts' => array('with_graphs' => true),
-	'groupid' => get_request('groupid', null),
-	'hostid' => get_request('hostid', null),
+	'groupid' => getRequest('groupid'),
+	'hostid' => getRequest('hostid'),
 	'graphs' => array('templated' => 0),
-	'graphid' => get_request('graphid', null)
+	'graphid' => getRequest('graphid')
 ));
 
 /*
  * Ajax
  */
+if (hasRequest('filterState')) {
+	CProfile::update('web.charts.filter.state', getRequest('filterState'), PROFILE_TYPE_INT);
+}
+
 if (isset($_REQUEST['favobj'])) {
-	if ($_REQUEST['favobj'] == 'filter') {
-		CProfile::update('web.charts.filter.state', $_REQUEST['favstate'], PROFILE_TYPE_INT);
+	if (getRequest('favobj') === 'timelinefixedperiod' && hasRequest('favid')) {
+		CProfile::update('web.screens.timelinefixed', getRequest('favid'), PROFILE_TYPE_INT);
 	}
-	if ($_REQUEST['favobj'] == 'timelinefixedperiod') {
-		if (isset($_REQUEST['favid'])) {
-			CProfile::update('web.screens.timelinefixed', $_REQUEST['favid'], PROFILE_TYPE_INT);
-		}
-	}
+
 	if (str_in_array($_REQUEST['favobj'], array('itemid', 'graphid'))) {
 		$result = false;
+
+		DBstart();
+
 		if ($_REQUEST['favaction'] == 'add') {
 			$result = CFavorite::add('web.favorite.graphids', $_REQUEST['favid'], $_REQUEST['favobj']);
 			if ($result) {
 				echo '$("addrm_fav").title = "'._('Remove from favourites').'";'."\n";
-				echo '$("addrm_fav").onclick = function() { rm4favorites("graphid", "'.$_REQUEST['favid'].'", 0); }'."\n";
+				echo '$("addrm_fav").onclick = function() { rm4favorites("graphid", "'.$_REQUEST['favid'].'"); }'."\n";
 			}
 		}
 		elseif ($_REQUEST['favaction'] == 'remove') {
 			$result = CFavorite::remove('web.favorite.graphids', $_REQUEST['favid'], $_REQUEST['favobj']);
-
 			if ($result) {
 				echo '$("addrm_fav").title = "'._('Add to favourites').'";'."\n";
 				echo '$("addrm_fav").onclick = function() { add2favorites("graphid", "'.$_REQUEST['favid'].'"); }'."\n";
 			}
 		}
 
+		$result = DBend($result);
+
 		if ($page['type'] == PAGE_TYPE_JS && $result) {
-			echo 'switchElementsClass("addrm_fav", "iconminus", "iconplus");';
+			echo 'switchElementClass("addrm_fav", "iconminus", "iconplus");';
 		}
 	}
 }
+
 if (!empty($_REQUEST['period']) || !empty($_REQUEST['stime'])) {
 	CScreenBase::calculateTime(array(
 		'profileIdx' => 'web.screens',
 		'profileIdx2' => $pageFilter->graphid,
 		'updateProfile' => true,
-		'period' => get_request('period'),
-		'stime' => get_request('stime')
+		'period' => getRequest('period'),
+		'stime' => getRequest('stime')
 	));
 
-	$curl = new Curl();
+	$curl = new CUrl();
 	$curl->removeArgument('period');
 	$curl->removeArgument('stime');
 
@@ -142,7 +145,7 @@ ob_end_flush();
 
 if ($page['type'] == PAGE_TYPE_JS || $page['type'] == PAGE_TYPE_HTML_BLOCK) {
 	require_once dirname(__FILE__).'/include/page_footer.php';
-	exit();
+	exit;
 }
 
 /*

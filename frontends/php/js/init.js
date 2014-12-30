@@ -57,20 +57,48 @@ jQuery(function($) {
 			data = obj.data('menu-popup');
 
 		switch (data.type) {
-			case 'host':
-				data = getMenuPopupHost(data);
+			case 'favouriteGraphs':
+				data = getMenuPopupFavouriteGraphs(data);
 				break;
 
-			case 'trigger':
-				data = getMenuPopupTrigger(data);
+			case 'favouriteMaps':
+				data = getMenuPopupFavouriteMaps(data);
+				break;
+
+			case 'favouriteScreens':
+				data = getMenuPopupFavouriteScreens(data);
 				break;
 
 			case 'history':
 				data = getMenuPopupHistory(data);
 				break;
 
+			case 'host':
+				data = getMenuPopupHost(data);
+				break;
+
 			case 'map':
 				data = getMenuPopupMap(data);
+				break;
+
+			case 'refresh':
+				data = getMenuPopupRefresh(data);
+				break;
+
+			case 'serviceConfiguration':
+				data = getMenuPopupServiceConfiguration(data);
+				break;
+
+			case 'trigger':
+				data = getMenuPopupTrigger(data);
+				break;
+
+			case 'triggerLog':
+				data = getMenuPopupTriggerLog(data);
+				break;
+
+			case 'triggerMacro':
+				data = getMenuPopupTriggerMacro(data);
 				break;
 		}
 
@@ -87,6 +115,14 @@ jQuery(function($) {
 
 	/*
 	 * add.popup event
+	 *
+	 * Call multiselect method 'addData' if parent was multiselect, execute addPopupValues function
+	 * or just update input field value
+	 *
+	 * @param object data
+	 * @param string data.object   object name
+	 * @param array  data.values   values
+	 * @param string data.parentId parent id
 	 */
 	$(document).on('add.popup', function(e, data) {
 		// multiselect check
@@ -98,15 +134,22 @@ jQuery(function($) {
 						'name': data.values[i].name,
 						'prefix': data.values[i].prefix
 					};
-					jQuery('#' + data.parentId).multiSelect.addData(item, data.parentId);
+					jQuery('#' + data.parentId).multiSelect('addData', item);
 				}
 			}
 		}
-		else {
+		else if (typeof addPopupValues !== 'undefined') {
 			// execute function if they exist
-			if (typeof addPopupValues !== 'undefined') {
-				addPopupValues(data);
-			}
+			addPopupValues(data);
+		}
+		else {
+			jQuery('#' + data.parentId).val(data.values[0].name);
 		}
 	});
+
+	// create jquery buttons
+	$('input.jqueryinput').button();
+	$('.jqueryinputset').buttonset();
+
+	createPlaceholders();
 });

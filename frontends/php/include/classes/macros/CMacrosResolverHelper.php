@@ -30,6 +30,17 @@ class CMacrosResolverHelper {
 	private static $macrosResolver;
 
 	/**
+	 * Create CMacrosResolver object and store in static variable.
+	 *
+	 * @static
+	 */
+	private static function init() {
+		if (self::$macrosResolver === null) {
+			self::$macrosResolver = new CMacrosResolver();
+		}
+	}
+
+	/**
 	 * Resolve macros.
 	 *
 	 * @static
@@ -478,13 +489,61 @@ class CMacrosResolverHelper {
 	}
 
 	/**
-	 * Create CMacrosResolver object and store in static variable.
+	 * Expand functional macros in given map label.
+	 *
+	 * @param string $label			label to expand
+	 * @param array  $replaceHosts	list of hosts in order which they appear in trigger expression if trigger label is
+	 * given, or single host when host label is given
+	 *
+	 * @return string
+	 */
+	public static function resolveMapLabelMacros($label, $replaceHosts = null) {
+		self::init();
+
+		return self::$macrosResolver->resolveMapLabelMacros($label, $replaceHosts);
+	}
+
+	/**
+	 * Resolve all kinds of macros in map labels.
 	 *
 	 * @static
+	 *
+	 * @param array  $selement
+	 * @param string $selement['label']						label to expand
+	 * @param int    $selement['elementtype']				element type
+	 * @param int    $selement['elementid']					element id
+	 * @param string $selement['elementExpressionTrigger']	if type is trigger, then trigger expression
+	 *
+	 * @return string
 	 */
-	private static function init() {
-		if (self::$macrosResolver === null) {
-			self::$macrosResolver = new CMacrosResolver();
-		}
+	public static function resolveMapLabelMacrosAll(array $selement) {
+		self::init();
+
+		return self::$macrosResolver->resolveMapLabelMacrosAll($selement);
+	}
+
+	/**
+	 * Resolve macros in screen element URL.
+	 *
+	 * @static
+	 *
+	 * @param array $screenElement
+	 *
+	 * @return string
+	 */
+	public static function resolveScreenElementURL(array $screenElement) {
+		self::init();
+
+		$macros = self::$macrosResolver->resolve(array(
+			'config' => $screenElement['config'],
+			'data' => array(
+				$screenElement['hostid'] => array(
+					'url' => $screenElement['url']
+				)
+			)
+		));
+		$macros = reset($macros);
+
+		return $macros['url'];
 	}
 }

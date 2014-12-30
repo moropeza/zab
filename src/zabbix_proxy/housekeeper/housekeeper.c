@@ -25,7 +25,8 @@
 
 #include "housekeeper.h"
 
-extern unsigned char	process_type;
+extern unsigned char	process_type, daemon_type;
+extern int		server_num, process_num;
 
 /******************************************************************************
  *                                                                            *
@@ -124,7 +125,7 @@ rollback:
  * Comments:                                                                  *
  *                                                                            *
  ******************************************************************************/
-static int housekeeping_history(int now)
+static int	housekeeping_history(int now)
 {
         int	records = 0;
 
@@ -137,10 +138,22 @@ static int housekeeping_history(int now)
         return records;
 }
 
-void	main_housekeeper_loop(void)
+ZBX_THREAD_ENTRY(housekeeper_thread, args)
 {
 	int	records, start, sleeptime;
 	double	sec;
+
+	process_type = ((zbx_thread_args_t *)args)->process_type;
+	server_num = ((zbx_thread_args_t *)args)->server_num;
+	process_num = ((zbx_thread_args_t *)args)->process_num;
+
+	zabbix_log(LOG_LEVEL_INFORMATION, "%s #%d started [%s #%d]", get_daemon_type_string(daemon_type),
+			server_num, get_process_type_string(process_type), process_num);
+
+	zbx_setproctitle("%s [startup idle for %d minutes]", get_process_type_string(process_type),
+			HOUSEKEEPER_STARTUP_DELAY);
+
+	zbx_sleep_loop(HOUSEKEEPER_STARTUP_DELAY * SEC_PER_MIN);
 
 	for (;;)
 	{
@@ -160,7 +173,8 @@ void	main_housekeeper_loop(void)
 
 		DBclose();
 
-		sleeptime = CONFIG_HOUSEKEEPING_FREQUENCY * SEC_PER_HOUR - (time(NULL) - start);
+		if (0 > (sleeptime = CONFIG_HOUSEKEEPING_FREQUENCY * SEC_PER_HOUR - (time(NULL) - start)))
+			sleeptime = 0;
 
 		zabbix_log(LOG_LEVEL_WARNING, "%s [deleted %d records in " ZBX_FS_DBL " sec, idle %d sec]",
 				get_process_type_string(process_type), records, sec, sleeptime);

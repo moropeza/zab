@@ -9,22 +9,7 @@
 
 	function insertText(obj, value) {
 		<?php if ($this->data['dstfld1'] == 'expression') { ?>
-			if (IE) {
-				obj.focus();
-
-				var s = window.opener.document.selection.createRange();
-				s.text = value;
-			}
-			else if (obj.selectionStart || obj.selectionStart == '0') {
-				var s = obj.selectionStart,
-					e = obj.selectionEnd,
-					objValue = jQuery(obj).val();
-
-				jQuery(obj).val(objValue.substring(0, s) + value + objValue.substring(e, objValue.length));
-			}
-			else {
-				jQuery(obj).val(jQuery(obj).val() + value);
-			}
+			jQuery(obj).val(jQuery(obj).val() + value);
 		<?php } else { ?>
 			jQuery(obj).val(value);
 		<?php } ?>
@@ -38,10 +23,10 @@
 					|| jQuery('#expr_type option:selected').val().substr(0, 6) == 'strlen'
 					|| jQuery('#expr_type option:selected').val().substr(0, 4) == 'band') {
 				if (jQuery('#paramtype option:selected').val() == <?php echo PARAM_TYPE_COUNTS; ?>) {
-					jQuery('#param_0').removeAttr('readonly');
+					jQuery('#params_0').removeAttr('readonly');
 				}
 				else {
-					jQuery('#param_0').attr('readonly', 'readonly');
+					jQuery('#params_0').attr('readonly', 'readonly');
 				}
 			}
 		});
@@ -51,10 +36,10 @@
 					|| jQuery('#expr_type option:selected').val().substr(0, 6) == 'strlen'
 					|| jQuery('#expr_type option:selected').val().substr(0, 4) == 'band') {
 				if (jQuery('#paramtype option:selected').val() == <?php echo PARAM_TYPE_COUNTS; ?>) {
-					jQuery('#param_0').removeAttr('readonly');
+					jQuery('#params_0').removeAttr('readonly');
 				}
 				else {
-					jQuery('#param_0').attr('readonly', 'readonly');
+					jQuery('#params_0').attr('readonly', 'readonly');
 				}
 			}
 		});

@@ -74,15 +74,6 @@ $httpFormList->addRow(_('New application'),
 	new CTextBox('new_application', $this->data['new_application'], ZBX_TEXTBOX_STANDARD_SIZE), false, null, 'new'
 );
 
-// Authentication
-$authenticationComboBox = new CComboBox('authentication', $this->data['authentication'], 'submit();');
-$authenticationComboBox->addItems(httptest_authentications());
-$httpFormList->addRow(_('Authentication'), $authenticationComboBox);
-if (in_array($this->data['authentication'], array(HTTPTEST_AUTH_BASIC, HTTPTEST_AUTH_NTLM))) {
-	$httpFormList->addRow(_('User'), new CTextBox('http_user', $this->data['http_user'], ZBX_TEXTBOX_STANDARD_SIZE, 'no', 64));
-	$httpFormList->addRow(_('Password'), new CTextBox('http_password', $this->data['http_password'], ZBX_TEXTBOX_STANDARD_SIZE, 'no', 64));
-}
-
 // update interval
 $httpFormList->addRow(_('Update interval (in sec)'), new CNumericBox('delay', $this->data['delay'], 5));
 
@@ -134,18 +125,72 @@ $agentComboBox->addItemsInGroup(_('Others'), array(
 	'Lynx/2.8.4rel.1 libwww-FM/2.14' => 'Lynx 2.8.4rel.1',
 	'Links (2.3pre1; Linux 2.6.35.10 i686; 225x51)' => 'Links 2.3pre1',
 	'Links (2.2; Linux 2.6.37.6-0.7-desktop i686; 225x51)' => 'Links 2.2',
-	'Googlebot/2.1 (+http://www.google.com/bot.html)' => 'Googlebot'
+	'Googlebot/2.1 (+http://www.google.com/bot.html)' => 'Googlebot',
+	-1 => _('other').' ...'
 ));
+
 $httpFormList->addRow(_('Agent'), $agentComboBox);
 
 // append HTTP proxy to form list
-$httpProxyTextBox = new CTextBox('http_proxy', $this->data['http_proxy'], ZBX_TEXTBOX_STANDARD_SIZE, 'no', 255);
+$httpProxyTextBox = new CTextBox('http_proxy', $this->data['http_proxy'], ZBX_TEXTBOX_STANDARD_SIZE, false, 255);
 $httpProxyTextBox->setAttribute('placeholder', 'http://[username[:password]@]proxy.example.com[:port]');
 $httpFormList->addRow(_('HTTP proxy'), $httpProxyTextBox);
 
-// append status to form list
+// append variables to form list
 $httpFormList->addRow(_('Variables'), new CTextArea('variables', $this->data['variables']));
+
+// append headers to form list
+$httpFormList->addRow(_('Headers'), new CTextArea('headers', $this->data['headers']));
+
+// status
 $httpFormList->addRow(_('Enabled'), new CCheckBox('status', !$this->data['status']));
+
+/*
+ * Authentication tab
+ */
+$httpAuthenticationFormList = new CFormList('httpAuthenticationFormList');
+
+// Authentication type
+$authenticationComboBox = new CComboBox('authentication', $this->data['authentication']);
+$authenticationComboBox->addItems(httptest_authentications());
+$httpAuthenticationFormList->addRow(_('HTTP authentication'), $authenticationComboBox);
+
+$httpAuthenticationUserTB = new CTextBox('http_user', $this->data['http_user'], ZBX_TEXTBOX_STANDARD_SIZE, false, 64);
+$httpAuthenticationPasswordTB = new CTextBox('http_password', $this->data['http_password'], ZBX_TEXTBOX_STANDARD_SIZE, false, 64);
+
+$authenticationInputsHidden = $this->data['authentication'] == HTTPTEST_AUTH_NONE;
+
+if ($authenticationInputsHidden) {
+	$httpAuthenticationUserTB->setAttribute('disabled', true);
+	$httpAuthenticationPasswordTB->setAttribute('disabled', true);
+}
+
+$httpAuthenticationFormList->addRow(_('User'), $httpAuthenticationUserTB, $authenticationInputsHidden);
+$httpAuthenticationFormList->addRow(_('Password'), $httpAuthenticationPasswordTB, $authenticationInputsHidden);
+
+// SSL verify peer checkbox
+$httpAuthenticationFormList->addRow(_('SSL verify peer'), new CCheckBox('verify_peer', $this->data['verify_peer']));
+
+// SSL verify host checkbox
+$httpAuthenticationFormList->addRow(_('SSL verify host'), new CCheckBox('verify_host', $this->data['verify_host']));
+
+// SSL certificate file
+$httpAuthenticationFormList->addRow(
+	_('SSL certificate file'),
+	new CTextBox('ssl_cert_file', $this->data['ssl_cert_file'], ZBX_TEXTBOX_STANDARD_SIZE, false, 255)
+);
+
+// SSL key file
+$httpAuthenticationFormList->addRow(
+	_('SSL key file'),
+	new CTextBox('ssl_key_file', $this->data['ssl_key_file'], ZBX_TEXTBOX_STANDARD_SIZE, false, 255)
+);
+
+// SSL key password
+$httpAuthenticationFormList->addRow(
+	_('SSL key password'),
+	new CTextBox('ssl_key_password', $this->data['ssl_key_password'], ZBX_TEXTBOX_STANDARD_SIZE, false, 64)
+);
 
 /*
  * Step tab
@@ -195,8 +240,10 @@ foreach ($this->data['steps'] as $stepid => $step) {
 		'name_step' => $stepid
 	));
 
-	if (zbx_strlen($step['url']) > 70) {
-		$url = new CSpan(substr($step['url'], 0, 35).SPACE.'...'.SPACE.substr($step['url'], zbx_strlen($step['url']) - 25, 25));
+	if (mb_strlen($step['url']) > 70) {
+		$start = mb_substr($step['url'], 0, 35);
+		$end = mb_substr($step['url'], mb_strlen($step['url']) - 25, 25);
+		$url = new CSpan($start.SPACE.'...'.SPACE.$end);
 		$url->setHint($step['url']);
 	}
 	else {
@@ -240,22 +287,46 @@ if (!$this->data['form_refresh']) {
 }
 $httpTab->addTab('scenarioTab', _('Scenario'), $httpFormList);
 $httpTab->addTab('stepTab', _('Steps'), $httpStepFormList);
+$httpTab->addTab('authenticationTab', _('Authentication'), $httpAuthenticationFormList);
+
 $httpForm->addItem($httpTab);
 
 // append buttons to form
 if (!empty($this->data['httptestid'])) {
+	if ($this->data['templated'] == 0) {
+		$btnDelete = new CButtonDelete(
+			_('Delete scenario?'),
+			url_param('form').url_param('httptestid').url_param('hostid')
+		);
+	}
+	else {
+		$btnDelete = null;
+	}
+
+	if ($this->data['host']['status'] != HOST_STATUS_TEMPLATE) {
+		$buttonDelHistory = new CButtonQMessage(
+			'del_history',
+			_('Clear history and trends'),
+			_('History clearing can take a long time. Continue?')
+		);
+	}
+	else {
+		$buttonDelHistory = null;
+	}
+
 	$httpForm->addItem(makeFormFooter(
-		new CSubmit('save', _('Save')),
+		new CSubmit('update', _('Update')),
 		array(
 			new CSubmit('clone', _('Clone')),
-			$this->data['templated'] ? null : new CButtonDelete(_('Delete scenario?'), url_param('form').url_param('httptestid').url_param('hostid')),
-			new CButtonCancel(url_param('hostid'))
+			$buttonDelHistory,
+			$btnDelete,
+			new CButtonCancel()
 		)
 	));
 }
 else {
 	$httpForm->addItem(makeFormFooter(
-		new CSubmit('save', _('Save')),
+		new CSubmit('add', _('Add')),
 		new CButtonCancel()
 	));
 }
