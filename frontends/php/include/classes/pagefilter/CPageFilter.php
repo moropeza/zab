@@ -520,6 +520,7 @@ class CPageFilter {
 				'output' => array('graphid', 'name'),
 				'groupids' => ($this->groupid > 0 && $this->hostid == 0) ? $this->groupid : null,
 				'hostids' => ($this->hostid > 0) ? $this->hostid : null,
+				'selectHosts' => array('hostid', 'name'),
 				'expandName' => true
 			);
 			$options = zbx_array_merge($def_ptions, $options);
@@ -527,6 +528,8 @@ class CPageFilter {
 			order_result($graphs, 'name');
 
 			foreach ($graphs as $graph) {
+				if ($this->hostid == 0)
+					$graph['name'] = $graph['hosts'][0]['name'] . ' : ' . $graph['name'];
 				$this->data['graphs'][$graph['graphid']] = $graph;
 			}
 
