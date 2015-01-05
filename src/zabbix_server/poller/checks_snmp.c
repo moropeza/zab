@@ -42,6 +42,9 @@ zbx_snmpidx_mapping_t;
 
 static zbx_hashset_t	snmpidx;
 
+static int snmp_translate_dynamic(struct snmp_session *ss, const DC_ITEM *items, AGENT_RESULT *results,
+		int *errcodes, int num, char *error, int max_error_len, int *max_succeed, int *min_fail, int bulk, char oids_translated[MAX_SNMP_ITEMS][ITEM_SNMP_OID_LEN_MAX]);
+
 static zbx_hash_t	__snmpidx_main_key_hash(const void *data)
 {
 	const zbx_snmpidx_main_key_t	*main_key = (const zbx_snmpidx_main_key_t *)data;
@@ -1357,7 +1360,7 @@ static int	zbx_snmp_process_discovery(struct snmp_session *ss, const DC_ITEM *it
 	const char	*__function_name = "zbx_snmp_process_discovery";
 
 	int		ret;
-	char		oid_translated[ITEM_SNMP_OID_LEN_MAX];
+	char		oid_translated[MAX_SNMP_ITEMS][ITEM_SNMP_OID_LEN_MAX];
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -1366,8 +1369,15 @@ static int	zbx_snmp_process_discovery(struct snmp_session *ss, const DC_ITEM *it
 	switch (num_key_param(items[0].snmp_oid))
 	{
 		case 0:
-			zbx_snmp_translate(oid_translated, items[0].snmp_oid, sizeof(oid_translated));
-			errcodes[0] = zbx_snmp_walk(ss, &items[0], oid_translated, ZBX_SNMP_WALK_MODE_DISCOVERY,
+			zbx_snmp_translate(oid_translated[0], items[0].snmp_oid, sizeof(oid_translated[0]));
+			errcodes[0] = zbx_snmp_walk(ss, &items[0], oid_translated[0], ZBX_SNMP_WALK_MODE_DISCOVERY,
+					&results[0], max_succeed, min_fail, max_vars, bulk);
+			break;
+		case 3:
+			zabbix_log(LOG_LEVEL_DEBUG, "%s() special processing", __function_name);
+			snmp_translate_dynamic(ss, items, results, errcodes, num, error, max_error_len,
+					max_succeed, min_fail, bulk, oid_translated);
+			errcodes[0] = zbx_snmp_walk(ss, &items[0], oid_translated[0], ZBX_SNMP_WALK_MODE_DISCOVERY,
 					&results[0], max_succeed, min_fail, max_vars, bulk);
 			break;
 		default:
@@ -1389,6 +1399,32 @@ static int	zbx_snmp_process_dynamic(struct snmp_session *ss, const DC_ITEM *item
 {
 	const char	*__function_name = "zbx_snmp_process_dynamic";
 
+	int		i, ret;
+	char		oids_translated[MAX_SNMP_ITEMS][ITEM_SNMP_OID_LEN_MAX];
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
+
+	ret = snmp_translate_dynamic(ss, items, results, errcodes, num, error, max_error_len,
+			max_succeed, min_fail, bulk, oids_translated);
+
+	if (SUCCEED != ret)
+		goto exit;
+
+	/* query values based on the indices verified and/or determined above */
+
+	ret = zbx_snmp_get_values(ss, items, oids_translated, results, errcodes, NULL, num, 0, error, max_error_len,
+			max_succeed, min_fail);
+exit:
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
+
+	return ret;
+}
+
+static int	snmp_translate_dynamic(struct snmp_session *ss, const DC_ITEM *items, AGENT_RESULT *results,
+		int *errcodes, int num, char *error, int max_error_len, int *max_succeed, int *min_fail, int bulk, char oids_translated[MAX_SNMP_ITEMS][ITEM_SNMP_OID_LEN_MAX])
+{
+	const char	*__function_name = "snmp_translate_dynamic";
+
 	int		i, j, k, ret;
 	int		to_walk[MAX_SNMP_ITEMS], to_walk_num = 0;
 	int		to_verify[MAX_SNMP_ITEMS], to_verify_num = 0;
@@ -1396,7 +1432,6 @@ static int	zbx_snmp_process_dynamic(struct snmp_session *ss, const DC_ITEM *item
 	unsigned char	query_and_ignore_type[MAX_SNMP_ITEMS];
 	char		index_oids[MAX_SNMP_ITEMS][ITEM_SNMP_OID_LEN_MAX];
 	char		index_values[MAX_SNMP_ITEMS][ITEM_SNMP_OID_LEN_MAX];
-	char		oids_translated[MAX_SNMP_ITEMS][ITEM_SNMP_OID_LEN_MAX];
 	char		*idx = NULL, *pl;
 	size_t		idx_alloc = 32;
 
@@ -1485,6 +1520,11 @@ static int	zbx_snmp_process_dynamic(struct snmp_session *ss, const DC_ITEM *item
 				*pl = '[';
 
 				zbx_strlcat(oids_translated[j], to_verify_oids[j] + len, sizeof(oids_translated[j]));
+
+				/* Busca la parte final del índice SNMP OID */
+				pl = strchr(items[j].snmp_oid, ']');
+				pl++;
+				zbx_strlcat(oids_translated[j], pl, sizeof(oids_translated[j]));
 			}
 
 			free_result(&results[j]);
@@ -1570,6 +1610,11 @@ static int	zbx_snmp_process_dynamic(struct snmp_session *ss, const DC_ITEM *item
 
 				zbx_strlcat(oids_translated[j], ".", sizeof(oids_translated[j]));
 				zbx_strlcat(oids_translated[j], idx, sizeof(oids_translated[j]));
+
+				/* Busca la parte final del índice SNMP OID */
+				pl = strchr(items[j].snmp_oid, ']');
+				pl++;
+				zbx_strlcat(oids_translated[j], pl, sizeof(oids_translated[j]));
 			}
 			else
 			{
@@ -1581,10 +1626,6 @@ static int	zbx_snmp_process_dynamic(struct snmp_session *ss, const DC_ITEM *item
 		}
 	}
 
-	/* query values based on the indices verified and/or determined above */
-
-	ret = zbx_snmp_get_values(ss, items, oids_translated, results, errcodes, NULL, num, 0, error, max_error_len,
-			max_succeed, min_fail);
 exit:
 	zbx_free(idx);
 
