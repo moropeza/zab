@@ -1603,14 +1603,18 @@ int	replace_key_params_dyn(char **data, int key_type, replace_key_param_f cb, vo
 
 	replace_key_param(data, key_type, 0, &i, level, num, 0, cb, cb_data);
 
-	for (; '\0' != (*data)[i]; i++)
+//	for (; '\0' != (*data)[i]; i++)
+	i--;
+	do
 	{
+		i++;
 		if (0 == level)
 		{
 			/* first square bracket + Zapcat compatibility */
-			if (ZBX_STATE_END == state && '[' == (*data)[i])
+//			if (ZBX_STATE_END == state && '[' == (*data)[i])
+			if ((ZBX_STATE_END == state && ('[' == (*data)[i]) || '.' == (*data)[i]))
 				state = ZBX_STATE_NEW;
-			else
+			else if (!(ZBX_STATE_UNQUOTED == state))
 				break;
 		}
 
@@ -1663,7 +1667,7 @@ int	replace_key_params_dyn(char **data, int key_type, replace_key_param_f cb, vo
 				}
 				break;
 			case ZBX_STATE_UNQUOTED:	/* an unquoted parameter */
-				if (']' == (*data)[i] || ',' == (*data)[i])
+				if (']' == (*data)[i] || ',' == (*data)[i] || '\0' == (*data)[i])
 				{
 					replace_key_param(data, key_type, l, &i, level, num, 0, cb, cb_data);
 
@@ -1680,7 +1684,7 @@ int	replace_key_params_dyn(char **data, int key_type, replace_key_param_f cb, vo
 				}
 				break;
 		}
-	}
+	} while ('\0' != (*data)[i]);
 clean:
 	if (0 == i || '\0' != (*data)[i] || 0 != level)
 	{
