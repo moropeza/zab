@@ -83,6 +83,10 @@ $params = array(
 		'dns' => $search,
 		'ip' => $search
 	),
+	'searchInventory' => array(
+		'type' => $search,
+		'location' => $search
+	),
 	'limit' => $rows_per_page,
 	'selectGroups' => API_OUTPUT_EXTEND,
 	'selectInterfaces' => API_OUTPUT_EXTEND,
