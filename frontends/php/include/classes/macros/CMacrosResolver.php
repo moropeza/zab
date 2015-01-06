@@ -705,7 +705,8 @@ class CMacrosResolver extends CMacrosResolverGeneral {
 					if ($function == 'last') {
 						$value = ($item['lastclock'] > 0)
 							? formatHistoryValue($item['lastvalue'], $item)
-							: UNRESOLVED_MACRO_STRING;
+							: '';
+//							: UNRESOLVED_MACRO_STRING;
 					}
 					// macro function is "max", "min" or "avg"
 					else {
